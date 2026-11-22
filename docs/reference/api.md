@@ -18,7 +18,7 @@ metrics = kgeval.default_metrics(
 )
 report = kgeval.evaluate(graph, metrics)
 
-report["entity_uniqueness"].findings  # each with .message, .subject and its element IDs
+report["entity_uniqueness"].findings  # each with .message, .subject, and its element IDs
 report.passed  # False when a metric misses its threshold
 ```
 

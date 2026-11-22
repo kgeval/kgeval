@@ -4,7 +4,9 @@ site_url: https://kgeval.github.io/kgeval/
 repo_url: https://github.com/kgeval/kgeval
 repo_name: kgeval/kgeval
 edit_uri: edit/main/docs/
-copyright: Released under the Apache-2.0 license.
+extra_css: [stylesheets/extra.css]
+extra:
+  generator: false
 
 nav:
   - Home: index.md
@@ -35,16 +37,10 @@ theme:
       scheme: default
       primary: black
       accent: indigo
-      toggle:
-        icon: material/weather-night
-        name: Switch to dark mode
     - media: "(prefers-color-scheme: dark)"
       scheme: slate
       primary: black
       accent: indigo
-      toggle:
-        icon: material/weather-sunny
-        name: Switch to light mode
   icon:
     repo: fontawesome/brands/github
 

@@ -168,7 +168,7 @@ def run(
     retrievals: Annotated[
         Path | None,
         typer.Option(
-            help="Element IDs your retriever returned per question (YAML or JSON); "
+            help="Element IDs a retriever returned per question (YAML or JSON); "
             "adds the retrieval metrics. Needs --questions.",
             exists=True,
             dir_okay=False,

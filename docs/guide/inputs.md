@@ -13,7 +13,7 @@ each one enables more [metrics](metrics.md). Files can be YAML or JSON.
 ## Graph schema
 
 A graph schema declares which node types, relationship types, and patterns the graph may
-contain. kgeval reads neo4j-graphrag's `GraphSchema` format, so a schema you wrote for
+contain. kgeval reads neo4j-graphrag's `GraphSchema` format, so a schema written for
 `SimpleKGPipeline` works as it is.
 
 ```yaml title="schema.yaml"
@@ -39,8 +39,8 @@ constraints:
 | `node_types`                                                                    | Node types. Each is a label, or a mapping with `label`, `description`, `properties`, and `additional_properties`. |
 | `relationship_types`                                                            | Relationship types, in the same form as node types, plus an optional `max_targets`.                               |
 | `patterns`                                                                      | Allowed combinations, each as `[source node type, relationship type, target node type]`.                          |
-| `constraints`                                                                   | `EXISTENCE`, `UNIQUENESS` or `KEY` constraints on the `property_names` of one `node_type` or `relationship_type`. |
-| `additional_node_types`, `additional_relationship_types`, `additional_patterns` | Whether undeclared node types, relationship types or patterns are allowed.                                        |
+| `constraints`                                                                   | `EXISTENCE`, `UNIQUENESS`, or `KEY` constraints on the `property_names` of one `node_type` or `relationship_type`. |
+| `additional_node_types`, `additional_relationship_types`, `additional_patterns` | Whether undeclared node types, relationship types, or patterns are allowed.                                       |
 
 A property has a `name`, a `type`, and optionally a `description` and `required`. The
 types are `BOOLEAN`, `DATE`, `DURATION`, `FLOAT`, `INTEGER`, `LIST`, `LOCAL_DATETIME`,
@@ -56,14 +56,14 @@ birthplaces fails `fact_conformance`.
 
 ### Draft a schema
 
-If you have no schema, draft one from the graph as it is today:
+Without a schema, draft one from the graph as it is today:
 
 ```console
 kgeval infer-schema -o schema.yaml
 ```
 
 The draft copies the graph's defects, such as a `PERSON` node type next to `Person`.
-Review it and remove them before you use it.
+Review the draft and remove those defects before using it.
 
 ## Ground truth
 
@@ -116,7 +116,7 @@ Each question needs a unique `text` and at least one supporting fact or entity. 
 `supporting_entities` for the entities an answer needs beyond those of its facts, such
 as the entity whose property the question asks about.
 
-To use `aliases`, `relationship_type_aliases` or `symmetric_relationship_types`, write
+To use `aliases`, `relationship_type_aliases`, or `symmetric_relationship_types`, write
 a mapping and put the questions under `questions`:
 
 ```yaml title="questions.yaml"
@@ -140,8 +140,8 @@ IDs of nodes and relationships in rank order, keyed by question text:
 ```
 
 Every question needs an entry, even if it is an empty list. Element IDs belong to one
-database, so write the retrievals from the database whose graph you evaluate. IDs of
-elements that aren't in the graph are ignored with a warning, and retrievals with no ID
+database, so the retrievals must come from the database of the evaluated graph. IDs of
+elements that are not in the graph are ignored with a warning, and retrievals with no ID
 of the graph at all are rejected, since they come from another database or hold
 something other than element IDs, such as chunk texts.
 

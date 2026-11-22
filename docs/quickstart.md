@@ -67,7 +67,7 @@ Each metric gets one row:
 - **Score** is the share of units that pass, so 100% is perfect.
 - **Failed** counts the units that failed out of those evaluated, in the metric's own
   unit.
-- **Threshold** and **Result** are filled in for metrics you give a threshold with
+- **Threshold** and **Result** are filled in for metrics with a threshold, set with
   [`--threshold`](reference/cli.md#kgeval-run).
 
 A metric with nothing to evaluate is skipped and shows the reason instead of a score.
@@ -90,12 +90,12 @@ To inspect those nodes in Neo4j Browser:
 MATCH (n) WHERE elementId(n) IN ['4:a63a…:4', '4:a63a…:9'] RETURN n
 ```
 
-The Markdown report lists up to 10 findings per metric, which you can change with
-`--max-findings`. The JSON report and the Python `Report` hold all of them.
+The Markdown report lists up to 10 findings per metric, and `--max-findings` changes
+that limit. The JSON report and the Python `Report` hold all of them.
 
 ## Enable more metrics
 
-Each input you provide enables another set of metrics:
+Each input enables another set of metrics:
 
 | Input          | Option         | Enables                                         |
 | -------------- | -------------- | ----------------------------------------------- |

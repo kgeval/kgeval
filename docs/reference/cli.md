@@ -116,7 +116,7 @@ run judges its own sample. Metrics whose parameters differ, such as runs against
 another ground truth, are not compared at all.
 
 The comparison opens with a summary: how many scores improved, worsened, stayed the
-same or changed by less than sampling noise, and the metadata that differs.
+same, or changed by less than sampling noise, and the metadata that differs.
 [Comparing builds](../guide/comparing.md) explains how to read it.
 
 ### Options
@@ -139,7 +139,7 @@ same or changed by less than sampling noise, and the metadata that differs.
 
 ```console
 kgeval run --metadata model=gpt-5-mini --format json -o base.json
-# Rebuild the graph with the change you want to test.
+# Rebuild the graph with the change under test.
 kgeval run --metadata model=gpt-5 --format json -o head.json
 kgeval compare base.json head.json
 ```
@@ -151,7 +151,7 @@ kgeval infer-schema [OPTIONS]
 ```
 
 Write the schema the graph follows today, as YAML in neo4j-graphrag's format. Review
-the draft before you pass it to `--schema`, because it copies the graph's defects.
+the draft before passing it to `--schema`, because it copies the graph's defects.
 
 ### Options
 

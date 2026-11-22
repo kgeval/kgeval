@@ -1,7 +1,7 @@
 # Metrics
 
 kgeval has 29 metrics in five categories. The intrinsic metrics run by default, and
-each input you add enables another category. Run `kgeval metrics` to list them all.
+each added input enables another category. Run `kgeval metrics` to list them all.
 Each metric name below links to its full definition in the
 [Python API reference](../reference/api.md).
 
@@ -35,8 +35,8 @@ score = (evaluated - failed) / evaluated
 ```
 
 The retrieval metrics are the exception: they score the mean of each question's share,
-so that every question counts equally. A score of 1.0 is perfect. A metric with nothing to evaluate is skipped, with the
-reason, instead of scored. When a metric has a threshold, it passes if its score is at
+so that every question counts equally. A score of 1.0 is perfect. A metric with nothing
+to evaluate is skipped, with the reason, instead of scored. When a metric has a threshold, it passes if its score is at
 or above the threshold, and fails if it scores lower or is skipped.
 
 ## Intrinsic metrics
@@ -110,8 +110,8 @@ These need [test questions](inputs.md#test-questions) and
 | [`retrieval_precision`][kgeval.RetrievalPrecision] | retrieved entities, facts, and chunks      | the question's answer needs it |
 
 A supporting fact counts as retrieved when its relationship was retrieved, or a chunk
-that grounds it, but not when only its two entities were. So retrievers that return
-chunks are evaluated as well as those that return graph elements. With `--top-k`, only
+that grounds it, but not when only its two entities were. Retrievers that return
+chunks are therefore evaluated as well as those that return graph elements. With `--top-k`, only
 the top-ranked element IDs of each retrieval count, as in recall and precision at k.
 
 ## Graph gaps and retrieval misses
@@ -122,7 +122,7 @@ needs, so kgeval can tell which:
 
 | `competency` | `retrieval_recall`             | Fix                                            |
 | ------------ | ------------------------------ | ---------------------------------------------- |
-| fails        | doesn't count the missing fact | The graph: extraction missed the fact.         |
+| fails        | does not count the missing fact | The graph: extraction missed the fact.         |
 | passes       | fails                          | The retriever: it missed a fact the graph has. |
 
 `retrieval_recall` evaluates only the supporting facts that the graph has, so the

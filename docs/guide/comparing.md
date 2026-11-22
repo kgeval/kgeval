@@ -1,7 +1,7 @@
 # Comparing builds
 
-When you change how a graph is built, such as the extraction prompt, the model or the
-schema, compare a report of each build to see whether the change helped. Build both
+To test a change to how a graph is built, such as the extraction prompt, the model, or
+the schema, compare a report of each build to see whether the change helped. Build both
 graphs from the same documents, so that the comparison measures the pipeline rather
 than the corpus.
 
@@ -13,7 +13,7 @@ Describe each run with `--metadata`, write its report as JSON, and compare the t
 
     ```console
     kgeval run --metadata model=gpt-5-mini --format json -o base.json
-    # Rebuild the graph with the change you want to test.
+    # Rebuild the graph with the change under test.
     kgeval run --metadata model=gpt-5 --format json -o head.json
     kgeval compare base.json head.json
     ```
@@ -68,7 +68,7 @@ changed, so give such comparisons an allowed drop, such as `--max-drop 0.01`. Se
 
 ## Choose which metrics to trust
 
-Metrics don't all compare the same way across builds:
+Not all metrics compare the same way across builds:
 
 - **Metrics over fixed inputs compare like for like.** Test questions and ground truth
   facts are the same in both builds, and so are chunks, as long as both builds split
@@ -80,7 +80,7 @@ Metrics don't all compare the same way across builds:
   precision together with recall, and check the unit counts.
 - **New and resolved findings mostly reflect churn when the extraction changes**,
   because a different build names and connects things differently. They are precise
-  when you rebuild with the same pipeline, and for metrics over fixed inputs.
+  for a rebuild with the same pipeline, and for metrics over fixed inputs.
 
 ## Account for sampling noise
 

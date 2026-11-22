@@ -20,7 +20,7 @@ offers the defaults. Elsewhere, such as in CI, it uses the defaults.
 For Aura, use the `neo4j+s://` URI from the instance's connection details.
 
 In Python, pass an open driver to [`Neo4jSource`][kgeval.Neo4jSource], and the database
-name as its second argument if it isn't the default:
+name as its second argument if it is not the default:
 
 ```python
 graph = kgeval.Neo4jSource(driver, "neo4j").load()
@@ -43,7 +43,7 @@ lexical node. A lexical label counts only on nodes that hold text, such as chunk
 that are joined to them, such as the documents of those chunks, so that a `Document`
 node type in a graph without a lexical graph stays a node type. A graph is a Graphiti
 graph when it has Graphiti's `Episodic` label. When the graph has none of the entity
-labels, every node that isn't a lexical or community node is an entity. When it has
+labels, every node that is not a lexical or community node is an entity. When it has
 some, nodes without them are ignored.
 
 Entity names come from the first of `name` and `title` that holds text. `id` is tried
@@ -58,7 +58,7 @@ The report's summary shows the layout kgeval used.
 ### Custom layout
 
 For a graph with other labels or property keys, write a layout file with only the
-fields you want to change. The other fields keep their detected values.
+fields to change. The other fields keep their detected values.
 
 ```yaml title="layout.yaml"
 lexical_labels: [Passage]
@@ -96,9 +96,9 @@ expired_keys: [retracted_at]
     report = kgeval.evaluate(graph, layout=layout)
     ```
 
-    `Layout.detect` keeps the fields you set on the overrides and detects the others,
-    using your text and name keys, as the CLI does with a layout file. A
-    [`Layout`][kgeval.Layout] you pass to `evaluate` is used as it is.
+    `Layout.detect` keeps the fields set on the overrides and detects the others,
+    guided by the overrides' text and name keys, as the CLI does with a layout file. A
+    [`Layout`][kgeval.Layout] passed to `evaluate` is used as it is.
 
 ## Logging
 

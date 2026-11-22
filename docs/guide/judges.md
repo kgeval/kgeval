@@ -1,6 +1,6 @@
 # LLM judges
 
-Some qualities can't be checked by rules, such as whether two names refer to the same
+Some qualities cannot be checked by rules, such as whether two names refer to the same
 thing or whether a chunk actually states a fact. The six
 [judged metrics](metrics.md#judged-metrics) ask an LLM instead. Any model served
 through the OpenAI API can judge, from a hosted provider or a local server.
@@ -13,7 +13,7 @@ model.
 === "CLI"
 
     ```console
-    export OPENAI_API_KEY=sk-...
+    export OPENAI_API_KEY=<api-key>
     kgeval run --judge openai:gpt-5-mini
     ```
 
@@ -26,7 +26,7 @@ model.
     ```
 
 When the judge gives no usable verdict for one prompt, because the model declines, its
-answer doesn't parse or the server rejects the prompt, kgeval asks once more and
+answer does not parse, or the server rejects the prompt, kgeval asks once more and
 otherwise leaves that unit out. The report counts such units as unjudged, and the score
 then carries a confidence interval, since the judged units no longer cover the
 population. If the judge fails otherwise, for example because the API rejects the key,
@@ -67,11 +67,11 @@ Each provider reads its base URL and API key from `<PREFIX>_BASE_URL` and
 | LM Studio     | `lmstudio:MODEL`   | `LMSTUDIO`     | `http://localhost:1234/v1`                                 |
 | vLLM          | `vllm:MODEL`       | `VLLM`         | `http://localhost:8000/v1`                                 |
 
-Azure OpenAI has no default base URL. Set it to your resource's endpoint:
+Azure OpenAI has no default base URL. Set it to the endpoint of the Azure OpenAI resource:
 
 ```console
 export AZURE_OPENAI_BASE_URL=https://<resource>.openai.azure.com/openai/v1/
-export AZURE_OPENAI_API_KEY=...
+export AZURE_OPENAI_API_KEY=<api-key>
 kgeval run --judge azure:<deployment>
 ```
 
@@ -83,7 +83,7 @@ other OpenAI-compatible server that needs no key, use one of these prefixes with
 `--judge-base-url`:
 
 ```console
-kgeval run --judge vllm:my-model --judge-base-url http://gpu-box:9000/v1
+kgeval run --judge vllm:my-model --judge-base-url <base-url>
 ```
 
 Small models judge most reliably when their JSON verdicts contain no extra whitespace
@@ -105,7 +105,7 @@ at most 200 terms per call. A larger vocabulary is split into calls that each li
 100 most used terms, so a rare synonym of a common term is still found, and a window of
 the other terms sorted by usage, so that rare terms used alike share a call.
 
-The sample is reproducible. It's chosen by hashing the content of each unit with a
+The sample is reproducible. It is chosen by hashing the content of each unit with a
 seed, so the same graph gets the same sample on every run and platform, and so does a
 rebuilt graph with the same content. When the sample is smaller than the population,
 the score comes with a 95% Wilson score interval.
