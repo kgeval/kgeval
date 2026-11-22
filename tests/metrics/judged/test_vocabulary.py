@@ -13,7 +13,9 @@ def test_judge_sees_each_terms_usage_with_grounded_examples() -> None:
     # Count Person and PERSON, and FOUNDED and Founded, once: vocabulary_uniqueness owns them.
     assert (result.unit, result.evaluated, result.failed) == ("distinct vocabulary terms", 12, 0)
     assert len(judge.prompts) == 3
-    [node_types, relationship_types, property_keys] = judge.prompts
+    [node_types] = [prompt for prompt in judge.prompts if "node types of" in prompt]
+    [relationship_types] = [prompt for prompt in judge.prompts if "relationship types of" in prompt]
+    [property_keys] = [prompt for prompt in judge.prompts if "property keys of" in prompt]
     assert "- Person, also spelled PERSON (used 6 times)\n" in node_types
     assert "  in facts: FOUNDED (3), BORN_IN (2), MARRIED (2)\n" in node_types
     # Show the sentence that says what ATTENDED means here, which its name alone does not.
