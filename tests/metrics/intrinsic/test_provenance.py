@@ -46,7 +46,7 @@ def test_extraction_coverage_counts_only_lexical_nodes_with_a_chunk_label() -> N
     assert finding.message == 'no entity was extracted from "Table of contents" (Chunk)'
 
 
-def test_extraction_coverage_skips_when_no_entity_is_grounded() -> None:
+def test_extraction_coverage_fails_every_chunk_when_no_entity_is_grounded() -> None:
     result = ExtractionCoverage().evaluate(view(node("c", "Chunk", text="Hi"), node("e", "Person")))
 
-    assert result.skip_reason == "no entity is grounded in a chunk"
+    assert (result.evaluated, result.failed) == (1, 1)

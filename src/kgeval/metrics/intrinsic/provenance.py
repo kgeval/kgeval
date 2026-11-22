@@ -106,7 +106,7 @@ class ExtractionCoverage(Metric):
         if not graph.lexical_nodes:
             return self.skip(NO_LEXICAL_NODES)
         if not graph.chunks:
-            return self.skip("no entity is grounded in a chunk")
+            return self.skip("no lexical node has text or grounds an entity")
         grounding = {
             chunk_id for entity in graph.entities for chunk_id in graph.chunk_ids(entity.id)
         }

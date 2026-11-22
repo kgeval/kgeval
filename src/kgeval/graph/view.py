@@ -75,8 +75,9 @@ class GraphView:
         # Remember node descriptions, since findings and fact descriptions repeat them.
         self._descriptions: dict[str, str] = {}
         grounding = {chunk_id for ids in chunk_ids.values() for chunk_id in ids}
+        examples = grounding or {node.id for node in self.lexical_nodes if self.text(node)}
         chunk_labels = self.layout.lexical_labels.intersection(
-            label for node_id in grounding for label in self._nodes[node_id].labels
+            label for node_id in examples for label in self._nodes[node_id].labels
         )
         self.chunks = tuple(
             node for node in self.lexical_nodes if chunk_labels.intersection(node.labels)
