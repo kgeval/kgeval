@@ -1,0 +1,30 @@
+# Declare the schema the Singapore graph should follow, in neo4j-graphrag's format.
+
+# Name entities by `id`, as LLM Graph Builder does.
+node_types:
+  - label: Person
+    properties:
+      - {name: id, type: STRING}
+      - {name: born, type: DATE}
+  - label: Location
+    properties:
+      - {name: id, type: STRING}
+  - label: Organization
+    properties:
+      - {name: id, type: STRING}
+  - label: Landmark
+    properties:
+      - {name: id, type: STRING}
+  - label: Award
+    properties:
+      - {name: id, type: STRING}
+# Allow one birthplace per person, so kgeval's max_targets extension flags a second one.
+relationship_types: [{label: BORN_IN, max_targets: 1}, FOUNDED, MARRIED, WON]
+patterns:
+  - [Person, BORN_IN, Location]
+  - [Person, FOUNDED, Organization]
+  - [Person, MARRIED, Person]
+  - [Person, WON, Award]
+constraints:
+  - {type: KEY, node_type: Person, property_names: [id]}
+  - {type: KEY, node_type: Organization, property_names: [id]}

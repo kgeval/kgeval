@@ -1,0 +1,22 @@
+# List the questions the Singapore graph should answer, with the facts each answer needs.
+- text: Who founded the People's Action Party?
+  supporting_facts:
+    - [Lee Kuan Yew, FOUNDED, "People's Action Party"]
+
+- text: Where was Lee Kuan Yew born?
+  supporting_facts:
+    - [Lee Kuan Yew, BORN_IN, Singapore]
+
+- text: What did Lee Kuan Yew co-found?
+  supporting_facts:
+    - [Lee Kuan Yew, FOUNDED, "People's Action Party"]
+    - [Lee Kuan Yew, FOUNDED, "Lee & Lee"]
+
+- text: When was Lee Kuan Yew born?
+  supporting_entities: [Lee Kuan Yew]
+
+# Require two hops, so retrievers that fetch only the named entity's facts miss the birthplace.
+- text: In which country was the founder of the People's Action Party born?
+  supporting_facts:
+    - [Lee Kuan Yew, FOUNDED, "People's Action Party"]
+    - [Lee Kuan Yew, BORN_IN, Singapore]

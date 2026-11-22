@@ -1,0 +1,12 @@
+# List every fact that singapore.txt states, as [source, relationship type, target].
+
+# Compare only the facts grounded in singapore.txt's chunks.
+documents:
+  - {fileName: singapore.txt}
+facts:
+  - [Lee Kuan Yew, BORN_IN, Singapore]
+  - [Lee Kuan Yew, FOUNDED, "People's Action Party"]
+  - [Lee Kuan Yew, FOUNDED, "Lee & Lee"]
+  - [Kwa Geok Choo, MARRIED, Lee Kuan Yew]
+# Match MARRIED facts in either direction, since a marriage reads both ways.
+symmetric_relationship_types: [MARRIED]

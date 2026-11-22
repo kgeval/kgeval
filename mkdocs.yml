@@ -1,0 +1,93 @@
+site_name: kgeval
+site_description: An evaluation framework for knowledge graphs.
+site_url: https://kgeval.github.io/kgeval/
+repo_url: https://github.com/kgeval/kgeval
+repo_name: kgeval/kgeval
+edit_uri: edit/main/docs/
+copyright: Released under the Apache-2.0 license.
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - User guide:
+      - Metrics: guide/metrics.md
+      - Inputs: guide/inputs.md
+      - LLM judges: guide/judges.md
+      - Comparing builds: guide/comparing.md
+      - Configuration: guide/configuration.md
+  - Reference:
+      - CLI: reference/cli.md
+      - Python API: reference/api.md
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - content.tabs.link
+    - navigation.footer
+    - navigation.sections
+    - navigation.top
+    - search.highlight
+    - search.suggest
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: black
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  icon:
+    repo: fontawesome/brands/github
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - pymdownx.details
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+      toc_depth: 3
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          inventories:
+            - https://docs.python.org/3/objects.inv
+            - https://docs.pydantic.dev/latest/objects.inv
+          options:
+            docstring_style: google
+            filters: ["!^_"]
+            heading_level: 3
+            members_order: source
+            merge_init_into_class: true
+            separate_signature: true
+            show_root_full_path: false
+            show_root_heading: true
+            show_signature_annotations: true
+            show_source: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn

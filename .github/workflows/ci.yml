@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+      - run: pipx install poetry && poetry install
+      - run: poetry run ruff check
+      - run: poetry run ruff format --check
+      - run: poetry run mypy
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include: # Pair the oldest supported Python, driver, and server, then test newer Pythons.
+          - { python: "3.11", driver: "neo4j==5.0.0", server: "neo4j:5.10" }
+          - { python: "3.12", driver: "neo4j", server: "neo4j:latest" }
+          - { python: "3.13", driver: "neo4j", server: "neo4j:latest" }
+          - { python: "3.x", driver: "neo4j", server: "neo4j:latest" }
+    services:
+      neo4j:
+        image: ${{ matrix.server }}
+        env:
+          NEO4J_AUTH: none
+        ports:
+          - 7687:7687
+        options: >-
+          --health-cmd "cypher-shell 'RETURN 1'"
+          --health-interval 5s
+          --health-retries 30
+    env:
+      KGEVAL_TEST_NEO4J_URI: neo4j://localhost:7687
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pipx install poetry && poetry install
+      - run: poetry run pip install -U ${{ matrix.driver }}
+      - run: poetry run pytest
+
+  # Run the unit tests on Windows, where console encodings and paths differ.
+  test-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+      - run: pipx install poetry && poetry install
+      - run: poetry run pytest
+
+  publish:
+    if: github.event_name == 'release'
+    needs: [lint, test, test-windows]
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+      - run: pipx install poetry && poetry build
+      - uses: pypa/gh-action-pypi-publish@release/v1
