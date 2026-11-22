@@ -21,6 +21,7 @@ __all__ = [
     "Scalar",
     "canonical_json",
     "content_digest",
+    "property_types",
     "value_type",
 ]
 
@@ -97,6 +98,20 @@ def value_type(value: PropertyValue) -> PropertyTypeName:
     if isinstance(value, Point):
         return "POINT"
     return "LIST"
+
+
+def property_types(element: Node | Relationship) -> dict[str, PropertyTypeName]:
+    """Return the Neo4j type name of each property of an element, its embeddings included.
+
+    Args:
+        element: The node or relationship.
+
+    Returns:
+        The type names by property key; ``"LIST"`` for each embedding.
+    """
+    types: dict[str, PropertyTypeName] = dict.fromkeys(element.embedding_dimensions, "LIST")
+    types.update((key, value_type(value)) for key, value in element.properties.items())
+    return types
 
 
 def canonical_json(value: object) -> str:

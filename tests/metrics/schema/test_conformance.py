@@ -75,6 +75,24 @@ def test_entities_without_a_node_type_fail_closed_node_types() -> None:
     assert messages(result) == ['"Thing": no node type']
 
 
+def test_embeddings_count_as_present_list_properties() -> None:
+    person = {
+        "label": "Person",
+        "properties": [
+            {"name": "name", "type": "STRING"},
+            {"name": "embedding", "type": "LIST", "required": True},
+        ],
+    }
+    constraint = {"type": "EXISTENCE", "property_names": ["embedding"], "node_type": "Person"}
+    schema = example_schema(node_types=node_types_with(person), constraints=[constraint])
+
+    result = EntityConformance(graph_schema=schema).evaluate(
+        view(node("ada", "Person", name="Ada", embeddings={"embedding": 3}))
+    )
+
+    assert (result.evaluated, result.failed) == (1, 0)
+
+
 def test_required_properties_must_be_present() -> None:
     organization = {
         "label": "Organization",

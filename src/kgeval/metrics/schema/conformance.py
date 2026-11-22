@@ -7,7 +7,7 @@ from collections.abc import Iterable, Iterator, Mapping, Sequence
 from dataclasses import dataclass
 from typing import ClassVar
 
-from kgeval.graph.model import Node, PropertyValue, Relationship, canonical_json, value_type
+from kgeval.graph.model import Node, Relationship, canonical_json, property_types
 from kgeval.graph.view import GraphView
 from kgeval.metrics.base import Finding, MetricResult
 from kgeval.metrics.schema.base import SchemaMetric
@@ -144,7 +144,7 @@ class _SchemaIndex:
         declared = [
             self.node_types[node_type] for node_type in node_types if node_type in self.node_types
         ]
-        return problems + _property_problems(entity.properties, declared)
+        return problems + _property_problems(entity, declared)
 
     def fact_problems(
         self,
@@ -167,11 +167,11 @@ class _SchemaIndex:
                 f"({':'.join(source_types)})-[:{relationship_type}]->({':'.join(target_types)})"
             )
             problems.append(f"pattern {pattern} is not declared")
-        return problems + _property_problems(fact.properties, [declared] if declared else [])
+        return problems + _property_problems(fact, [declared] if declared else [])
 
 
 def _property_problems(
-    properties: Mapping[str, PropertyValue], types: Sequence[NodeType | RelationshipType]
+    element: Node | Relationship, types: Sequence[NodeType | RelationshipType]
 ) -> list[str]:
     if not types:
         return []
@@ -180,10 +180,11 @@ def _property_problems(
         for element_type in types
         for property_type in element_type.properties
     }
+    held = property_types(element)
     problems: list[str] = []
     for property_type in declared.values():
-        if property_type.name in properties:
-            actual = value_type(properties[property_type.name])
+        if property_type.name in held:
+            actual = held[property_type.name]
             if actual != property_type.type:
                 problems.append(
                     f"property {property_type.name} is {actual}, expected {property_type.type}"
@@ -191,7 +192,7 @@ def _property_problems(
         elif property_type.required:
             problems.append(f"required property {property_type.name} is missing")
     if not any(element_type.additional_properties for element_type in types):
-        undeclared = sorted(key for key in properties if key not in declared)
+        undeclared = sorted(key for key in element.properties if key not in declared)
         if undeclared:
             noun = "property" if len(undeclared) == 1 else "properties"
             problems.append(f"undeclared {noun} {', '.join(undeclared)}")
@@ -211,7 +212,7 @@ def _constraint_problems(graph: GraphView, constraint: Constraint) -> Iterator[t
     names = constraint.property_names
     if constraint.type in ("EXISTENCE", "KEY"):
         for element in elements:
-            for missing in (key for key in names if key not in element.properties):
+            for missing in (key for key in names if key not in property_types(element)):
                 yield (
                     element.id,
                     f"{constraint.type} constraint on {scope} needs property {missing}",

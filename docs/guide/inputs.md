@@ -44,7 +44,8 @@ constraints:
 
 A property has a `name`, a `type`, and optionally a `description` and `required`. The
 types are `BOOLEAN`, `DATE`, `DURATION`, `FLOAT`, `INTEGER`, `LIST`, `LOCAL_DATETIME`,
-`LOCAL_TIME`, `POINT`, `STRING`, `ZONED_DATETIME`, and `ZONED_TIME`.
+`LOCAL_TIME`, `POINT`, `STRING`, `ZONED_DATETIME`, and `ZONED_TIME`. An embedding,
+which kgeval reads from any non-empty list of floats, has the type `LIST`.
 
 As in neo4j-graphrag, declaring something closes it. Each `additional_*` field
 defaults to `true` only when its list is empty, and `additional_properties` defaults to

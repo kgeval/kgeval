@@ -13,6 +13,7 @@ from kgeval.graph.model import (
     Scalar,
     canonical_json,
     content_digest,
+    property_types,
     value_type,
 )
 from kgeval.graph.names import normalize_name, normalize_type
@@ -38,5 +39,6 @@ __all__ = [
     "content_digest",
     "normalize_name",
     "normalize_type",
+    "property_types",
     "value_type",
 ]

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import ClassVar
 
-from kgeval.graph.model import Node, Relationship
+from kgeval.graph.model import Node, Relationship, property_types
 from kgeval.graph.view import GraphView
 from kgeval.metrics.base import Finding, MetricResult
 from kgeval.metrics.schema.base import SchemaMetric
@@ -128,7 +128,7 @@ class PropertyCompleteness(SchemaMetric):
             )
             for element, names in units
             for name in names
-            if name not in element.properties
+            if name not in property_types(element)
         ]
         return self.result(sum(len(names) for _, names in units), len(findings), findings)
 
