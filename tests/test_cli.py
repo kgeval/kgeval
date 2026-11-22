@@ -2,6 +2,7 @@
 
 import io
 import json
+import re
 import sys
 from importlib.metadata import version
 from pathlib import Path
@@ -46,7 +47,8 @@ class FakeSource:
 
 
 def plain(output: str) -> str:
-    """Return CLI output without the box drawing and line wrapping of error panels."""
+    """Return CLI output without the colors, box drawing, and line wrapping of error panels."""
+    output = re.sub(r"\x1b\[[0-9;]*m", "", output)
     return " ".join(output.translate(str.maketrans("│╭╮╰╯─┌┐└┘", "          ")).split())
 
 
