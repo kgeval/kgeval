@@ -27,10 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        include: # Pair the oldest supported Python, driver, and server, then test newer Pythons.
+        include: # Test the oldest supported Python, driver, and server, and the latest.
           - { python: "3.11", driver: "neo4j==5.0.0", server: "neo4j:5.10" }
-          - { python: "3.12", driver: "neo4j", server: "neo4j:latest" }
-          - { python: "3.13", driver: "neo4j", server: "neo4j:latest" }
           - { python: "3.x", driver: "neo4j", server: "neo4j:latest" }
     services:
       neo4j:
