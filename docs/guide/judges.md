@@ -29,10 +29,10 @@ When the judge gives no usable verdict for one prompt, because the model decline
 answer does not parse, or the server rejects the prompt, kgeval asks once more and
 otherwise leaves that unit out. The report counts such units as unjudged, and the score
 then carries a confidence interval, since the judged units no longer cover the
-population. If the judge fails otherwise, for example because the API rejects the key,
-or gives no usable verdict at all, the metric is skipped with the error as its reason,
-and the other metrics still run. Each finding includes the judge's reason for its
-verdict.
+population. Requests that hit a rate limit are retried for about a minute. If the judge
+fails otherwise, for example because the API rejects the key, or gives no usable verdict
+at all, the metric is skipped with the error as its reason, and the other metrics still
+run. Each finding includes the judge's reason for its verdict.
 
 ### Request settings
 

@@ -17,6 +17,8 @@ _OutputT = TypeVar("_OutputT", bound=BaseModel)
 
 _JSON_INSTRUCTION = "Reply with only a JSON object that matches this JSON schema:\n{schema}"
 
+_MAX_RETRIES = 10
+
 
 class OpenAIJudge:
     """Judge with a model served through the OpenAI API, by OpenAI or any compatible server.
@@ -67,7 +69,7 @@ class OpenAIJudge:
         self._body = body
         if client is None:
             try:
-                client = openai.OpenAI(base_url=base_url, api_key=api_key)
+                client = openai.OpenAI(base_url=base_url, api_key=api_key, max_retries=_MAX_RETRIES)
             except openai.OpenAIError as error:
                 raise JudgeError(f"cannot create a client for {self.name}: {error}") from error
         self._client = client
