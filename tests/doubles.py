@@ -50,9 +50,11 @@ class FailingJudge:
     def __init__(self, delay: float = 0.0) -> None:
         self.delay = delay
         self.calls = 0
+        self._lock = threading.Lock()
 
     def ask(self, prompt: str, output_type: type[OutputT]) -> OutputT:
-        self.calls += 1
+        with self._lock:
+            self.calls += 1
         time.sleep(self.delay)
         raise JudgeError("model unavailable")
 
