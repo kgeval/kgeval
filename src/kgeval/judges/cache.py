@@ -5,11 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 import sqlite3
-from contextlib import closing
+from contextlib import closing, suppress
 from pathlib import Path
 from typing import TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from kgeval.errors import JudgeError
 from kgeval.judges.base import Judge
@@ -60,7 +60,9 @@ class CachedJudge:
         ).hexdigest()
         rows = self._execute("SELECT answer FROM verdicts WHERE key = ?", key)
         if rows:
-            return output_type.model_validate_json(rows[0][0])
+            # Ask again when a stored verdict no longer validates; the insert below replaces it.
+            with suppress(ValidationError):
+                return output_type.model_validate_json(rows[0][0])
         answer = self._judge.ask(prompt, output_type)
         self._execute(
             "INSERT OR REPLACE INTO verdicts VALUES (?, ?)", key, answer.model_dump_json()
