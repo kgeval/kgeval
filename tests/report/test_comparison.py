@@ -343,7 +343,7 @@ def test_markdown_warns_when_reports_come_from_different_kgeval_versions() -> No
     head = base.model_copy(update={"kgeval_version": "9.9.9"})
 
     assert (
-        "The reports come from kgeval 0.1.0 and 9.9.9, whose metrics may differ."
+        f"The reports come from kgeval {base.kgeval_version} and 9.9.9, whose metrics may differ."
         in compare(base, head).to_markdown()
     )
 

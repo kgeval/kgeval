@@ -7,6 +7,12 @@
 
 kgeval is an evaluation framework for knowledge graphs.
 
+It scores a graph on 29 metrics, covering duplicate entities, conformance to a graph
+schema, agreement with a ground truth, and whether each fact is supported by the text it
+was extracted from, and reports every defect with the nodes and relationships involved.
+Comparing the reports of two versions of a graph shows which metrics improved or
+regressed.
+
 ## Features
 
 - Score a graph on 29 built-in metrics
@@ -27,6 +33,9 @@ pip install kgeval
 
 ## Usage
 
+kgeval runs from the command line or from Python. Both read the graph from Neo4j through a
+read-only session, evaluate it in memory, and produce a report of scores and findings.
+
 ### CLI
 
 ```console
@@ -46,7 +55,24 @@ report = kgeval.evaluate(graph)
 print(report.to_markdown())
 ```
 
+## Report
+
+The report gives each metric a score, the share of units such as entities or facts that
+pass, so 100% is perfect. Each finding describes one defect and lists the IDs of the nodes
+and relationships involved, so you can inspect them in Neo4j:
+
+```text
+### entity_uniqueness: 1 of 10 entities with a name failed
+
+- 2 entities share the normalized name 'lee kuan yew': "Lee Kuan Yew" (Person), "lee kuan yew" (Person)
+  - nodes: `4:9e643a2e-be5f-4bd0-8757-2f90968f1f8a:4`, `4:9e643a2e-be5f-4bd0-8757-2f90968f1f8a:9`
+```
+
 ## Metrics
+
+kgeval has 29 metrics in five categories: intrinsic, schema, reference, judged, and
+retrieval. The metrics that need only the graph run by default, and the others run when you
+provide their input, such as a schema or ground truth:
 
 | Input          | Evaluates                                                               |
 | -------------- | ----------------------------------------------------------------------- |

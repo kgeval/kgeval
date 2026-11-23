@@ -2,6 +2,12 @@
 
 kgeval is an evaluation framework for knowledge graphs.
 
+It scores a graph on 29 metrics, covering duplicate entities, conformance to a graph
+schema, agreement with a ground truth, and whether each fact is supported by the text it
+was extracted from, and reports every defect with the nodes and relationships involved.
+Comparing the reports of two versions of a graph shows which metrics improved or
+regressed.
+
 ## Features
 
 - Score a graph on 29 built-in metrics
