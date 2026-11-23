@@ -10,7 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field, model_validat
 from kgeval.graph.layout import Layout, Role
 from kgeval.graph.view import GraphView
 from kgeval.metrics.base import MetricResult
-from kgeval.report.markdown import render_markdown
+from kgeval.report.markdown import DEFAULT_MAX_FINDINGS, render_markdown
 
 __all__ = ["REPORT_FORMAT", "GraphSummary", "Report"]
 
@@ -148,7 +148,7 @@ class Report(BaseModel):
                 return result
         raise KeyError(metric)
 
-    def to_markdown(self, max_findings: int = 10) -> str:
+    def to_markdown(self, max_findings: int = DEFAULT_MAX_FINDINGS) -> str:
         """Render the report as Markdown: graph summary, score tables, and findings.
 
         Text taken from the graph is escaped, so it cannot inject Markdown.

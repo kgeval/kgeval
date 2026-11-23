@@ -13,7 +13,10 @@ if TYPE_CHECKING:
     from kgeval.report.comparison import Comparison, MetricChange
     from kgeval.report.model import Report
 
-__all__ = ["render_comparison_markdown", "render_markdown"]
+__all__ = ["DEFAULT_MAX_FINDINGS", "render_comparison_markdown", "render_markdown"]
+
+DEFAULT_MAX_FINDINGS = 10
+"""The default for how many findings Markdown lists per metric."""
 
 _MAX_IDS_SHOWN = 10
 
@@ -29,7 +32,7 @@ _CATEGORY_TITLES = {
 _MARKDOWN_SYNTAX = re.compile(r"[\\`*\[<~|]|_(?![^\W_])|(?<![^\W_])_")
 
 
-def render_markdown(report: Report, max_findings: int = 10) -> str:
+def render_markdown(report: Report, max_findings: int = DEFAULT_MAX_FINDINGS) -> str:
     """Render a report as Markdown; see ``Report.to_markdown``.
 
     Args:
@@ -89,7 +92,9 @@ def render_markdown(report: Report, max_findings: int = 10) -> str:
     return "\n".join(lines) + "\n"
 
 
-def render_comparison_markdown(comparison: Comparison, max_findings: int = 10) -> str:
+def render_comparison_markdown(
+    comparison: Comparison, max_findings: int = DEFAULT_MAX_FINDINGS
+) -> str:
     """Render a comparison as Markdown; see ``Comparison.to_markdown``.
 
     Args:

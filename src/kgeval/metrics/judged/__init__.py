@@ -1,7 +1,7 @@
 """Provide the judged metrics."""
 
 from kgeval.metrics.judged._prompts import MAX_CHUNKS
-from kgeval.metrics.judged.base import JudgedMetric, SampledMetric
+from kgeval.metrics.judged.base import DEFAULT_SAMPLE_SIZE, JudgedMetric, SampledMetric
 from kgeval.metrics.judged.entities import (
     DuplicateVerdict,
     EntityDisambiguation,
@@ -19,6 +19,7 @@ from kgeval.metrics.judged.facts import FactAccuracy, SupportVerdict
 from kgeval.metrics.judged.vocabulary import SynonymGroup, SynonymVerdict, VocabularyResolution
 
 __all__ = [
+    "DEFAULT_SAMPLE_SIZE",
     "MAX_CHUNKS",
     "CompletenessVerdict",
     "DuplicateVerdict",

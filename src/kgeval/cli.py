@@ -36,8 +36,9 @@ from kgeval.metrics import (
     MetricCategory,
     default_metrics,
 )
+from kgeval.metrics.judged import DEFAULT_SAMPLE_SIZE
 from kgeval.questions import load_questions
-from kgeval.report import Report, compare
+from kgeval.report import DEFAULT_MAX_FINDINGS, Report, compare
 from kgeval.retrieval import load_retrievals
 from kgeval.schema import infer_schema, load_schema
 from kgeval.sources import Neo4jSource
@@ -195,7 +196,7 @@ def run(
     ] = None,
     sample_size: Annotated[
         int, typer.Option(min=1, help="Most units each sampled judged metric judges.")
-    ] = 100,
+    ] = DEFAULT_SAMPLE_SIZE,
     seed: Annotated[int, typer.Option(help="Seed that selects which units are sampled.")] = 0,
     top_k: Annotated[
         int | None,
@@ -226,7 +227,7 @@ def run(
         OutputFormat, typer.Option("--format", "-f", help="Report format.")
     ] = OutputFormat.MARKDOWN,
     output: Output = None,
-    max_findings: MaxFindings = 10,
+    max_findings: MaxFindings = DEFAULT_MAX_FINDINGS,
     verbose: Verbose = False,
 ) -> None:
     """Evaluate a Neo4j knowledge graph and report scores and findings.
@@ -290,7 +291,7 @@ def compare_command(
         ),
     ] = 0.0,
     output: Output = None,
-    max_findings: MaxFindings = 10,
+    max_findings: MaxFindings = DEFAULT_MAX_FINDINGS,
 ) -> None:
     """Compare the report HEAD with the report BASE, such as a baseline, metric by metric.
 

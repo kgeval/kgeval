@@ -16,9 +16,14 @@ from kgeval.errors import VerdictError
 from kgeval.judges.base import Judge
 from kgeval.metrics.base import Finding, Metric, MetricCategory, MetricResult
 
-__all__ = ["JudgedMetric", "SampledMetric"]
+__all__ = ["DEFAULT_SAMPLE_SIZE", "JudgedMetric", "SampledMetric"]
 
 logger = logging.getLogger(__name__)
+
+DEFAULT_SAMPLE_SIZE = 100
+"""The default for the most units each sampled judged metric judges."""
+
+_ATTEMPTS = 2
 
 _Z_95 = NormalDist().inv_cdf(0.975)
 
@@ -80,11 +85,13 @@ class JudgedMetric(Metric):
         return answers
 
     def _ask(self, prompt: str, output_type: type[_OutputT]) -> _OutputT | None:
-        for attempt in (1, 2):
+        for attempt in range(1, _ATTEMPTS + 1):
             try:
                 return self.judge.ask(prompt, output_type)
             except VerdictError as error:
-                logger.warning("No usable verdict on attempt %d of 2: %s", attempt, error)
+                logger.warning(
+                    "No usable verdict on attempt %d of %d: %s", attempt, _ATTEMPTS, error
+                )
         return None
 
 
@@ -108,7 +115,7 @@ class SampledMetric(JudgedMetric):
         seed: Selects which units are sampled.
     """
 
-    sample_size: int = Field(default=100, ge=1)
+    sample_size: int = Field(default=DEFAULT_SAMPLE_SIZE, ge=1)
     seed: int = 0
 
     def signature(self) -> str:

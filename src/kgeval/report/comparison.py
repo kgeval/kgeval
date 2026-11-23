@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from kgeval.errors import InputError
 from kgeval.metrics.base import Finding, MetricCategory, MetricResult
-from kgeval.report.markdown import render_comparison_markdown
+from kgeval.report.markdown import DEFAULT_MAX_FINDINGS, render_comparison_markdown
 from kgeval.report.model import Report
 
 __all__ = ["Comparison", "MetricChange", "Trend", "compare"]
@@ -182,7 +182,7 @@ class Comparison(BaseModel):
         counts = Counter(trend for trend in trends if trend is not None)
         return {trend: counts[trend] for trend in Trend}
 
-    def to_markdown(self, max_findings: int = 10) -> str:
+    def to_markdown(self, max_findings: int = DEFAULT_MAX_FINDINGS) -> str:
         """Render the comparison as Markdown: both graphs, score changes, and changed findings.
 
         Text taken from the graph is escaped, so it cannot inject Markdown.

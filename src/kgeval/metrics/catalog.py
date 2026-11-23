@@ -19,6 +19,7 @@ from kgeval.metrics.intrinsic import (
     VocabularyUniqueness,
 )
 from kgeval.metrics.judged import (
+    DEFAULT_SAMPLE_SIZE,
     EntityDisambiguation,
     EntityResolution,
     ExtractionCompleteness,
@@ -126,7 +127,7 @@ def default_metrics(
     questions: QuestionSet | None = None,
     retrievals: Retrievals | None = None,
     judge: Judge | None = None,
-    sample_size: int = 100,
+    sample_size: int = DEFAULT_SAMPLE_SIZE,
     seed: int = 0,
     top_k: int | None = None,
 ) -> list[Metric]:
