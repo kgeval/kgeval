@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 
 import neo4j
 import neo4j.spatial
@@ -110,35 +111,41 @@ def _describe(error: Neo4jError | DriverError) -> str:
 
 
 def _read_graph(transaction: neo4j.ManagedTransaction) -> tuple[list[Node], list[Relationship]]:
+    # Store repeated IDs, labels, types and keys once.
+    strings: dict[str, str] = {}
+
+    def share(text: str) -> str:
+        return strings.setdefault(text, text)
+
     nodes = [
         Node(
-            id=record["id"],
-            labels=tuple(record["labels"]),
-            properties=_properties(record["properties"]),
-            embedding_dimensions=dict(record["embedding_dimensions"]),
+            id=share(record["id"]),
+            labels=tuple(map(share, record["labels"])),
+            properties=_properties(record["properties"], share),
+            embedding_dimensions={share(key): size for key, size in record["embedding_dimensions"]},
         )
         for record in transaction.run(_NODES_QUERY)
     ]
     relationships = [
         Relationship(
             id=record["id"],
-            type=record["type"],
-            source_id=record["source_id"],
-            target_id=record["target_id"],
-            properties=_properties(record["properties"]),
-            embedding_dimensions=dict(record["embedding_dimensions"]),
+            type=share(record["type"]),
+            source_id=share(record["source_id"]),
+            target_id=share(record["target_id"]),
+            properties=_properties(record["properties"], share),
+            embedding_dimensions={share(key): size for key, size in record["embedding_dimensions"]},
         )
         for record in transaction.run(_RELATIONSHIPS_QUERY)
     ]
     return nodes, relationships
 
 
-def _properties(pairs: list[list[object]]) -> dict[str, PropertyValue]:
+def _properties(pairs: list[list[object]], share: Callable[[str], str]) -> dict[str, PropertyValue]:
     properties: dict[str, PropertyValue] = {}
     for key, value in pairs:
         converted = _convert(value)
         if converted is not None:
-            properties[str(key)] = converted
+            properties[share(str(key))] = converted
     return properties
 
 

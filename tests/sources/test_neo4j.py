@@ -21,7 +21,7 @@ from kgeval.errors import SourceError
 from kgeval.evaluation import evaluate
 from kgeval.graph.model import Duration, Graph, Point, PropertyValue, canonical_json
 from kgeval.report import compare
-from kgeval.sources.neo4j import Neo4jSource, _convert
+from kgeval.sources.neo4j import Neo4jSource, _convert, _read_graph
 from tests.doubles import ScriptedJudge
 from tests.factories import EXAMPLE_DIR, example_graph
 
@@ -100,6 +100,53 @@ def test_driver_values_convert_to_property_values(value: object, expected: Prope
 @pytest.mark.parametrize("value", [b"bytes", ["a", b"b"], None])
 def test_unsupported_driver_values_are_dropped(value: object) -> None:
     assert _convert(value) is None
+
+
+class RecordedTransaction:
+    def __init__(self, *results: list[dict[str, Any]]) -> None:
+        self.results = iter(results)
+
+    def run(self, query: str) -> list[dict[str, Any]]:
+        return next(self.results)
+
+
+def decoded(text: str) -> str:
+    # Build a new string object, as the driver does for every record.
+    return "".join(list(text))
+
+
+def test_loaded_elements_share_repeated_strings() -> None:
+    nodes = [
+        {
+            "id": decoded(node_id),
+            "labels": [decoded("Person")],
+            "properties": [[decoded("name"), node_id]],
+            "embedding_dimensions": [[decoded("embedding"), 3]],
+        }
+        for node_id in ("ada", "bob")
+    ]
+    relationships = [
+        {
+            "id": relationship_id,
+            "type": decoded("KNOWS"),
+            "source_id": decoded("ada"),
+            "target_id": decoded("bob"),
+            "properties": [[decoded("name"), relationship_id]],
+            "embedding_dimensions": [],
+        }
+        for relationship_id in ("knows_1", "knows_2")
+    ]
+
+    (ada, bob), (first, second) = _read_graph(
+        cast(neo4j.ManagedTransaction, RecordedTransaction(nodes, relationships))
+    )
+
+    assert first.source_id is ada.id
+    assert first.target_id is bob.id
+    assert first.type is second.type
+    assert ada.labels[0] is bob.labels[0]
+    assert next(iter(ada.properties)) is next(iter(first.properties))
+    assert next(iter(ada.embedding_dimensions)) is next(iter(bob.embedding_dimensions))
 
 
 class PredicateSyntaxError(Neo4jError):
