@@ -32,6 +32,9 @@ ground truth, is marked "parameters changed, so not compared", since its scores 
 different things. The comparison also warns when the reports come from different kgeval
 versions or read their graphs with different layouts.
 
+To compare the scores of pytest runs, see
+[Testing with pytest](testing.md#compare-test-runs).
+
 ## Read the comparison
 
 The comparison opens with a summary of how the scores moved, followed by the metadata

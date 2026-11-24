@@ -98,7 +98,7 @@ kgeval compare [OPTIONS] BASE HEAD
 ```
 
 Compare the report `HEAD` with the report `BASE`, such as a baseline, metric by metric.
-Both are JSON reports written by `kgeval run --format json`.
+Both are JSON reports written by `kgeval run --format json` or `pytest --kgeval-report`.
 
 A metric regresses when `HEAD` scores it worse than `BASE`, or no longer scores a
 metric that `BASE` scored, because it skips the metric or does not run it. `HEAD`

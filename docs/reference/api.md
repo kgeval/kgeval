@@ -26,6 +26,8 @@ report.passed  # False when a metric misses its threshold
 
 ::: kgeval.evaluate
 
+::: kgeval.assert_passes
+
 ::: kgeval.default_metrics
 
 ## Reports

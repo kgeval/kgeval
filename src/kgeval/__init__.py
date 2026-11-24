@@ -3,7 +3,7 @@
 from importlib.metadata import version
 
 from kgeval.errors import InputError, JudgeError, KgevalError, SourceError, VerdictError
-from kgeval.evaluation import evaluate
+from kgeval.evaluation import assert_passes, evaluate
 from kgeval.graph import (
     Duration,
     Graph,
@@ -137,6 +137,7 @@ __all__ = [
     "VocabularyResolution",
     "VocabularyUniqueness",
     "__version__",
+    "assert_passes",
     "compare",
     "default_metrics",
     "evaluate",

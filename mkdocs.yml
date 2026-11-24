@@ -16,6 +16,7 @@ nav:
       - Inputs: guide/inputs.md
       - LLM judges: guide/judges.md
       - Comparing builds: guide/comparing.md
+      - Testing with pytest: guide/testing.md
       - Configuration: guide/configuration.md
   - Reference:
       - CLI: reference/cli.md

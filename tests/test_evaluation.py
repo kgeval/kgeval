@@ -3,7 +3,7 @@
 import pytest
 
 from kgeval.errors import InputError
-from kgeval.evaluation import evaluate
+from kgeval.evaluation import assert_passes, evaluate
 from kgeval.graph.layout import Layout
 from kgeval.ground_truth import load_ground_truth
 from kgeval.metrics import (
@@ -99,3 +99,28 @@ def test_a_failing_metric_is_reported_as_skipped_and_the_others_still_run() -> N
 def test_each_metric_runs_once_per_evaluation() -> None:
     with pytest.raises(InputError, match="repeated: entity_uniqueness"):
         evaluate(example_graph(), [EntityUniqueness(), EntityConnectivity(), EntityUniqueness()])
+
+
+def test_assert_passes_needs_a_threshold_on_every_metric() -> None:
+    with pytest.raises(InputError, match="no metrics to check"):
+        assert_passes(example_graph(), [])
+    with pytest.raises(InputError, match=r"missing on: entity_naming$"):
+        assert_passes(example_graph(), [EntityUniqueness(threshold=0.5), EntityNaming()])
+
+
+def test_assert_passes_names_each_missed_threshold_on_the_first_line() -> None:
+    metrics = [
+        EntityUniqueness(threshold=0.95),
+        EntityNaming(threshold=0.5),
+        FactAccuracy(judge=FailingJudge(), threshold=0.9),
+    ]
+
+    with pytest.raises(AssertionError) as raised:
+        assert_passes(example_graph(), metrics)
+
+    headline, _, report = str(raised.value).partition("\n\n")
+    assert headline == (
+        "entity_uniqueness scored 90.0%, below its threshold of 95.0%; "
+        "fact_accuracy was skipped: failed: model unavailable"
+    )
+    assert report.startswith("# kgeval report")

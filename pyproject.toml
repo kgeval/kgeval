@@ -11,6 +11,7 @@ authors = [
 keywords = ["knowledge-graph", "neo4j", "evaluation", "graphrag", "rag", "retrieval", "data-quality", "llm-as-a-judge"]
 classifiers = [
     "Development Status :: 4 - Beta",
+    "Framework :: Pytest",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Operating System :: OS Independent",
@@ -38,6 +39,9 @@ dependencies = [
 
 [project.scripts]
 kgeval = "kgeval.cli:app"
+
+[project.entry-points.pytest11]
+kgeval = "kgeval.pytest_plugin"
 
 [project.urls]
 Documentation = "https://kgeval.github.io/kgeval/"

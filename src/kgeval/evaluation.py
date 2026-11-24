@@ -15,9 +15,12 @@ from kgeval.metrics.base import Metric
 from kgeval.metrics.catalog import default_metrics
 from kgeval.report.model import REPORT_FORMAT, GraphSummary, Report
 
-__all__ = ["evaluate"]
+__all__ = ["assert_passes", "evaluate"]
 
 logger = logging.getLogger(__name__)
+
+# Collect the reports of assert_passes here while pytest runs with --kgeval-report.
+_recorded: list[Report] | None = None
 
 
 def evaluate(
@@ -70,3 +73,48 @@ def evaluate(
         results=tuple(results),
         metadata=dict(metadata or {}),
     )
+
+
+def assert_passes(
+    graph: Graph, metrics: Iterable[Metric], *, layout: Layout | None = None
+) -> Report:
+    """Evaluate a graph and fail unless every metric meets its threshold.
+
+    Args:
+        graph: The snapshot to evaluate.
+        metrics: The metrics to check, each with a threshold.
+        layout: How to read the graph; detected from its labels when omitted.
+
+    Returns:
+        The report.
+
+    Raises:
+        InputError: If there are no metrics, a metric has no threshold, or two metrics
+            share a name.
+        AssertionError: If a metric misses its threshold.
+    """
+    # Hide this frame from pytest tracebacks, so a failure points at the test.
+    __tracebackhide__ = True
+    selected = list(metrics)
+    if not selected:
+        raise InputError("no metrics to check")
+    unchecked = [metric.name for metric in selected if metric.threshold is None]
+    if unchecked:
+        raise InputError(
+            f"each metric to check needs a threshold, missing on: {', '.join(unchecked)}"
+        )
+    report = evaluate(graph, selected, layout=layout)
+    if _recorded is not None:
+        _recorded.append(report)
+    misses = [
+        f"{result.metric} was skipped: {result.skip_reason}"
+        if result.score is None
+        else f"{result.metric} scored {result.score:.1%}, below its threshold of "
+        f"{result.threshold:.1%}"
+        for result in report.results
+        if result.passed is False
+    ]
+    if misses:
+        # Name every miss on the first line, since pytest's short summary shows only that line.
+        raise AssertionError("; ".join(misses) + "\n\n" + report.to_markdown())
+    return report

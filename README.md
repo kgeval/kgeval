@@ -19,6 +19,7 @@ regressed.
 - Trace every finding to the nodes and relationships involved
 - Run reference-free and reference-based evaluation
 - Compare evaluation runs over time
+- Unit test graph quality in CI with pytest
 
 ## Requirements
 
@@ -33,8 +34,8 @@ pip install kgeval
 
 ## Usage
 
-kgeval runs from the command line or from Python. Both read the graph from Neo4j through a
-read-only session, evaluate it in memory, and produce a report of scores and findings.
+kgeval runs from the command line, from Python, or in pytest. Each loads a snapshot of the
+graph, evaluates it in memory, and produces a report of scores and findings.
 
 ### CLI
 
@@ -55,11 +56,25 @@ report = kgeval.evaluate(graph)
 print(report.to_markdown())
 ```
 
+### pytest
+
+```python
+import kgeval
+from neo4j import GraphDatabase
+
+
+def test_entities_are_unique():
+    with GraphDatabase.driver("<uri>", auth=("<username>", "<password>")) as driver:
+        graph = kgeval.Neo4jSource(driver).load()
+
+    kgeval.assert_passes(graph, [kgeval.EntityUniqueness(threshold=0.95)])
+```
+
 ## Report
 
 The report gives each metric a score, the share of units such as entities or facts that
 pass, so 100% is perfect. Each finding describes one defect and lists the IDs of the nodes
-and relationships involved, so you can inspect them in Neo4j:
+and relationships involved, so you can find them in the graph:
 
 ```text
 ### entity_uniqueness: 1 of 10 entities with a name failed

@@ -129,7 +129,9 @@ MaxFindings = Annotated[int, typer.Option(min=0, help="Findings listed per metri
 ReportFile = Annotated[
     Path,
     typer.Argument(
-        help="A report that `kgeval run --format json` wrote.", exists=True, dir_okay=False
+        help="A report that `kgeval run --format json` or `pytest --kgeval-report` wrote.",
+        exists=True,
+        dir_okay=False,
     ),
 ]
 Verbose = Annotated[bool, typer.Option("--verbose", "-v", help="Log progress to standard error.")]
