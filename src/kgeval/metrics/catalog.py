@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from kgeval.errors import InputError
 from kgeval.ground_truth import GroundTruth
-from kgeval.judges.base import Judge
+from kgeval.judge import Judge
 from kgeval.metrics.base import Metric
 from kgeval.metrics.intrinsic import (
     EmbeddingConsistency,

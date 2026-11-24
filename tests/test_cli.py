@@ -226,21 +226,23 @@ def test_run_reports_unwritable_output(runner: CliRunner, tmp_path: Path) -> Non
 def test_run_adds_the_judged_metrics_for_a_judge(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    created: list[tuple[str, str | None]] = []
+    created: list[tuple[str, str | None, Path | None]] = []
 
-    def create(model: str, *, base_url: str | None = None) -> ScriptedJudge:
-        created.append((model, base_url))
+    def create(
+        model: str, *, base_url: str | None = None, cache: Path | None = None
+    ) -> ScriptedJudge:
+        created.append((model, base_url, cache))
         return ScriptedJudge()
 
-    monkeypatch.setattr(cli, "create_judge", create)
+    monkeypatch.setattr(cli, "Judge", create)
 
     result = runner.invoke(
         cli.app,
-        ["run", "--judge", "groq:test-model", "-m", "fact_accuracy", "-m", "node_type_accuracy"],
+        ["run", "--judge", "groq/test-model", "-m", "fact_accuracy", "-m", "node_type_accuracy"],
     )
 
     assert result.exit_code == 0, result.output
-    assert created == [("groq:test-model", None)]
+    assert created == [("groq/test-model", None, None)]
     assert "| fact_accuracy | 100.0% |" in result.stdout
     assert "| node_type_accuracy | 100.0% |" in result.stdout
 
@@ -248,10 +250,10 @@ def test_run_adds_the_judged_metrics_for_a_judge(
 def test_run_names_a_missing_judge_key(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
 
-    result = runner.invoke(cli.app, ["run", "--judge", "groq:test-model"])
+    result = runner.invoke(cli.app, ["run", "--judge", "groq/test-model"])
 
     assert result.exit_code == 2
-    assert result.stderr == "Error: missing environment variable: GROQ_API_KEY\n"
+    assert result.stderr == "Error: missing environment variables: GROQ_API_KEY\n"
 
 
 def test_version_prints_the_installed_version(runner: CliRunner) -> None:

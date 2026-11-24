@@ -24,7 +24,7 @@ from kgeval.errors import InputError, KgevalError, SourceError
 from kgeval.evaluation import evaluate
 from kgeval.graph import GraphView, Layout
 from kgeval.ground_truth import load_ground_truth
-from kgeval.judges import PROVIDERS, CachedJudge, Judge, create_judge
+from kgeval.judge import Judge
 from kgeval.metrics import (
     BUILTIN_METRICS,
     GROUND_TRUTH_METRICS,
@@ -179,8 +179,7 @@ def run(
         str | None,
         typer.Option(
             "--judge",
-            help="Model to judge with: an OpenAI model, or PROVIDER:MODEL for "
-            f"{', '.join(provider for provider in PROVIDERS if provider != 'openai')}; "
+            help="Model to judge with, as LiteLLM names it, such as openai/gpt-5-mini; "
             "adds the judged metrics. Needs the provider's API key.",
         ),
     ] = None,
@@ -248,9 +247,7 @@ def run(
         layout_overrides = _load_layout(layout)
         judge: Judge | None = None
         if judge_model is not None:
-            judge = create_judge(judge_model, base_url=judge_base_url)
-            if judge_cache is not None:
-                judge = CachedJudge(judge, judge_cache)
+            judge = Judge(judge_model, base_url=judge_base_url, cache=judge_cache)
         metrics = default_metrics(
             schema=None if schema is None else load_schema(schema),
             ground_truth=None if ground_truth is None else load_ground_truth(ground_truth),

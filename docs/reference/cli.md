@@ -42,13 +42,13 @@ offers the defaults. Elsewhere, such as in CI, it uses the defaults.
 
 ### Judge
 
-| Option                 | Default        | Description                                                                                                |
-| ---------------------- | -------------- | ---------------------------------------------------------------------------------------------------------- |
-| `--judge MODEL`        | None           | The [judge model](../guide/judges.md), as `PROVIDER:MODEL` or an OpenAI model ID. Adds the judged metrics. |
-| `--judge-base-url URL` | The provider's | A base URL that replaces the provider's. Requires `--judge`.                                               |
-| `--judge-cache FILE`   | None           | A SQLite file that stores verdicts for reruns. Requires `--judge`.                                         |
-| `--sample-size N`      | 100            | The most units each sampled judged metric judges.                                                          |
-| `--seed N`             | 0              | The seed that selects which units are sampled.                                                             |
+| Option                 | Default        | Description                                                                                                       |
+| ---------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `--judge MODEL`        | None           | The [judge model](../guide/judges.md), as LiteLLM names it, such as `openai/gpt-5-mini`. Adds the judged metrics. |
+| `--judge-base-url URL` | The provider's | A base URL that replaces the provider's. Requires `--judge`.                                                      |
+| `--judge-cache FILE`   | None           | A SQLite file that stores verdicts for reruns. Requires `--judge`.                                                |
+| `--sample-size N`      | 100            | The most units each sampled judged metric judges.                                                                 |
+| `--seed N`             | 0              | The seed that selects which units are sampled.                                                                    |
 
 ### Metrics
 
@@ -86,7 +86,7 @@ stays plain Markdown. The JSON report holds every field of
 
 ```console
 kgeval run --schema schema.yaml --ground ground_truth.yaml
-kgeval run --judge openai:gpt-5-mini --judge-cache verdicts.sqlite
+kgeval run --judge openai/gpt-5-mini --judge-cache verdicts.sqlite
 kgeval run -t entity_uniqueness=0.98 -t fact_provenance=0.95
 kgeval run --metadata model=gpt-5-mini --format json -o report.json
 ```

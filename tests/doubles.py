@@ -8,11 +8,12 @@ from typing import TypeVar
 from pydantic import BaseModel
 
 from kgeval.errors import JudgeError, VerdictError
+from kgeval.judge import Judge
 
 OutputT = TypeVar("OutputT", bound=BaseModel)
 
 
-class ScriptedJudge:
+class ScriptedJudge(Judge):
     """Approve every prompt except those containing one of the given texts; record every prompt.
 
     Approving verdicts set their flag and leave their lists empty; rejecting verdicts clear
@@ -42,7 +43,7 @@ class ScriptedJudge:
         return output_type.model_validate(answer)
 
 
-class FailingJudge:
+class FailingJudge(Judge):
     """Fail on every prompt after an optional delay, and count how many it was asked."""
 
     name = "failing"

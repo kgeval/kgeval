@@ -13,7 +13,7 @@ from typing import ClassVar, TypeVar
 from pydantic import BaseModel, ConfigDict, Field
 
 from kgeval.errors import VerdictError
-from kgeval.judges.base import Judge
+from kgeval.judge import Judge
 from kgeval.metrics.base import Finding, Metric, MetricCategory, MetricResult
 
 __all__ = ["DEFAULT_SAMPLE_SIZE", "JudgedMetric", "SampledMetric"]

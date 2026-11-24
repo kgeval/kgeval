@@ -17,7 +17,7 @@ from kgeval.graph import (
     value_type,
 )
 from kgeval.ground_truth import GroundTruth, load_ground_truth
-from kgeval.judges import CachedJudge, Judge, OpenAIJudge, create_judge
+from kgeval.judge import Judge
 from kgeval.metrics import (
     BUILTIN_METRICS,
     Competency,
@@ -71,7 +71,6 @@ __version__ = version(__name__)
 
 __all__ = [
     "BUILTIN_METRICS",
-    "CachedJudge",
     "Comparison",
     "Competency",
     "Duration",
@@ -115,7 +114,6 @@ __all__ = [
     "Neo4jSource",
     "Node",
     "NodeTypeAccuracy",
-    "OpenAIJudge",
     "Point",
     "PropertyCompleteness",
     "PropertyTypeConsistency",
@@ -140,7 +138,6 @@ __all__ = [
     "VocabularyUniqueness",
     "__version__",
     "compare",
-    "create_judge",
     "default_metrics",
     "evaluate",
     "infer_schema",

@@ -24,13 +24,15 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
     "Typing :: Typed",
 ]
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.16"
 dependencies = [
+    "litellm>=1.110.3",
     "neo4j>=5.0",
     "openai>=1.92",
     "pydantic>=2.10",
     "pyyaml>=6.0",
     "rich>=13",
+    "tenacity>=9.2",
     "typer>=0.15.4",
 ]
 
@@ -96,4 +98,8 @@ warn_required_dynamic_aliases = true
 testpaths = ["tests"]
 addopts = ["--strict-markers", "--strict-config"]
 markers = ["integration: needs a disposable Neo4j database at KGEVAL_TEST_NEO4J_URI"]
-filterwarnings = ["error"]
+filterwarnings = [
+    "error",
+    # Keep the filter LiteLLM sets on import, since pytest drops it after the importing test.
+    "ignore:.*`ReadOnly` qualifier:UserWarning",
+]

@@ -261,7 +261,7 @@ def test_example_notebook_loads_and_evaluates_the_example_graph(
     shutil.copytree(EXAMPLE_DIR, tmp_path, dirs_exist_ok=True)
     monkeypatch.chdir(tmp_path)
     judge = ScriptedJudge()
-    monkeypatch.setattr("kgeval.create_judge", lambda model, **options: judge)
+    monkeypatch.setattr("kgeval.Judge", lambda model, **options: judge)
     notebook = json.loads((tmp_path / "evaluate.ipynb").read_text(encoding="utf-8"))
     namespace: dict[str, Any] = {}
 

@@ -14,7 +14,7 @@ with GraphDatabase.driver("<uri>", auth=("<username>", "<password>")) as driver:
 metrics = kgeval.default_metrics(
     schema=kgeval.load_schema("schema.yaml"),
     ground_truth=kgeval.load_ground_truth("ground_truth.yaml"),
-    judge=kgeval.create_judge("openai:gpt-5-mini"),
+    judge=kgeval.Judge("openai/gpt-5-mini"),
 )
 report = kgeval.evaluate(graph, metrics)
 
@@ -114,13 +114,7 @@ report.passed  # False when a metric misses its threshold
 
 ## Judges
 
-::: kgeval.create_judge
-
 ::: kgeval.Judge
-
-::: kgeval.OpenAIJudge
-
-::: kgeval.CachedJudge
 
 ## Metrics
 
