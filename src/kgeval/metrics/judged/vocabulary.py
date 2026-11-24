@@ -260,8 +260,13 @@ def _counted(items: Iterable[str]) -> str:
 
 def _examples(items: Iterable[_ItemT], show: Callable[[_ItemT], str]) -> list[str]:
     """Return up to three distinct, non-empty renderings: those with the lowest SHA-256."""
-    shown = {text for item in items if (text := show(item))}
-    return sorted(shown, key=lambda text: hashlib.sha256(text.encode()).hexdigest())[:_SHOWN]
+    lowest: dict[str, str] = {}
+    for item in items:
+        if text := show(item):
+            lowest[hashlib.sha256(text.encode()).hexdigest()] = text
+            if len(lowest) > _SHOWN:
+                del lowest[max(lowest)]
+    return [lowest[digest] for digest in sorted(lowest)]
 
 
 def _types(graph: GraphView, node_id: str) -> str:

@@ -238,24 +238,19 @@ class EntityDisambiguation(SampledMetric):
             JudgeError: If the judge fails on any entity, or gives no usable verdict for
                 any.
         """
-        eligible: list[tuple[Node, str, list[str]]] = []
+        eligible: list[tuple[Node, str]] = []
         for entity in graph.entities:
             name = entity_name(graph, entity)
             if name is None:
                 continue
-            texts = chunk_texts(graph, graph.chunk_ids(entity.id), [name])
-            if len(texts) > 1:
-                eligible.append((entity, _statement(graph, entity, name), texts))
+            if len(chunk_texts(graph, graph.chunk_ids(entity.id), ())) > 1:
+                eligible.append((entity, name))
         if not eligible:
             return self.skip("no entity with a name is grounded in two chunks with text")
 
-        sample = self.sample(eligible, lambda item: item[1])
+        sample = self.sample(eligible, lambda item: _statement(graph, *item))
         verdicts = self.ask_all(
-            [
-                _DISAMBIGUATION_PROMPT.format(statement=statement, chunks=quote_chunks(texts))
-                for _, statement, texts in sample
-            ],
-            IdentityVerdict,
+            [_prompt(_DISAMBIGUATION_PROMPT, graph, *item) for item in sample], IdentityVerdict
         )
         findings = [
             Finding(
@@ -264,7 +259,7 @@ class EntityDisambiguation(SampledMetric):
                 subject=graph.describe(entity),
                 node_ids=(entity.id,),
             )
-            for (entity, _, _), verdict in zip(sample, verdicts, strict=True)
+            for (entity, _), verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.one_thing
         ]
         return self.estimate(len(eligible), len(sample), findings, verdicts.count(None))
@@ -297,23 +292,19 @@ class NodeTypeAccuracy(SampledMetric):
             JudgeError: If the judge fails on any entity, or gives no usable verdict for
                 any.
         """
-        eligible: list[tuple[Node, str, list[str]]] = []
+        eligible: list[tuple[Node, str]] = []
         for entity in graph.entities:
             name = entity_name(graph, entity)
             if name is None or not graph.layout.node_types(entity):
                 continue
-            if texts := chunk_texts(graph, graph.chunk_ids(entity.id), [name]):
-                eligible.append((entity, _statement(graph, entity, name), texts))
+            if chunk_texts(graph, graph.chunk_ids(entity.id), ()):
+                eligible.append((entity, name))
         if not eligible:
             return self.skip("no entity with a node type is grounded in a chunk with text")
 
-        sample = self.sample(eligible, lambda item: item[1])
+        sample = self.sample(eligible, lambda item: _statement(graph, *item))
         verdicts = self.ask_all(
-            [
-                _TYPE_PROMPT.format(statement=statement, chunks=quote_chunks(texts))
-                for _, statement, texts in sample
-            ],
-            TypeVerdict,
+            [_prompt(_TYPE_PROMPT, graph, *item) for item in sample], TypeVerdict
         )
         findings = [
             Finding(
@@ -322,10 +313,16 @@ class NodeTypeAccuracy(SampledMetric):
                 subject=graph.describe(entity),
                 node_ids=(entity.id,),
             )
-            for (entity, _, _), verdict in zip(sample, verdicts, strict=True)
+            for (entity, _), verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.correct
         ]
         return self.estimate(len(eligible), len(sample), findings, verdicts.count(None))
+
+
+def _prompt(template: str, graph: GraphView, entity: Node, name: str) -> str:
+    """Return a prompt that states an entity with its chunks, those with its name first."""
+    texts = chunk_texts(graph, graph.chunk_ids(entity.id), [name])
+    return template.format(statement=_statement(graph, entity, name), chunks=quote_chunks(texts))
 
 
 def _statement(graph: GraphView, entity: Node, name: str) -> str:

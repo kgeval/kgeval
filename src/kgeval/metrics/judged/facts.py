@@ -74,23 +74,14 @@ class FactAccuracy(SampledMetric):
             JudgeError: If the judge fails on any fact, or gives no usable verdict for
                 any.
         """
-        grounded: list[tuple[Relationship, str, list[str]]] = []
-        for fact in graph.facts:
-            entities = (graph.node(fact.source_id), graph.node(fact.target_id))
-            names = [name for entity in entities if (name := graph.name(entity))]
-            if texts := chunk_texts(graph, graph.fact_chunk_ids(fact), names):
-                grounded.append((fact, _statement(graph, fact), texts))
+        grounded = [
+            fact for fact in graph.facts if chunk_texts(graph, graph.fact_chunk_ids(fact), ())
+        ]
         if not grounded:
             return self.skip("no fact is grounded in a chunk with text")
 
-        sample = self.sample(grounded, lambda item: item[1])
-        verdicts = self.ask_all(
-            [
-                _PROMPT.format(statement=statement, chunks=quote_chunks(texts))
-                for _, statement, texts in sample
-            ],
-            SupportVerdict,
-        )
+        sample = self.sample(grounded, lambda fact: _statement(graph, fact))
+        verdicts = self.ask_all([_prompt(graph, fact) for fact in sample], SupportVerdict)
         findings = [
             Finding(
                 message=f"the chunks do not support {graph.describe(fact)}: {verdict.reason}",
@@ -98,10 +89,18 @@ class FactAccuracy(SampledMetric):
                 node_ids=fact.node_ids,
                 relationship_ids=(fact.id,),
             )
-            for (fact, _, _), verdict in zip(sample, verdicts, strict=True)
+            for fact, verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.supported
         ]
         return self.estimate(len(grounded), len(sample), findings, verdicts.count(None))
+
+
+def _prompt(graph: GraphView, fact: Relationship) -> str:
+    """Return the prompt that states a fact with its shared chunks, those with both names first."""
+    entities = (graph.node(fact.source_id), graph.node(fact.target_id))
+    names = [name for entity in entities if (name := graph.name(entity))]
+    texts = chunk_texts(graph, graph.fact_chunk_ids(fact), names)
+    return _PROMPT.format(statement=_statement(graph, fact), chunks=quote_chunks(texts))
 
 
 def _statement(graph: GraphView, fact: Relationship) -> str:

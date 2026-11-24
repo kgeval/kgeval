@@ -95,7 +95,7 @@ class ExtractionCompleteness(SampledMetric):
         """
         if not graph.lexical_nodes:
             return self.skip(NO_LEXICAL_NODES)
-        chunks = [(chunk, text) for chunk in graph.chunks if (text := graph.text(chunk))]
+        chunks = [chunk for chunk in graph.chunks if graph.text(chunk)]
         if not chunks:
             return self.skip("no chunk has text")
         entities: defaultdict[str, list[Node]] = defaultdict(list)
@@ -107,21 +107,21 @@ class ExtractionCompleteness(SampledMetric):
             for chunk_id in graph.fact_chunk_ids(fact):
                 facts[chunk_id].append(fact)
 
-        sample = self.sample(chunks, lambda item: item[1])
+        sample = self.sample(chunks, lambda chunk: graph.text(chunk) or "")
         verdicts = self.ask_all(
             [
                 _PROMPT.format(
-                    chunk=quote_chunks([text]),
+                    chunk=quote_chunks([graph.text(chunk) or ""]),
                     entities=_listing(graph, entities[chunk.id]),
                     facts=_listing(graph, facts[chunk.id]),
                 )
-                for chunk, text in sample
+                for chunk in sample
             ],
             CompletenessVerdict,
         )
         clusters: list[tuple[int, int]] = []
         findings: list[Finding] = []
-        for (chunk, _), verdict in zip(sample, verdicts, strict=True):
+        for chunk, verdict in zip(sample, verdicts, strict=True):
             if verdict is None:
                 continue
             missing = [item.fact for item in verdict.facts if not item.extracted]
