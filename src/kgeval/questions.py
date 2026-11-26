@@ -9,7 +9,7 @@ from typing import NamedTuple
 
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
-from kgeval._yaml import load_yaml
+from kgeval._files import load_yaml
 from kgeval.graph.view import GraphView
 from kgeval.reference import Name, NamedFact, Reference
 

@@ -7,7 +7,7 @@ from typing import Any
 import pytest
 from pydantic import TypeAdapter
 
-from kgeval._yaml import load_json, load_yaml
+from kgeval._files import load_json, load_yaml
 
 
 @pytest.mark.parametrize("load", [load_yaml, load_json])

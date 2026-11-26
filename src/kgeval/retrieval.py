@@ -12,7 +12,7 @@ from neo4j.graph import Node, Relationship
 from neo4j.graph import Path as GraphPath
 from pydantic import TypeAdapter
 
-from kgeval._yaml import load_yaml
+from kgeval._files import load_yaml
 from kgeval.errors import InputError
 from kgeval.questions import QuestionSet
 

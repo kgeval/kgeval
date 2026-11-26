@@ -19,7 +19,7 @@ from pydantic import TypeAdapter
 from rich.console import Console
 from rich.markdown import Markdown
 
-from kgeval._yaml import load_json, load_yaml
+from kgeval._files import load_json, load_yaml
 from kgeval.errors import KgevalError, SourceError
 from kgeval.evaluation import evaluate
 from kgeval.graph import Graph, GraphView, Layout, load_graph

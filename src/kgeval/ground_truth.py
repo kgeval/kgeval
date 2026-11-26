@@ -8,7 +8,7 @@ from typing import Annotated, TypeAlias
 
 from pydantic import Field, TypeAdapter, model_validator
 
-from kgeval._yaml import load_yaml
+from kgeval._files import load_yaml
 from kgeval.reference import NamedFact, Reference
 
 __all__ = ["DocumentSelector", "GroundTruth", "load_ground_truth"]

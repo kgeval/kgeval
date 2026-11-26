@@ -8,7 +8,7 @@ from typing import Annotated, Any
 
 from pydantic import Field, TypeAdapter, ValidationError
 
-from kgeval._yaml import load_yaml
+from kgeval._files import load_yaml
 from kgeval.errors import InputError
 from kgeval.metrics.base import Metric
 from kgeval.metrics.intrinsic import (

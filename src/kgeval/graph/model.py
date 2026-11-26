@@ -22,7 +22,7 @@ from pydantic import (
     model_validator,
 )
 
-from kgeval._yaml import load_json
+from kgeval._files import load_json
 
 __all__ = [
     "SNAPSHOT_FORMAT",

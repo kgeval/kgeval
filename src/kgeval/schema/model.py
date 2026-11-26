@@ -9,7 +9,7 @@ from typing import Literal
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_serializer, model_validator
 
-from kgeval._yaml import load_yaml
+from kgeval._files import load_yaml
 from kgeval.graph.model import PropertyTypeName, content_digest
 
 __all__ = [
