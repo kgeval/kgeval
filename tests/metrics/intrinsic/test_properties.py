@@ -45,7 +45,7 @@ def test_fact_properties_are_grouped_by_relationship_type() -> None:
     )
 
     [finding] = result.findings
-    assert (finding.node_ids, finding.relationship_ids) == ((), ("r2",))
+    assert (finding.node_ids, finding.relationship_ids) == (("a", "b"), ("r2",))
     assert finding.message == (
         '"Ada" -[:WORKS_AT]-> "Bob": property since is STRING, '
         "while other WORKS_AT facts hold INTEGER"

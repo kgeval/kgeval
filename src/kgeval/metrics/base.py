@@ -110,15 +110,21 @@ class Finding(BaseModel):
             subject: The unit at fault, named by content; the message when omitted.
 
         Returns:
-            The finding, with each element's ID among its node or relationship IDs, in
-            the order given.
+            The finding, with the IDs of the given nodes and of the given relationships'
+            sources and targets among its node IDs, and the IDs of the given
+            relationships among its relationship IDs, each once, in the order given.
         """
         # Check for one element first, since models iterate over their fields.
         listed = [elements] if isinstance(elements, Node | Relationship) else list(elements)
+        node_ids = (
+            node_id
+            for element in listed
+            for node_id in ((element.id,) if isinstance(element, Node) else element.node_ids)
+        )
         return cls(
             message=message,
             subject=message if subject is None else subject,
-            node_ids=tuple(element.id for element in listed if isinstance(element, Node)),
+            node_ids=tuple(dict.fromkeys(node_ids)),
             relationship_ids=tuple(
                 element.id for element in listed if isinstance(element, Relationship)
             ),

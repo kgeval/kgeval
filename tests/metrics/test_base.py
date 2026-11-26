@@ -9,7 +9,7 @@ from kgeval.errors import InputError
 from kgeval.graph.view import GraphView
 from kgeval.metrics.base import Finding, Inputs, Metric, MetricCategory, MetricResult
 from tests.doubles import ScriptedModel
-from tests.factories import view
+from tests.factories import node, relationship, view
 
 
 class Fixed(Metric):
@@ -104,6 +104,14 @@ def test_result_has_a_score_exactly_when_something_was_evaluated() -> None:
 def test_findings_are_about_their_message_unless_given_a_subject() -> None:
     assert Finding(message="Ada is unnamed").subject == "Ada is unnamed"
     assert Finding(message="Ada is unnamed", subject="Ada").subject == "Ada"
+
+
+def test_findings_about_relationships_also_list_their_sources_and_targets_once() -> None:
+    works_at = relationship("works_at", "ada", "WORKS_AT", "acme")
+
+    finding = Finding.about([works_at, node("ada")], "Ada works at Acme without a start date")
+
+    assert (finding.node_ids, finding.relationship_ids) == (("ada", "acme"), ("works_at",))
 
 
 def test_a_metric_needs_its_inputs() -> None:

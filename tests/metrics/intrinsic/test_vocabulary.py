@@ -15,7 +15,11 @@ def test_vocabulary_uniqueness_reports_spelling_variants_of_each_kind_of_term() 
         (finding.message, finding.node_ids, finding.relationship_ids) for finding in result.findings
     ] == [
         ("PERSON spells the node type Person differently", ("he",), ()),
-        ("Founded spells the relationship type FOUNDED differently", (), ("he_founded",)),
+        (
+            "Founded spells the relationship type FOUNDED differently",
+            ("he", "pap"),
+            ("he_founded",),
+        ),
     ]
 
 
