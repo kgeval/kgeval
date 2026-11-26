@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -10,7 +11,7 @@ from pydantic import TypeAdapter, ValidationError
 
 from kgeval.errors import InputError
 
-__all__ = ["load_yaml"]
+__all__ = ["load_json", "load_yaml"]
 
 _T = TypeVar("_T")
 
@@ -31,7 +32,7 @@ def load_yaml(path: str | Path, adapter: TypeAdapter[_T]) -> _T:
     """Read a YAML file, which may also be JSON, and validate its content.
 
     Args:
-        path: The file to read.
+        path: The file to read, in UTF-8, or in UTF-16 with a byte order mark.
         adapter: Validates the parsed content.
 
     Returns:
@@ -41,7 +42,28 @@ def load_yaml(path: str | Path, adapter: TypeAdapter[_T]) -> _T:
         InputError: If the file cannot be read, parsed, or validated.
     """
     try:
-        content = yaml.load(Path(path).read_text(encoding="utf-8"), Loader=_Loader)
+        content = yaml.load(Path(path).read_bytes(), Loader=_Loader)
         return adapter.validate_python(content)
     except (OSError, yaml.YAMLError, ValidationError) as error:
+        raise InputError(f"invalid file {path}: {error}") from error
+
+
+def load_json(path: str | Path, adapter: TypeAdapter[_T]) -> _T:
+    """Read a JSON file in any encoding that JSON allows, and validate its content.
+
+    Args:
+        path: The file to read, in UTF-8, UTF-16, or UTF-32.
+        adapter: Validates the parsed content.
+
+    Returns:
+        The validated content.
+
+    Raises:
+        InputError: If the file cannot be read, decoded, parsed, or validated.
+    """
+    try:
+        data = Path(path).read_bytes()
+        # Detect the encoding, since redirecting output in Windows PowerShell writes UTF-16.
+        return adapter.validate_json(data.decode(json.detect_encoding(data)))
+    except (OSError, UnicodeDecodeError, ValidationError) as error:
         raise InputError(f"invalid file {path}: {error}") from error

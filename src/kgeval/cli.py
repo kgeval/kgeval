@@ -15,12 +15,12 @@ from typing import Annotated, Any, NoReturn
 import typer
 from neo4j import Driver, GraphDatabase
 from neo4j.exceptions import DriverError
-from pydantic import TypeAdapter, ValidationError
+from pydantic import TypeAdapter
 from rich.console import Console
 from rich.markdown import Markdown
 
-from kgeval._yaml import load_yaml
-from kgeval.errors import InputError, KgevalError, SourceError
+from kgeval._yaml import load_json, load_yaml
+from kgeval.errors import KgevalError, SourceError
 from kgeval.evaluation import evaluate
 from kgeval.graph import Graph, GraphView, Layout, load_graph
 from kgeval.ground_truth import load_ground_truth
@@ -573,10 +573,7 @@ def _select(
 
 
 def _load_report(path: Path) -> Report:
-    try:
-        return Report.model_validate_json(path.read_text(encoding="utf-8"))
-    except (OSError, ValidationError) as error:
-        raise InputError(f"invalid report {path}: {error}") from error
+    return load_json(path, TypeAdapter(Report))
 
 
 def _load_layout(path: Path | None) -> Layout | None:

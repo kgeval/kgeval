@@ -16,13 +16,13 @@ from pydantic import (
     ConfigDict,
     Field,
     SerializerFunctionWrapHandler,
-    ValidationError,
+    TypeAdapter,
     WrapSerializer,
     field_validator,
     model_validator,
 )
 
-from kgeval.errors import InputError
+from kgeval._yaml import load_json
 
 __all__ = [
     "SNAPSHOT_FORMAT",
@@ -360,9 +360,6 @@ def load_graph(path: str | Path) -> Graph:
     Raises:
         InputError: If the file cannot be read or holds no valid snapshot.
     """
-    try:
-        graph = Graph.model_validate_json(Path(path).read_bytes())
-    except (OSError, ValidationError) as error:
-        raise InputError(f"invalid file {path}: {error}") from error
+    graph = load_json(path, TypeAdapter(Graph))
     logger.info("Loaded %d nodes and %d relationships", len(graph.nodes), len(graph.relationships))
     return graph

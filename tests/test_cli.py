@@ -367,4 +367,4 @@ def test_compare_reports_invalid_reports(runner: CliRunner, tmp_path: Path) -> N
     result = runner.invoke(cli.app, ["compare", str(path), str(path)])
 
     assert result.exit_code == 2
-    assert result.stderr.startswith(f"Error: invalid report {path}: ")
+    assert result.stderr.startswith(f"Error: invalid file {path}: ")
