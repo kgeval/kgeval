@@ -7,7 +7,16 @@ import json
 from datetime import date, datetime, time
 from typing import Annotated, Literal, TypeAlias, TypeVar
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    BeforeValidator,
+    ConfigDict,
+    Field,
+    SerializerFunctionWrapHandler,
+    WrapSerializer,
+    field_validator,
+    model_validator,
+)
 
 __all__ = [
     "Duration",
@@ -46,7 +55,34 @@ class Point(BaseModel):
     coordinates: tuple[float, ...]
 
 
-Scalar: TypeAlias = str | bool | int | float | datetime | date | time | Duration | Point
+# Check datetime before date, since a datetime is a date.
+_TEMPORAL_TYPES: dict[str, type[date | time]] = {"datetime": datetime, "date": date, "time": time}
+
+
+def _tag(value: date | time) -> dict[str, str]:
+    """Return a temporal value as ``{type name: ISO format}``, which JSON keeps apart from text."""
+    kind = next(name for name, type_ in _TEMPORAL_TYPES.items() if isinstance(value, type_))
+    return {kind: value.isoformat()}
+
+
+def _serialize_scalar(value: object, handler: SerializerFunctionWrapHandler) -> object:
+    return _tag(value) if isinstance(value, date | time) else handler(value)
+
+
+def _untag(data: object) -> object:
+    if isinstance(data, dict) and len(data) == 1:
+        [(kind, text)] = data.items()
+        if kind in _TEMPORAL_TYPES and isinstance(text, str):
+            return _TEMPORAL_TYPES[kind].fromisoformat(text)
+    return data
+
+
+Scalar: TypeAlias = Annotated[
+    str | bool | int | float | datetime | date | time | Duration | Point,
+    # Tag temporal values in JSON, so that loading it back does not read them as strings.
+    WrapSerializer(_serialize_scalar, when_used="json"),
+    BeforeValidator(_untag),
+]
 """A single property value of any type Neo4j stores, except vectors and byte arrays."""
 
 PropertyValue: TypeAlias = Scalar | list[Scalar]
@@ -117,7 +153,8 @@ def property_types(element: Node | Relationship) -> dict[str, PropertyTypeName]:
 def canonical_json(value: object) -> str:
     """Encode a value as compact, key-sorted JSON that keeps non-JSON types distinct.
 
-    Values JSON cannot represent are encoded as ``{type name: repr}`` objects. Property
+    Values JSON cannot represent are encoded as ``{type name: text}`` objects, where the
+    text is the ISO format of a temporal value and the repr of any other. Property
     values are never maps, so these objects cannot collide with real values.
 
     Args:
@@ -131,7 +168,10 @@ def canonical_json(value: object) -> str:
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
-        default=lambda other: {type(other).__name__: repr(other)},
+        # Encode temporal values by content, since the repr of a time zone varies by its class.
+        default=lambda other: (
+            _tag(other) if isinstance(other, date | time) else {type(other).__name__: repr(other)}
+        ),
     )
 
 

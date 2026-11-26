@@ -115,6 +115,28 @@ def test_fingerprint_distinguishes_values_that_print_alike() -> None:
 
 
 def test_canonical_json_sorts_keys_and_tags_non_json_types() -> None:
-    assert canonical_json({"b": 1, "a": date(2020, 1, 2)}) == (
-        '{"a":{"date":"datetime.date(2020, 1, 2)"},"b":1}'
-    )
+    assert canonical_json({"b": 1, "a": date(2020, 1, 2)}) == '{"a":{"date":"2020-01-02"},"b":1}'
+
+
+def test_graphs_keep_every_property_type_and_their_fingerprint_through_json() -> None:
+    values: list[PropertyValue] = [
+        True,
+        1,
+        1.0,
+        "2020-01-02",
+        date(2020, 1, 2),
+        datetime(2020, 1, 2, 3, 4),
+        datetime(2020, 1, 2, 3, 4, 5, 6, tzinfo=UTC),
+        time(3, 4),
+        time(3, 4, tzinfo=UTC),
+        Duration(months=1),
+        Point(srid=4326, coordinates=(1.0, 2.0)),
+        [date(2020, 1, 2), date(2021, 1, 2)],
+    ]
+    properties = {f"p{index}": value for index, value in enumerate(values)}
+    original = graph(Node(id="a", properties=properties))
+
+    loaded = Graph.model_validate_json(original.model_dump_json())
+
+    assert loaded == original
+    assert loaded.fingerprint() == original.fingerprint()
