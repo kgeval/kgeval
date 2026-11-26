@@ -22,14 +22,14 @@ given.
 
 ### Graph
 
-| Option          | Default                  | Description                                                                                      |
-| --------------- | ------------------------ | ------------------------------------------------------------------------------------------------ |
-| `--uri`         | `neo4j://localhost:7687` | The connection URI. Reads `NEO4J_URI`.                                                           |
-| `--username`    | `neo4j`                  | The user. Reads `NEO4J_USERNAME`.                                                                |
-| `--password`    | None                     | The password. Reads `NEO4J_PASSWORD`. Without one, kgeval connects without authentication.       |
-| `--database`    | The server's default     | The database to read. Reads `NEO4J_DATABASE`.                                                    |
-| `--graph FILE`  | None                     | A [snapshot](../guide/configuration.md#snapshots) to read instead of Neo4j.                      |
-| `--layout FILE` | Detected                 | A [layout file](../guide/configuration.md#custom-layout) whose fields replace the detected ones. |
+| Option          | Default                  | Description                                                                                                  |
+| --------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `--uri`         | `neo4j://localhost:7687` | The connection URI. Reads `NEO4J_URI`.                                                                       |
+| `--username`    | `neo4j`                  | The user. Reads `NEO4J_USERNAME`.                                                                            |
+| `--password`    | None                     | The password. Reads `NEO4J_PASSWORD`. Without one, kgeval connects without authentication.                   |
+| `--database`    | The server's default     | The database to read. Reads `NEO4J_DATABASE`.                                                                |
+| `--graph FILE`  | None                     | A [snapshot](../guide/configuration.md#snapshots) to read instead of Neo4j, ignoring the connection options. |
+| `--layout FILE` | Detected                 | A [layout file](../guide/configuration.md#custom-layout) whose fields replace the detected ones.             |
 
 Without `--graph`, kgeval connects to Neo4j. In a terminal, it prompts for the URI,
 user, and password when they are unset, and offers the defaults. Elsewhere, such as in

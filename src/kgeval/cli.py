@@ -127,7 +127,7 @@ GraphFile = Annotated[
     Path | None,
     typer.Option(
         "--graph",
-        help="Graph snapshot (JSON) to read instead of Neo4j.",
+        help="Graph snapshot (JSON) to read instead of Neo4j, ignoring the connection options.",
         exists=True,
         dir_okay=False,
         rich_help_panel=_GRAPH,
