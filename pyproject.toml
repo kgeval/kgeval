@@ -25,7 +25,7 @@ classifiers = [
     "Topic :: Software Development :: Quality Assurance",
     "Typing :: Typed",
 ]
-requires-python = ">=3.11,<3.16"
+requires-python = ">=3.11"
 dependencies = [
     "litellm>=1.110.3",
     "neo4j>=5.0",
@@ -59,6 +59,10 @@ docs = [
     "mkdocs-material (>=9.8.2,<10.0.0)",
     "mkdocstrings[python] (>=1.0.8,<2.0.0)",
 ]
+
+# Cap Python only for locking, which LiteLLM's own cap requires, so the metadata stays uncapped.
+[tool.poetry.dependencies]
+python = ">=3.11,<3.16"
 
 [tool.poetry.group.docs]
 optional = true
