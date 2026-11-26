@@ -38,3 +38,6 @@ def test_reports_in_a_newer_format_are_rejected_with_the_reason() -> None:
 
     with pytest.raises(ValidationError, match="which needs a newer kgeval"):
         Report.model_validate(data)
+    data["report_format"] = str(REPORT_FORMAT + 1)
+    with pytest.raises(ValidationError, match="valid integer"):
+        Report.model_validate(data)

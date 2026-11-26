@@ -103,7 +103,7 @@ class Report(BaseModel):
 
     model_config = ConfigDict(frozen=True)
 
-    report_format: int = Field(default=1, ge=1)
+    report_format: int = Field(default=1, ge=1, strict=True)
     kgeval_version: str
     graph_fingerprint: str
     layout: Layout
