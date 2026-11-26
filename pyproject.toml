@@ -30,11 +30,11 @@ dependencies = [
     "litellm>=1.110.3",
     "neo4j>=5.0",
     "openai>=1.92",
-    "pydantic>=2.10",
+    "pydantic>=2.12",
     "pyyaml>=6.0",
     "rich>=13",
     "tenacity>=9.2",
-    "typer>=0.15.4",
+    "typer>=0.26",
 ]
 
 [project.scripts]
