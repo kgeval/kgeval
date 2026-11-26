@@ -204,7 +204,7 @@ class EntityResolution(SampledMetric):
                     Finding.about(
                         [entity, *duplicates],
                         f"{graph.describe(entity)} duplicates {others}: {verdict.reason}",
-                        subject=graph.describe(entity),
+                        subject=graph.subject(entity),
                     )
                 )
         return self.estimate(inputs, len(named), len(sample), findings, verdicts.count(None))
@@ -262,7 +262,7 @@ class EntityDisambiguation(SampledMetric):
             Finding.about(
                 entity,
                 f"{graph.describe(entity)} stands for more than one thing: {verdict.reason}",
-                subject=graph.describe(entity),
+                subject=graph.subject(entity),
             )
             for (entity, _), verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.one_thing
@@ -320,7 +320,7 @@ class NodeTypeAccuracy(SampledMetric):
                 entity,
                 f"the chunks do not support the node types of {graph.describe(entity)}: "
                 + verdict.reason,
-                subject=graph.describe(entity),
+                subject=graph.subject(entity),
             )
             for (entity, _), verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.correct

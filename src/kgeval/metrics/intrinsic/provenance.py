@@ -45,7 +45,7 @@ class EntityProvenance(Metric):
             Finding.about(
                 entity,
                 f"{graph.describe(entity)} is grounded in no chunk",
-                subject=graph.describe(entity),
+                subject=graph.subject(entity),
             )
             for entity in graph.entities
             if not graph.chunk_ids(entity.id)
@@ -82,7 +82,7 @@ class FactProvenance(Metric):
             Finding.about(
                 fact,
                 f"no chunk grounds both entities of {graph.describe(fact)}",
-                subject=graph.describe(fact),
+                subject=graph.subject(fact),
             )
             for fact in graph.facts
             if not graph.fact_chunk_ids(fact)
@@ -123,7 +123,7 @@ class ExtractionCoverage(Metric):
             Finding.about(
                 chunk,
                 f"no entity was extracted from {graph.describe(chunk)}",
-                subject=graph.describe(chunk),
+                subject=graph.subject(chunk),
             )
             for chunk in graph.chunks
             if chunk.id not in grounding

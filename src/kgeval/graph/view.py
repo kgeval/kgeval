@@ -73,8 +73,8 @@ class GraphView:
         self.expired_facts = tuple(expired_facts)
         self.provenance = tuple(provenance)
         self._chunk_ids = {key: frozenset(ids) for key, ids in chunk_ids.items()}
-        # Remember node descriptions, since findings and fact descriptions repeat them.
-        self._descriptions: dict[str, str] = {}
+        # Remember node references, since findings and the references of facts repeat them.
+        self._references: dict[tuple[str, int | None], str] = {}
         grounding = {chunk_id for ids in chunk_ids.values() for chunk_id in ids}
         examples = grounding or {node.id for node in self.lexical_nodes if self.text(node)}
         chunk_labels = self.layout.lexical_labels.intersection(
@@ -228,17 +228,35 @@ class GraphView:
             target nodes, each described as a node, joined by its relationship type in
             Cypher arrow notation.
         """
+        return self._reference(element, _PREVIEW_LENGTH)
+
+    def subject(self, element: Node | Relationship) -> str:
+        """Return a reference that names a node or relationship by its full content.
+
+        It reads as ``describe`` does, but never shortens a name or text, so that the
+        findings about different elements have different subjects, which ``compare``
+        matches findings by.
+
+        Args:
+            element: The node or relationship to name.
+
+        Returns:
+            The reference.
+        """
+        return self._reference(element, None)
+
+    def _reference(self, element: Node | Relationship, length: int | None) -> str:
         if isinstance(element, Relationship):
-            source = self.describe(self.node(element.source_id))
-            target = self.describe(self.node(element.target_id))
+            source = self._reference(self.node(element.source_id), length)
+            target = self._reference(self.node(element.target_id), length)
             return f"{source} -[:{self.relationship_type(element)}]-> {target}"
-        if (description := self._descriptions.get(element.id)) is None:
+        if (reference := self._references.get((element.id, length))) is None:
             content = self.name(element) or self.text(element)
-            reference = _quote(content) if content else "unnamed"
+            quoted = _quote(content, length) if content else "unnamed"
             labels = ":".join(self.layout.node_types(element))
-            description = f"{reference} ({labels})" if labels else reference
-            self._descriptions[element.id] = description
-        return description
+            reference = f"{quoted} ({labels})" if labels else quoted
+            self._references[(element.id, length)] = reference
+        return reference
 
     def _with_role(self, role: Role) -> tuple[Node, ...]:
         return tuple(node for node in self.graph.nodes if self._roles[node.id] is role)
@@ -252,8 +270,8 @@ def _first_text(element: Node | Relationship, keys: tuple[str, ...]) -> str | No
     return None
 
 
-def _quote(text: str) -> str:
+def _quote(text: str, length: int | None) -> str:
     flat = " ".join(text.split())
-    if len(flat) > _PREVIEW_LENGTH:
-        flat = flat[: _PREVIEW_LENGTH - 1] + "…"
+    if length is not None and len(flat) > length:
+        flat = flat[: length - 1] + "…"
     return f'"{flat}"'

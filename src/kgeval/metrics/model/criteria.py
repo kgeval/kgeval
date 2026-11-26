@@ -285,7 +285,8 @@ def _chunk_texts(graph: GraphView, unit: Node | Relationship) -> list[str]:
 
 def _finding(graph: GraphView, unit: Node | Relationship, reason: str) -> Finding:
     """Return the finding about an entity or fact that does not meet the criterion."""
-    described = graph.describe(unit)
     return Finding.about(
-        unit, f"{described} does not meet the criterion: {reason}", subject=described
+        unit,
+        f"{graph.describe(unit)} does not meet the criterion: {reason}",
+        subject=graph.subject(unit),
     )

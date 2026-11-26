@@ -46,7 +46,7 @@ class FactUniqueness(Metric):
             Finding.about(
                 group,
                 f"{len(group)} facts repeat {graph.describe(group[0])}",
-                subject=graph.describe(group[0]),
+                subject=graph.subject(group[0]),
             )
             for group in duplicates
         ]

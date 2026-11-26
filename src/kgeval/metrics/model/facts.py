@@ -94,7 +94,7 @@ class FactAccuracy(SampledMetric):
             Finding.about(
                 fact,
                 f"the chunks do not support {graph.describe(fact)}: {verdict.reason}",
-                subject=graph.describe(fact),
+                subject=graph.subject(fact),
             )
             for fact, verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.supported

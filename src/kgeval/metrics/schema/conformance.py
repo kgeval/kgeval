@@ -281,8 +281,11 @@ def _findings(
         reasons = list(dict.fromkeys(problems.get(element.id, ())))
         if not reasons:
             continue
-        description = graph.describe(element)
         findings.append(
-            Finding.about(element, f"{description}: {'; '.join(reasons)}", subject=description)
+            Finding.about(
+                element,
+                f"{graph.describe(element)}: {'; '.join(reasons)}",
+                subject=graph.subject(element),
+            )
         )
     return findings

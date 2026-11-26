@@ -103,7 +103,7 @@ class BirthplaceCompleteness(kgeval.Metric):
             kgeval.Finding.about(
                 person,
                 f"{graph.describe(person)} has no birthplace",
-                subject=graph.describe(person),
+                subject=graph.subject(person),
             )
             for person in people
             if person.id not in born
@@ -122,9 +122,10 @@ report = kgeval.evaluate(graph, [BirthplaceCompleteness(threshold=0.9)])
 - `result` scores the share of units that pass, and records the metric as skipped when
   it evaluated none.
 
-Give each finding a subject that names the unit at fault by content, as `graph.describe`
-does. `compare` matches findings by subject, so a defect keeps its subject when a rebuild
-assigns new element IDs.
+Give each finding a subject that names the unit at fault by its full content, as
+`graph.subject` does, while `graph.describe` shortens long names for messages. `compare`
+matches findings by subject, so a defect keeps its subject when a rebuild assigns new
+element IDs.
 
 ## Add parameters and inputs
 

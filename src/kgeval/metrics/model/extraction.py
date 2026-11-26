@@ -135,7 +135,7 @@ class ExtractionCompleteness(SampledMetric):
                         chunk,
                         f"{graph.describe(chunk)} states facts the graph lacks: "
                         + " ".join(_sentence(fact) for fact in missing),
-                        subject=graph.describe(chunk),
+                        subject=graph.subject(chunk),
                     )
                 )
         return self.estimate_clusters(inputs, len(chunks), clusters, findings, verdicts.count(None))

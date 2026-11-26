@@ -54,7 +54,7 @@ class PropertyTypeConsistency(Metric):
                     element,
                     f"{graph.describe(element)}: property {key} is {type_name}, "
                     f"while other {group} hold {intended}",
-                    subject=f"{graph.describe(element)}: property {key}",
+                    subject=f"{graph.subject(element)}: property {key}",
                 )
                 for type_name, elements in sorted(by_type.items())
                 if type_name != intended
@@ -131,7 +131,7 @@ class EmbeddingConsistency(Metric):
                         Finding.about(
                             member,
                             f"{graph.describe(member)}: {problem}",
-                            subject=f"{graph.describe(member)}: embedding {key}",
+                            subject=f"{graph.subject(member)}: embedding {key}",
                         )
                     )
         if not evaluated:

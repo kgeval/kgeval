@@ -105,7 +105,7 @@ class EntityConnectivity(Metric):
             Finding.about(
                 entity,
                 f"{graph.describe(entity)} is in no fact with another entity",
-                subject=graph.describe(entity),
+                subject=graph.subject(entity),
             )
             for entity in graph.entities
             if entity.id not in connected
@@ -144,7 +144,7 @@ class EntityNaming(Metric):
         keys = ", ".join(graph.layout.name_keys)
         findings = [
             Finding.about(
-                entity, f"{graph.describe(entity)} {problem}", subject=graph.describe(entity)
+                entity, f"{graph.describe(entity)} {problem}", subject=graph.subject(entity)
             )
             for entity in graph.entities
             if (problem := _naming_problem(graph.name(entity), keys)) is not None

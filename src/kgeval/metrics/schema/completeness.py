@@ -133,7 +133,7 @@ class PropertyCompleteness(SchemaMetric):
             Finding.about(
                 element,
                 f"{graph.describe(element)}: declared property {name} is missing",
-                subject=f"{graph.describe(element)}: property {name}",
+                subject=f"{graph.subject(element)}: property {name}",
             )
             for element, names in units
             for name in names

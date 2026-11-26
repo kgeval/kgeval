@@ -10,6 +10,7 @@ from kgeval.metrics import (
     EntityConnectivity,
     EntityNaming,
     EntityUniqueness,
+    ExtractionCoverage,
     FactAccuracy,
     FactProvenance,
     FactRecall,
@@ -23,7 +24,7 @@ from kgeval.report.comparison import MetricChange, Trend, compare
 from kgeval.report.model import Report
 from kgeval.schema import load_schema
 from tests.doubles import ScriptedModel
-from tests.factories import EXAMPLE_DIR, example_graph, graph, node
+from tests.factories import EXAMPLE_DIR, example_graph, graph, node, relationship
 
 
 def deterministic_report(original: Graph) -> Report:
@@ -185,6 +186,25 @@ def test_findings_pair_up_by_subject_when_their_details_change() -> None:
     # Keep one finding about 'ada', though its message now counts three entities.
     assert (change.new_findings, change.resolved_findings) == ((), ())
     assert change.regressed
+
+
+def test_findings_about_units_whose_descriptions_shorten_alike_stay_apart() -> None:
+    heading = "Annual report of the Ministry of Trade and Industry, chapter"
+
+    def report(grounded: str) -> Report:
+        return evaluate(
+            graph(
+                node("one", "Chunk", text=f"{heading} one: exports grew."),
+                node("two", "Chunk", text=f"{heading} two: imports fell."),
+                node("entity", "__Entity__", name="Singapore"),
+                relationship("mention", grounded, "HAS_ENTITY", "entity"),
+            ),
+            [ExtractionCoverage()],
+        )
+
+    [change] = compare(report("two"), report("one")).changes
+
+    assert (len(change.new_findings), len(change.resolved_findings)) == (1, 1)
 
 
 def test_a_lower_score_from_a_smaller_population_alone_does_not_regress() -> None:
