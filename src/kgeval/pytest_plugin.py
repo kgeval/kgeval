@@ -101,10 +101,14 @@ def _merge(reports: Sequence[Report]) -> Report:
         raise InputError("a report covers one graph, but the tests evaluated several")
     results: dict[str, MetricResult] = {}
     for result in (result for report in reports for result in report.results):
-        if results.setdefault(result.metric, result).signature != result.signature:
+        kept = results.setdefault(result.metric, result)
+        if kept.signature != result.signature:
             raise InputError(
                 "a report has one result per metric, but the tests checked "
                 f"{result.metric} with different parameters"
             )
+        # Keep the strictest threshold, so the report fails whenever a test of the metric did.
+        if (result.threshold or 0) > (kept.threshold or 0):
+            results[result.metric] = result
     # Sort by metric, since pytest-xdist workers finish tests in any order.
     return first.model_copy(update={"results": tuple(results[name] for name in sorted(results))})

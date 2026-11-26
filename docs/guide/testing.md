@@ -111,5 +111,6 @@ kgeval compare base.json head.json
 
 A report covers one graph and has one result per metric, so every call must evaluate the
 same graph, and a metric checked in several tests must have the same parameters in each.
-Otherwise, pytest saves no report and fails. To read the comparison, see
+Otherwise, pytest saves no report and fails. When several tests check a metric with
+different thresholds, the report keeps the highest. To read the comparison, see
 [Comparing builds](comparing.md).

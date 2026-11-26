@@ -12,7 +12,7 @@ from tests.factories import example_graph
 pytest_plugins = ["pytester"]
 
 
-def test_the_report_lists_each_checked_metric_once_in_name_order(
+def test_the_report_lists_each_metric_once_in_name_order_at_its_strictest_threshold(
     pytester: pytest.Pytester,
 ) -> None:
     pytester.makepyfile(
@@ -20,14 +20,14 @@ def test_the_report_lists_each_checked_metric_once_in_name_order(
         import kgeval
         from tests.factories import example_graph
 
-        def test_uniqueness():
-            kgeval.assert_passes(example_graph(), [kgeval.EntityUniqueness(threshold=0.95)])
+        def test_uniqueness_leniently():
+            kgeval.assert_passes(example_graph(), [kgeval.EntityUniqueness(threshold=0.5)])
 
         def test_naming():
             kgeval.assert_passes(example_graph(), [kgeval.EntityNaming(threshold=0.8)])
 
-        def test_uniqueness_leniently():
-            kgeval.assert_passes(example_graph(), [kgeval.EntityUniqueness(threshold=0.5)])
+        def test_uniqueness():
+            kgeval.assert_passes(example_graph(), [kgeval.EntityUniqueness(threshold=0.95)])
         """
     )
 
@@ -37,6 +37,8 @@ def test_the_report_lists_each_checked_metric_once_in_name_order(
     result.stdout.fnmatch_lines(["*kgeval report written to *scores.json*"])
     report = Report.model_validate_json((pytester.path / "scores.json").read_text("utf-8"))
     assert [result.metric for result in report.results] == ["entity_naming", "entity_uniqueness"]
+    assert report["entity_uniqueness"].threshold == 0.95
+    assert not report.passed
 
 
 def test_pytest_fails_without_a_report_when_tests_evaluate_different_graphs(
