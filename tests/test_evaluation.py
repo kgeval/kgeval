@@ -107,10 +107,11 @@ def test_a_failing_metric_is_reported_as_skipped_and_the_others_still_run() -> N
         example_graph(), [FactAccuracy(threshold=0.9), EntityNaming()], model=FailingModel()
     )
 
-    assert report["fact_accuracy"].skip_reason == "failed: model unavailable"
+    reason = "failed: model unavailable: the server is down"
+    assert report["fact_accuracy"].skip_reason == reason
     assert report["entity_naming"].failed == 2
     assert report.passed is False
-    assert "**FAIL**, skipped: failed: model unavailable" in report.to_markdown()
+    assert f"**FAIL**, skipped: {reason}" in report.to_markdown()
 
 
 def test_each_metric_runs_once_per_evaluation() -> None:
@@ -138,6 +139,6 @@ def test_assert_passes_names_each_missed_threshold_on_the_first_line() -> None:
     headline, _, report = str(raised.value).partition("\n\n")
     assert headline == (
         "entity_uniqueness scored 90.0%, below its threshold of 95.0%; "
-        "fact_accuracy was skipped: failed: model unavailable"
+        "fact_accuracy was skipped: failed: model unavailable: the server is down"
     )
     assert report.startswith("# kgeval report")

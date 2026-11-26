@@ -110,8 +110,8 @@ def test_a_prompt_without_a_usable_verdict_is_retried_once_then_left_undecided()
     assert undecided.findings == ()
 
 
-def test_no_usable_verdict_for_any_prompt_fails_the_metric() -> None:
-    with pytest.raises(VerdictError, match="no usable verdict for any prompt"):
+def test_no_usable_verdict_for_any_prompt_fails_the_metric_and_names_the_cause() -> None:
+    with pytest.raises(VerdictError, match="for any prompt, such as: unparsable verdict"):
         EntityApproval().evaluate(example_view(), Inputs(model=UnusableModel("")))
 
 

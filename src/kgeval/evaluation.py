@@ -100,7 +100,8 @@ def evaluate(
             results.append(metric.evaluate(view, inputs))
         except KgevalError as error:
             logger.warning("Skipped %s: %s", metric.name, error)
-            results.append(metric.skip(inputs, f"failed: {error}"))
+            # Flatten the reason, since assert_passes names every miss on its first line.
+            results.append(metric.skip(inputs, "failed: " + " ".join(str(error).split())))
     return Report(
         report_format=REPORT_FORMAT,
         kgeval_version=version("kgeval"),

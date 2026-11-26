@@ -44,7 +44,7 @@ class ScriptedModel(Model):
 
 
 class FailingModel(Model):
-    """Fail on every prompt after an optional delay, and count how many it was asked."""
+    """Fail on every prompt with a two-line error after an optional delay; count the prompts."""
 
     name = "failing"
 
@@ -57,7 +57,7 @@ class FailingModel(Model):
         with self._lock:
             self.calls += 1
         time.sleep(self.delay)
-        raise ModelError("model unavailable")
+        raise ModelError("model unavailable:\n  the server is down")
 
 
 class UnusableModel(ScriptedModel):

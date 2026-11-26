@@ -81,13 +81,17 @@ class ModelMetric(Metric):
         model = self.require(inputs.model, "model")
         pool = ThreadPoolExecutor(max_workers=self.concurrency)
         try:
-            verdicts = list(pool.map(lambda prompt: _ask(model, prompt, output_type), prompts))
+            answers = list(pool.map(lambda prompt: _ask(model, prompt, output_type), prompts))
         finally:
             # Cancel queued calls after a failure rather than pay for verdicts nobody reads.
             pool.shutdown(cancel_futures=True)
-        if prompts and all(verdict is None for verdict in verdicts):
-            raise VerdictError(f"{model.name} gave no usable verdict for any prompt")
-        return verdicts
+        errors = [answer for answer in answers if isinstance(answer, VerdictError)]
+        if answers and len(errors) == len(answers):
+            cause = errors[0].__cause__ or errors[0]
+            raise VerdictError(
+                f"{model.name} gave no usable verdict for any prompt, such as: {cause}"
+            ) from errors[0]
+        return [None if isinstance(answer, VerdictError) else answer for answer in answers]
 
 
 class SampledMetric(ModelMetric):
@@ -244,11 +248,13 @@ def _wilson_interval(proportion: float, trials: float) -> tuple[float, float]:
     return max(0.0, center - margin), min(1.0, center + margin)
 
 
-def _ask(model: Model, prompt: str, output_type: type[_OutputT]) -> _OutputT | None:
-    """Ask the model a prompt, once more if the first verdict is unusable."""
+def _ask(model: Model, prompt: str, output_type: type[_OutputT]) -> _OutputT | VerdictError:
+    """Ask the model a prompt, once more if the first verdict is unusable, else return the error."""
+    errors: list[VerdictError] = []
     for attempt in range(1, _ATTEMPTS + 1):
         try:
             return model.ask(prompt, output_type)
         except VerdictError as error:
             logger.warning("No usable verdict on attempt %d of %d: %s", attempt, _ATTEMPTS, error)
-    return None
+            errors.append(error)
+    return errors[-1]
