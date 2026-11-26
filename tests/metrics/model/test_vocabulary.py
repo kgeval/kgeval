@@ -11,7 +11,7 @@ def test_model_sees_each_terms_usage_with_grounded_examples() -> None:
 
     result = VocabularyResolution().evaluate(example_view(), Inputs(model=model))
 
-    # Count Person and PERSON, and FOUNDED and Founded, once: vocabulary_uniqueness owns them.
+    # Count Person and PERSON, and FOUNDED and Founded, once, since vocabulary_uniqueness owns them.
     assert (result.unit, result.evaluated, result.failed) == ("distinct vocabulary terms", 12, 0)
     assert len(model.prompts) == 3
     [node_types] = [prompt for prompt in model.prompts if "node types of" in prompt]
@@ -22,10 +22,15 @@ def test_model_sees_each_terms_usage_with_grounded_examples() -> None:
     # Show the sentence that says what ATTENDED means here, which its name alone does not.
     assert (
         "- ATTENDED (used once)\n  connects: Person → Organization (1)\n"
-        '  e.g. "Lee Kuan Yew" (Person) -[:ATTENDED]-> "Raffles" (Organization) <excerpt>'
+        '  sample fact: "Lee Kuan Yew" (Person) -[:ATTENDED]-> "Raffles" (Organization) <excerpt>'
     ) in relationship_types
     assert "attended Raffles Institution.</excerpt>" in relationship_types
     assert "  values: DATE (2), STRING (1)\n" in property_keys
+    # Warn that node types can be wrong where they describe other terms, not where they are judged.
+    caution = "The node types shown can be wrong"
+    assert caution in relationship_types
+    assert caution in property_keys
+    assert caution not in node_types
     assert result.signature == "vocabulary_resolution|model=scripted"
 
 

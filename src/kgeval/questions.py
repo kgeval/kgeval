@@ -62,7 +62,7 @@ class Support(NamedTuple):
 
     @property
     def element_ids(self) -> frozenset[str]:
-        """Return the elements that hold it: the matching facts, or the matching entities."""
+        """Return the IDs of the facts or entities that match it."""
         return self.relationship_ids if self.is_fact else self.node_ids
 
 
@@ -87,7 +87,7 @@ class QuestionSet(Reference):
 
     @model_validator(mode="after")
     def _require_distinct_texts(self) -> QuestionSet:
-        # Keep texts distinct: retrievals are keyed by question text.
+        # Keep texts distinct, since retrievals are keyed by question text.
         counts = Counter(question.text for question in self.questions)
         if repeated := sorted(text for text, count in counts.items() if count > 1):
             raise ValueError(f"questions must differ, repeated: {', '.join(map(repr, repeated))}")
@@ -119,8 +119,8 @@ class QuestionSet(Reference):
             graph: The graph to match against.
 
         Returns:
-            One list per question, in order: its supporting facts, then its supporting
-            entities, each with the graph elements that match it, if any.
+            One list per question, in order, of its supporting facts, then its
+            supporting entities, each with the graph elements that match it, if any.
         """
         entities: defaultdict[str, set[str]] = defaultdict(set)
         entity_chunks: defaultdict[str, set[str]] = defaultdict(set)

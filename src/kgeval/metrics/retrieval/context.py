@@ -15,8 +15,8 @@ __all__ = ["RetrievalPrecision", "RetrievalRecall"]
 class RetrievalRecall(RetrievalMetric):
     """Measure the share of supporting facts and entities in the graph that were retrieved.
 
-    Only what the graph holds is evaluated, so that the retriever is never blamed for
-    a gap in the graph: ``competency`` reports those. A supporting fact counts as
+    Only what the graph holds is evaluated, so that the retriever is never blamed for a
+    gap in the graph, which ``competency`` reports. A supporting fact counts as
     retrieved when one of its matching facts is, or a chunk that grounds one; retrieving
     both of its entities without the relationship between them does not count. A
     supporting entity counts as retrieved when one of its matching entities is, or a

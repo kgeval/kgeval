@@ -85,7 +85,7 @@ def test_recall_reports_ground_truth_facts_and_entities_the_graph_lacks() -> Non
 def test_entity_precision_counts_names_that_normalize_alike_once() -> None:
     result = measure(EntityPrecision)
 
-    # Count 5 distinct names among 6 entities in scope: "lee kuan yew" duplicates "Lee Kuan Yew".
+    # Count 5 distinct names of 6 entities in scope, as "lee kuan yew" duplicates "Lee Kuan Yew".
     assert result.evaluated == 5
     [finding] = result.findings
     assert finding.message == '"He" (PERSON) is not in the ground truth'

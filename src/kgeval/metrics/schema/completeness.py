@@ -17,8 +17,8 @@ class SchemaCompleteness(SchemaMetric):
     """Measure the share of declared node types, relationship types, and patterns in use.
 
     A node type is in use when an entity has it, a relationship type when a fact has it,
-    and a pattern when a fact realizes it: has its relationship type, a source with its
-    source node type, and a target with its target node type. This is the schema
+    and a pattern when a fact realizes it by having its relationship type, a source with
+    its source node type, and a target with its target node type. This is the schema
     completeness of the linked data quality literature; for node types alone, it is the
     class richness of OntoQA.
     """
@@ -75,12 +75,12 @@ class SchemaCompleteness(SchemaMetric):
 class PropertyCompleteness(SchemaMetric):
     """Measure the share of declared properties that entities and facts actually hold.
 
-    Each property declared by any of an entity's node types is one unit for that
-    entity, and each property declared by a fact's relationship type is one unit for
-    that fact. A unit fails when the entity or fact lacks the property. This is the
-    property, or column, completeness of the data quality literature: it measures how
-    filled-in the graph is, not whether it is wrong, so legitimately optional
-    properties lower the score without being defects.
+    Each property declared by any of an entity's node types is one unit for that entity,
+    and each property declared by a fact's relationship type is one unit for that fact.
+    A unit fails when the entity or fact lacks the property. This is the property, or
+    column, completeness of the data quality literature, which measures how filled-in
+    the graph is, not whether it is wrong, so legitimately optional properties lower the
+    score without being defects.
     """
 
     name: ClassVar[str] = "property_completeness"

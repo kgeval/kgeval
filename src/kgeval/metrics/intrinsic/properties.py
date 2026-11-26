@@ -73,7 +73,7 @@ class EmbeddingConsistency(Metric):
     is missing, or has another dimension than the vector index expects, cannot be found.
     Entities are grouped by node types, taken together, lexical and community nodes by
     labels, and facts by relationship type. As for property types, what most members
-    hold is intended: a group expects every embedding property that at least half of
+    hold is intended, so a group expects every embedding property that at least half of
     its members hold, with the dimension most of those members have, ties going to the
     smaller dimension, so a stray embedding on a few members fails no one. Each member
     of the group is one unit per expected embedding, and fails when it lacks the

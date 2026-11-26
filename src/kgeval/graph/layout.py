@@ -46,10 +46,10 @@ class Role(StrEnum):
 class Layout(BaseModel):
     """Describe which labels give each role, and which properties hold names, text, and types.
 
-    A node's role is decided by its labels, with this precedence: lexical, community,
-    entity. When ``base_labels`` is empty, every remaining node is an entity;
-    otherwise only nodes with a base label are, and the rest are ignored as
-    ``Role.OTHER``.
+    A node's role is decided by its labels. A lexical label makes it a lexical node, and
+    otherwise a community label makes it a community node. When ``base_labels`` is
+    empty, every remaining node is an entity; otherwise only nodes with a base label
+    are, and the rest are ignored as ``Role.OTHER``.
 
     Attributes:
         lexical_labels: Labels of lexical nodes.
@@ -100,13 +100,13 @@ class Layout(BaseModel):
         Returns:
             A layout using whichever of ``LEXICAL_LABELS``, ``COMMUNITY_LABELS``, and
             ``BASE_LABELS`` the graph shows, as their docstrings describe, with the
-            default text and description keys. In a graph with Graphiti's
-            ``Episodic`` label, ``Entity`` is a base label and ``Community`` a
-            community label too, the type keys are ``name``, where Graphiti keeps the
-            relationship types of its ``RELATES_TO`` facts, and the expired keys are
-            ``expired_at``. The name keys are ``name`` and ``title``, followed by
-            ``id`` when the graph has the ``__Entity__`` label or no entity has a name
-            or title: LLM Graph Builder and LangChain store entity names in ``id``.
+            default text and description keys. In a graph with Graphiti's ``Episodic``
+            label, ``Entity`` is a base label and ``Community`` a community label too,
+            the type keys are ``name``, where Graphiti keeps the relationship types of
+            its ``RELATES_TO`` facts, and the expired keys are ``expired_at``. The name
+            keys are ``name`` and ``title``, followed by ``id`` when the graph has the
+            ``__Entity__`` label or no entity has a name or title, since LLM Graph
+            Builder and LangChain store entity names in ``id``.
         """
         given = cls() if overrides is None else overrides
         fixed = set() if overrides is None else overrides.model_fields_set
@@ -153,7 +153,7 @@ class Layout(BaseModel):
         return Role.OTHER
 
     def node_types(self, node: Node) -> tuple[str, ...]:
-        """Return a node's node types: its labels other than base labels.
+        """Return a node's labels other than base labels, which are its node types.
 
         Args:
             node: The node whose labels to filter.

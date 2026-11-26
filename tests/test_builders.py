@@ -270,4 +270,6 @@ def test_model_sees_the_relationship_type_and_description_of_the_builders_facts(
         assert (result.evaluated, result.failed) == (1, 0)
         assert shape.statement in model.prompts[0]
     else:
-        assert result.skip_reason == "no fact is grounded in a chunk with text"
+        assert result.skip_reason == (
+            "no fact between entities with a name is grounded in a chunk with text"
+        )

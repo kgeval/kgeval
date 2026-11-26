@@ -32,11 +32,10 @@ class GraphSummary(BaseModel):
         lexical_nodes: Lexical nodes.
         community_nodes: Community nodes.
         other_nodes: Nodes the layout ignores.
-        facts: Facts: relationships between two entities.
+        facts: Relationships between two entities that are still current.
         expired_facts: Relationships between two entities that the layout marks as no
             longer current.
-        provenance_relationships: Provenance relationships: between an entity and a
-            lexical node.
+        provenance_relationships: Relationships between an entity and a lexical node.
         labels: Node count per label.
         relationship_types: Relationship count per relationship type.
     """
@@ -98,8 +97,8 @@ class Report(BaseModel):
         layout: How the graph was read.
         summary: Counts of the graph's nodes and relationships.
         results: One result per metric, in evaluation order.
-        metadata: Describes the run, such as the chunk size or prompt that built the graph.
-            It annotates the report without changing any result.
+        metadata: Describes the run, such as the chunk size or prompt that built the
+            graph. It annotates the report without changing any result.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -154,7 +153,7 @@ class Report(BaseModel):
         raise KeyError(metric)
 
     def to_markdown(self, max_findings: int = DEFAULT_MAX_FINDINGS) -> str:
-        """Render the report as Markdown: graph summary, score tables, and findings.
+        """Render the graph summary, score tables, and findings as Markdown.
 
         Text taken from the graph is escaped, so it cannot inject Markdown.
 

@@ -13,7 +13,7 @@ def test_detect_reads_names_from_id_with_the_entity_base_label_or_without_other_
 
     assert marked.name_keys == ("name", "title", "id")
     assert named.name_keys == ("name", "title")
-    # Ignore lexical nodes: a titled chunk says nothing about where entities keep names.
+    # Ignore lexical nodes, since a titled chunk says nothing about where entities keep names.
     assert unnamed.name_keys == ("name", "title", "id")
 
 

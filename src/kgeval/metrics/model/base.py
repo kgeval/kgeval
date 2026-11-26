@@ -70,8 +70,8 @@ class ModelMetric(Metric):
             output_type: The Pydantic model class each verdict must validate against.
 
         Returns:
-            The verdicts, in the order of the prompts, with ``None`` for each prompt left
-            undecided.
+            The verdicts, in the order of the prompts, with ``None`` for each prompt
+            left undecided.
 
         Raises:
             InputError: If the model was not given.
@@ -96,14 +96,14 @@ class SampledMetric(ModelMetric):
     Subclasses choose the population, write one prompt per sampled unit, and decide
     which verdicts fail; this class samples, selects chunk texts, and builds the result.
     The sample is the ``sample_size`` units with the lowest SHA-256 of
-    ``"{seed}:{key}"``, where a unit's key describes its content: the same on every run
-    and platform, and only extended when ``sample_size`` grows. Since keys hold no
-    element IDs, a rebuilt graph with the same content gets the same sample, and graphs
-    built from one corpus in different ways mostly sample the units they have in common,
-    which pairs their scores and lets cached verdicts serve both. When the decided units
-    are fewer than the population, the result carries a 95% Wilson score interval.
-    Sampled units the model gives no usable verdict for are left out and counted as
-    undecided.
+    ``"{seed}:{key}"``, where a unit's key describes its content, so the sample is the
+    same on every run and platform, and only extended when ``sample_size`` grows. Since
+    keys hold no element IDs, a rebuilt graph with the same content gets the same
+    sample, and graphs built from one corpus in different ways mostly sample the units
+    they have in common, which pairs their scores and lets cached verdicts serve both.
+    When the decided units are fewer than the population, the result carries a 95%
+    Wilson score interval. Sampled units the model gives no usable verdict for are left
+    out and counted as undecided.
 
     Attributes:
         sample_size: The most units to ask the model about.

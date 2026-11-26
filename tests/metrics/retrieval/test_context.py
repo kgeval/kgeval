@@ -52,7 +52,7 @@ def test_recall_leaves_out_questions_whose_support_the_graph_lacks() -> None:
         example_view(), Inputs(questions=QuestionSet(questions=(question,)), retrievals=retrievals)
     )
 
-    # Average over the other five questions only: the retriever cannot return what is missing.
+    # Average over the other five questions only, since the retriever cannot return what is missing.
     assert result.score == pytest.approx((1 + 0 + 1 + 1 + 0.5) / 5)
     assert alone.skip_reason is not None
 

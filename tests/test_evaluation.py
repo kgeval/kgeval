@@ -32,7 +32,7 @@ def test_every_metric_finds_the_planted_defects_of_the_example() -> None:
         model=ScriptedModel("-[:KNOWS]->"),
     )
 
-    # Expect extraction_completeness to skip: the scripted model finds no stated fact.
+    # Expect extraction_completeness to skip, since the scripted model finds no stated fact.
     failures = {result.metric: (result.failed, result.evaluated) for result in report.results}
     assert failures == {
         "entity_uniqueness": (1, 10),
@@ -59,7 +59,7 @@ def test_every_metric_finds_the_planted_defects_of_the_example() -> None:
         "entity_resolution": (0, 10),
         "entity_disambiguation": (0, 3),
         "node_type_accuracy": (0, 9),
-        "fact_accuracy": (1, 10),
+        "fact_accuracy": (1, 9),
         "vocabulary_resolution": (0, 12),
         "extraction_completeness": (0, 0),
         "retrieval_recall": (2, 6),

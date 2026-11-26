@@ -113,7 +113,7 @@ class Finding(BaseModel):
             The finding, with each element's ID among its node or relationship IDs, in
             the order given.
         """
-        # Check for one element first: models iterate over their fields.
+        # Check for one element first, since models iterate over their fields.
         listed = [elements] if isinstance(elements, Node | Relationship) else list(elements)
         return cls(
             message=message,
@@ -126,7 +126,7 @@ class Finding(BaseModel):
 
 
 class MetricResult(BaseModel):
-    """Hold the outcome of one metric: its score, the counts behind it, and its findings.
+    """Hold one metric's score, the counts behind it, and its findings.
 
     A metric checks each unit of its population, and by default its score is the share
     of units that passed, ``(evaluated - failed) / evaluated``, so 1.0 is perfect. A
@@ -230,8 +230,8 @@ class Inputs:
 class Metric(BaseModel, ABC):
     """Measure one quality of a knowledge graph.
 
-    A metric holds its parameters, such as its threshold. The inputs it needs, such as
-    a ground truth or a model, come with each evaluation. To add a metric, subclass this,
+    A metric holds its parameters, such as its threshold. The inputs it needs, such as a
+    ground truth or a model, come with each evaluation. To add a metric, subclass this,
     set ``name``, ``category``, ``unit``, and the ``needs`` it reads from the inputs,
     declare parameters as fields, and implement ``evaluate``, building its return value
     with ``result`` or ``skip``. Override ``signature`` when parameters or inputs change

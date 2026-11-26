@@ -34,7 +34,7 @@ class EntityUniqueness(Metric):
     Entities are duplicates when their names share the key that ``normalize_name``
     returns, whatever their node types; findings list each entity's node types so that
     homonyms can be dismissed. Entities without a name that has a letter or digit are
-    not evaluated. ``failed`` counts redundant entities: a group of n duplicates adds
+    not evaluated. ``failed`` counts redundant entities, so a group of n duplicates adds
     n - 1, the merges that entity resolution would make.
     """
 
@@ -117,14 +117,14 @@ class EntityNaming(Metric):
     """Measure the share of entities whose name identifies a thing on its own.
 
     An entity fails when it has no name, a non-blank string under one of the layout's
-    name keys: it cannot be shown to people, resolved as a duplicate, or matched against
-    ground truth facts and test questions. It also fails when its name is an English
-    pronoun, such as "he" or "they", which refers to an entity only within its sentence:
-    the builder did not resolve the reference to the entity it stands for. And it fails
-    when its name has no letter, such as "1923" or "50%": that is a value, which belongs
-    in a property of the entity it describes. A name in capitals of two or more letters,
-    such as "US" or "IT", is an acronym rather than a pronoun, but a work titled like a
-    pronoun, such as the novel "It", fails.
+    name keys, since it then cannot be shown to people, resolved as a duplicate, or
+    matched against ground truth facts and test questions. It also fails when its name
+    is an English pronoun, such as "he" or "they", which refers to an entity only within
+    its sentence, so the builder did not resolve the reference to the entity it stands
+    for. And it fails when its name has no letter, such as "1923" or "50%", since such a
+    name is a value, which belongs in a property of the entity it describes. A name in
+    capitals of two or more letters, such as "US" or "IT", is an acronym rather than a
+    pronoun, but a work titled like a pronoun, such as the novel "It", fails.
     """
 
     name: ClassVar[str] = "entity_naming"

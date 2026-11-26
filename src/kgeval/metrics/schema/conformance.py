@@ -29,8 +29,8 @@ class EntityConformance(SchemaMetric):
       undeclared property;
     - it satisfies every EXISTENCE, UNIQUENESS, and KEY constraint on its node types.
 
-    Lexical nodes and community nodes are not evaluated: as in neo4j-graphrag, graph
-    schemas describe only extracted entities and the relationships between them.
+    Lexical nodes and community nodes are not evaluated, since graph schemas describe
+    only extracted entities and the relationships between them, as in neo4j-graphrag.
     """
 
     name: ClassVar[str] = "entity_conformance"
@@ -76,8 +76,10 @@ class FactConformance(SchemaMetric):
     - it satisfies every EXISTENCE, UNIQUENESS, and KEY constraint on its relationship
       type;
     - when its relationship type declares ``max_targets``, its source has facts of that
-      type to no more distinct targets: two birthplaces contradict each other, so every
-      fact of the type from that source fails.
+      type to no more distinct targets.
+
+    Two birthplaces contradict each other, so a source with more distinct targets than
+    ``max_targets`` fails every fact of that type, not only the extra ones.
 
     The pattern rule alone is Text2KGBench's ontology conformance, the share of facts
     that conform to the ontology; this metric adds property, constraint, and cardinality
@@ -166,7 +168,7 @@ class _SchemaIndex:
         problems: list[str] = []
         declared = self.relationship_types.get(relationship_type)
         if declared is None and not self.schema.additional_relationship_types:
-            # Skip the pattern check: no declared pattern can name an undeclared type.
+            # Skip the pattern check, since no declared pattern can name an undeclared type.
             problems.append(f"undeclared relationship type {relationship_type}")
         elif not self.schema.additional_patterns and not any(
             (source, relationship_type, target) in self.patterns

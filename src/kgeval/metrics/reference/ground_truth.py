@@ -26,18 +26,19 @@ class GroundTruthMetric(Metric):
     """Compare the graph with a ground truth of facts, as precision, recall, or F1.
 
     Entity names and relationship types match under the keys that the ground truth's
-    ``entity_key`` and ``fact_key`` return: normalized, with aliases mapped to the ground truth
-    names they stand for, and in either direction for symmetric relationship types.
-    Both sides are compared as sets, so duplicates count once. Facts and entities
-    involving an entity without a name cannot match and are not evaluated;
+    ``entity_key`` and ``fact_key`` return, which normalize them, map aliases to the
+    ground truth names they stand for, and match symmetric relationship types in either
+    direction. Both sides are compared as sets, so duplicates count once. Facts and
+    entities involving an entity without a name cannot match and are not evaluated;
     ``entity_naming`` reports them. When the ground truth names documents, only the
     facts and entities grounded in their chunks are compared. Precision scores the
     graph's distinct facts or entities, failing those the ground truth lacks, so it
     assumes the ground truth lists every fact that its documents, or without documents
-    the chunks, state. Recall scores the ground truth facts or entities, failing those the graph
-    lacks. F1 scores both, which makes its score ``2 * matched / (distinct + ground_truth)``, the
-    harmonic mean of precision and recall; its findings are those of precision and
-    recall, so it reports none of its own.
+    the chunks, state. Recall scores the ground truth facts or entities, failing those
+    the graph lacks. F1 scores both, which makes its score
+    ``2 * matched / (distinct + ground_truth)``, the harmonic mean of precision and
+    recall; its findings are those of precision and recall, so it reports none of
+    its own.
     """
 
     category: ClassVar[MetricCategory] = MetricCategory.REFERENCE
@@ -179,8 +180,8 @@ def _fact_subject(key: tuple[str, ...]) -> str:
 class FactPrecision(_FactMetric):
     """Measure the share of the graph's distinct facts that the ground truth contains.
 
-    A fact matches a ground truth fact when its source entity's name, relationship type, and
-    target entity's name match the ground truth fact's, in that direction unless the
+    A fact matches a ground truth fact when its source entity's name, relationship type,
+    and target entity's name match the ground truth fact's, in that direction unless the
     relationship type is symmetric.
     """
 
@@ -205,8 +206,8 @@ class FactRecall(_FactMetric):
 class FactF1(_FactMetric):
     """Measure the harmonic mean of ``fact_precision`` and ``fact_recall``.
 
-    It reports no findings: ``fact_precision`` and ``fact_recall`` list the facts it
-    counts as failed.
+    It reports no findings, since ``fact_precision`` and ``fact_recall`` list the facts
+    it counts as failed.
     """
 
     name: ClassVar[str] = "fact_f1"
@@ -218,8 +219,8 @@ class FactF1(_FactMetric):
 class EntityPrecision(_EntityMetric):
     """Measure the share of the graph's distinct entities that the ground truth contains.
 
-    The ground truth entities are the source and target entities of the ground truth facts, and
-    entities match them by name.
+    The ground truth entities are the source and target entities of the ground truth
+    facts, and entities match them by name.
     """
 
     name: ClassVar[str] = "entity_precision"
@@ -243,8 +244,8 @@ class EntityRecall(_EntityMetric):
 class EntityF1(_EntityMetric):
     """Measure the harmonic mean of ``entity_precision`` and ``entity_recall``.
 
-    It reports no findings: ``entity_precision`` and ``entity_recall`` list the entities
-    it counts as failed.
+    It reports no findings, since ``entity_precision`` and ``entity_recall`` list the
+    entities it counts as failed.
     """
 
     name: ClassVar[str] = "entity_f1"

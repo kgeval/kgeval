@@ -78,7 +78,7 @@ def test_clusters_that_pass_or_fail_together_widen_the_interval() -> None:
     apart = metric.estimate_clusters(MODEL, 100, [(10, 8)] * 10, [])
     perfect = metric.estimate_clusters(MODEL, 100, [(10, 10)] * 10, [])
 
-    # Check 100 facts in each: failures bunched in two chunks tell less than failures spread out.
+    # Check 100 facts in each, as failures bunched in two chunks tell less than ones spread out.
     assert together.score == apart.score == 0.8
     assert together.confidence_interval == pytest.approx((0.4902, 0.9433), abs=1e-4)
     assert apart.confidence_interval is not None

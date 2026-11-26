@@ -42,7 +42,7 @@ def test_infer_schema_requires_the_properties_every_element_of_a_type_has() -> N
     assert [
         (constraint.node_type, constraint.property_names) for constraint in schema.constraints
     ] == [
-        # Leave born out: Lee and Fitzwilliam College lack it.
+        # Leave born out, since Lee and Fitzwilliam College lack it.
         ("Person", ("id",)),
         ("Landmark", ("id",)),
         ("Location", ("id",)),

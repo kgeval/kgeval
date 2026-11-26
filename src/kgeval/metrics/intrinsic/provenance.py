@@ -56,10 +56,10 @@ class EntityProvenance(Metric):
 class FactProvenance(Metric):
     """Measure the share of facts whose source and target are grounded in a common chunk.
 
-    A builder creates a fact from one chunk, which then grounds both of its entities
-    and is the fact's provenance. A fact whose entities share no chunk cannot be traced
-    to any text: it was added by hand, hallucinated across chunks, or left behind by
-    entity resolution.
+    A builder creates a fact from one chunk, which then grounds both of its entities and
+    is the fact's provenance. A fact whose entities share no chunk cannot be traced to
+    any text, because it was added by hand, hallucinated across chunks, or left behind
+    by entity resolution.
     """
 
     name: ClassVar[str] = "fact_provenance"
@@ -94,9 +94,9 @@ class FactProvenance(Metric):
 class ExtractionCoverage(Metric):
     """Measure the share of chunks from which at least one entity was extracted.
 
-    Chunks are as ``GraphView.chunks`` defines them: in a lexical graph of documents and
-    chunks, every chunk and no document. A chunk that grounds no entity usually marks a
-    failed or empty extraction.
+    Chunks are as ``GraphView.chunks`` defines them, which in a lexical graph of
+    documents and chunks means every chunk and no document. A chunk that grounds no
+    entity usually marks a failed or empty extraction.
     """
 
     name: ClassVar[str] = "extraction_coverage"

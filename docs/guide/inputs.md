@@ -64,8 +64,8 @@ As in neo4j-graphrag, declaring something closes it. Each `additional_*` field
 defaults to `true` only when its list is empty, and `additional_properties` defaults to
 `true` only when a type declares no properties.
 
-`max_targets` is a kgeval extension: the most distinct entities that one entity may
-relate to with that type. With `max_targets: 1` on `BORN_IN`, a person with two
+`max_targets` is a kgeval extension that limits how many distinct entities one entity
+may relate to with that type. With `max_targets: 1` on `BORN_IN`, a person with two
 birthplaces fails `fact_conformance`.
 
 ### Draft a schema

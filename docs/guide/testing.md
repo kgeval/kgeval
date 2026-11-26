@@ -43,7 +43,7 @@ E       # kgeval report
 E       ### entity_uniqueness: 1 of 10 entities with a name failed
 E
 E       - 2 entities share the normalized name 'lee kuan yew': "Lee Kuan Yew" (Person), "lee kuan yew" (Person)
-E         - nodes: `4:5cda…:4`, `4:5cda…:9`
+E         - nodes: `4:74f3…:4`, `4:74f3…:9`
 ```
 
 `assert_passes` returns the report, so a test can check more, such as a metric's

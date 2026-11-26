@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from kgeval.graph.model import Relationship
 from kgeval.graph.view import GraphView
 from kgeval.metrics.base import Finding, Inputs, MetricResult
-from kgeval.metrics.model._prompts import chunk_texts, quote_chunks, spell
+from kgeval.metrics.model._prompts import chunk_texts, entity_name, quote_chunks, spell
 from kgeval.metrics.model.base import SampledMetric
 
 __all__ = ["FactAccuracy", "SupportVerdict"]
@@ -50,16 +50,17 @@ class FactAccuracy(SampledMetric):
     This is knowledge graph accuracy as Gao et al. estimate it, from an annotated sample
     with a confidence interval, with an LLM as the annotator. Rules can tell whether a
     fact is grounded in a chunk (``fact_provenance``) but not whether the chunk says it,
-    so this metric asks a model. It considers facts whose source and target share at
-    least one chunk with text, and shows the model each sampled fact, with its
-    description when it has one, and up to ``MAX_CHUNKS`` of the shared chunks, those
-    that contain both entities' names first. A wrong direction fails, since the model
-    reads the fact from source to target. Sampling and the confidence interval work as
-    described in ``SampledMetric``; the sample is keyed by the fact and its description.
+    so this metric asks a model. It considers facts whose source and target have a
+    name, one with a letter or digit, and share at least one chunk with text, and shows
+    the model each sampled fact, with its description when it has one, and up to
+    ``MAX_CHUNKS`` of the shared chunks, those that contain both entities' names first.
+    A wrong direction fails, since the model reads the fact from source to target.
+    Sampling and the confidence interval work as described in ``SampledMetric``; the
+    sample is keyed by the fact and its description.
     """
 
     name: ClassVar[str] = "fact_accuracy"
-    unit: ClassVar[str] = "facts grounded in a chunk with text"
+    unit: ClassVar[str] = "facts between entities with a name, grounded in a chunk with text"
 
     def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Ask the model about sampled grounded facts and report each one found unsupported.
@@ -77,10 +78,15 @@ class FactAccuracy(SampledMetric):
                 any.
         """
         grounded = [
-            fact for fact in graph.facts if chunk_texts(graph, graph.fact_chunk_ids(fact), ())
+            fact
+            for fact in graph.facts
+            if all(entity_name(graph, graph.node(id_)) for id_ in (fact.source_id, fact.target_id))
+            and chunk_texts(graph, graph.fact_chunk_ids(fact), ())
         ]
         if not grounded:
-            return self.skip(inputs, "no fact is grounded in a chunk with text")
+            return self.skip(
+                inputs, "no fact between entities with a name is grounded in a chunk with text"
+            )
 
         sample = self.sample(grounded, lambda fact: _statement(graph, fact))
         verdicts = self.ask_all(inputs, [_prompt(graph, fact) for fact in sample], SupportVerdict)
@@ -106,7 +112,7 @@ def _prompt(graph: GraphView, fact: Relationship) -> str:
 
 
 def _statement(graph: GraphView, fact: Relationship) -> str:
-    """Return the lines that state a fact to the model: the fact, then its description."""
+    """Return the lines that state a fact, then its description, to the model."""
     statement = f"Fact: {spell(graph, fact)}"
     if description := graph.description(fact):
         statement += f"\nDescription: {description}"

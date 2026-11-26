@@ -16,8 +16,8 @@ OutputT = TypeVar("OutputT", bound=BaseModel)
 class ScriptedModel(Model):
     """Approve every prompt except those containing one of the given texts; record every prompt.
 
-    Approving verdicts set their flag and leave their lists empty; rejecting verdicts clear
-    their flag and take their lists from ``rejection``.
+    Approving verdicts set their flag and leave their lists empty; rejecting verdicts
+    clear their flag and take their lists from ``rejection``.
     """
 
     name = "scripted"

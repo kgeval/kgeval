@@ -55,8 +55,8 @@ def evaluate(
         retrievals: What a retriever returned for each test question.
         model: The model that metrics ask when rules cannot decide.
         layout: How to read the graph; detected from its labels when omitted.
-        metadata: Describes the run, such as the chunk size or prompt that built the graph;
-            the report records it, and ``compare`` shows where two runs differ.
+        metadata: Describes the run, such as the chunk size or prompt that built the
+            graph; the report records it, and ``compare`` shows where two runs differ.
 
     Returns:
         A report with one result per metric, in the order given.

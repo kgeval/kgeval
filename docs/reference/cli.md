@@ -67,7 +67,7 @@ the suite when there is one. For example, `--threshold fact_recall=0.9` requires
 
 | Option                 | Default         | Description                                                                                          |
 | ---------------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
-| `-f`, `--format`       | `markdown`      | The report format: `markdown` or `json`.                                                             |
+| `-f`, `--format`       | `markdown`      | The report format, either `markdown` or `json`.                                                      |
 | `-o`, `--output FILE`  | Standard output | The file to write the report to.                                                                     |
 | `--max-findings N`     | 10              | The most findings listed per metric in Markdown.                                                     |
 | `--metadata KEY=VALUE` | None            | A description of the run, such as `chunk_size=512`, that `kgeval compare` shows. Repeat for several. |
@@ -104,14 +104,13 @@ kgeval compare [OPTIONS] BASE HEAD
 Compare the report `HEAD` with the report `BASE`, such as a baseline, metric by metric.
 Both are JSON reports written by `kgeval run --format json` or `pytest --kgeval-report`.
 
-A metric regresses when `HEAD` scores it worse than `BASE`, or no longer scores a
-metric that `BASE` scored, because it skips the metric or does not run it. `HEAD`
-scores worse when its score is lower by more than `--max-drop` and, for a sampled score,
-by more than sampling explains. For a deterministic metric, `HEAD` must also have a new
-finding or more failed units, so that a score that drops only because the population
-shrank, as when duplicates that passed are removed, is no regression. New findings
-without a lower score are no regression either: a rebuild fixes some defects as it adds
-others.
+A metric regresses when `HEAD` scores it worse than `BASE`, or no longer scores a metric
+that `BASE` scored, because it skips the metric or does not run it. `HEAD` scores worse
+when its score is lower by more than `--max-drop` and, for a sampled score, by more than
+sampling explains. For a deterministic metric, `HEAD` must also have a new finding or
+more failed units, so that a score that drops only because the population shrank, as
+when duplicates that passed are removed, is no regression. New findings without a lower
+score are no regression either, since a rebuild fixes some defects as it adds others.
 
 Findings are matched by their subject, which names the unit at fault by content rather
 than by element ID or wording, so a baseline still matches after the graph is rebuilt
@@ -119,8 +118,8 @@ or a defect's details change. Findings of model metrics are not compared, becaus
 run checks its own sample. Metrics whose parameters differ, such as runs against
 another ground truth, are not compared at all.
 
-The comparison opens with a summary: how many scores improved, worsened, stayed the
-same, or changed by less than sampling noise, and the metadata that differs.
+The comparison opens with a summary of how many scores improved, worsened, stayed the
+same, or changed by less than sampling noise, and of the metadata that differs.
 [Comparing builds](../guide/comparing.md) explains how to read it.
 
 ### Options

@@ -127,12 +127,12 @@ class MetricChange(BaseModel):
     def regressed(self) -> bool:
         """Return whether the head scores worse than the base, or no longer scores the metric.
 
-        The head scores worse when the trend is worsened, so a sampled score must drop by
-        more than sampling explains, and the score dropped by more than ``max_drop``.
+        The head scores worse when the trend is worsened, so a sampled score must drop
+        by more than sampling explains, and the score dropped by more than ``max_drop``.
         For a metric whose findings are compared, the head must also have a new finding
         or more failed units, since a drop that a smaller population alone explains, as
         when removing duplicate facts that passed, adds no defect. New findings without
-        a lower score are no regression either: a rebuild that extracts different
+        a lower score are no regression either, since a rebuild that extracts different
         entities and facts fixes some defects as it adds others.
         """
         if self.base is None or self.base.score is None:
@@ -156,8 +156,8 @@ class Comparison(BaseModel):
     Attributes:
         base: The report compared against, such as a baseline.
         head: The report checked against it.
-        changes: One change per metric that either report ran: the head's metrics in
-            its order, then the others of the base.
+        changes: One change per metric that either report ran, with the head's metrics
+            in its order, then the others of the base.
     """
 
     model_config = ConfigDict(frozen=True)
@@ -168,7 +168,7 @@ class Comparison(BaseModel):
 
     @property
     def regressed(self) -> bool:
-        """Return whether any metric regressed: scores worse, or is no longer scored."""
+        """Return whether any metric scores worse or is no longer scored."""
         return any(change.regressed for change in self.changes)
 
     @property
@@ -183,7 +183,7 @@ class Comparison(BaseModel):
         return {trend: counts[trend] for trend in Trend}
 
     def to_markdown(self, max_findings: int = DEFAULT_MAX_FINDINGS) -> str:
-        """Render the comparison as Markdown: both graphs, score changes, and changed findings.
+        """Render both graphs, the score changes, and the changed findings as Markdown.
 
         Text taken from the graph is escaped, so it cannot inject Markdown.
 
@@ -248,7 +248,7 @@ def _change(
         return change.model_copy(update={"new_findings": head.findings})
     if not change.comparable:
         return change
-    # Resolve nothing when the head skipped: a skip cannot show that a defect was fixed.
+    # Resolve nothing when the head skipped, since a skip cannot show that a defect was fixed.
     resolved = _unmatched(base.findings, head.findings) if head.score is not None else ()
     return change.model_copy(
         update={

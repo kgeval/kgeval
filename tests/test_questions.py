@@ -44,7 +44,7 @@ def test_support_matches_facts_and_entities_with_their_elements() -> None:
 
     born, founded, birth_date = (questions.support(example_view())[index] for index in (1, 2, 3))
 
-    # Match the duplicate "lee kuan yew" too: names match under normalization.
+    # Match the duplicate "lee kuan yew" too, since names match under normalization.
     [birthplace] = born
     assert birthplace.label == '"Lee Kuan Yew" -[:BORN_IN]-> "Singapore"'
     assert birthplace.relationship_ids == {"born_in", "born_in_copy"}

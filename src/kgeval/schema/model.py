@@ -87,8 +87,9 @@ class RelationshipType(_ElementType):
         additional_properties: Whether undeclared properties are allowed; defaults to
             true exactly when no properties are declared.
         max_targets: The most distinct entities that one entity may relate to with
-            this type, such as 1 for ``BORN_IN``; unlimited when omitted. More targets
-            contradict each other. This is a kgeval extension of neo4j-graphrag's format.
+            this type, such as 1 for ``BORN_IN``; unlimited when omitted. More
+            targets contradict each other. This is a kgeval extension of
+            neo4j-graphrag's format.
     """
 
     max_targets: int | None = Field(default=None, ge=1)
@@ -132,7 +133,7 @@ class Constraint(BaseModel):
     both.
 
     Attributes:
-        type: The constraint type: EXISTENCE, UNIQUENESS, or KEY.
+        type: The constraint type, one of EXISTENCE, UNIQUENESS, and KEY.
         property_names: The constrained properties.
         node_type: The label of the constrained node type, when it constrains entities.
         relationship_type: The constrained relationship type, when it constrains facts.
@@ -167,7 +168,7 @@ class GraphSchema(BaseModel):
     """Declare which node types, relationship types, and patterns a graph may contain.
 
     Each ``additional_*`` switch defaults to true exactly when the matching list is
-    empty, as in neo4j-graphrag: declaring node types closes the set of node types
+    empty, as in neo4j-graphrag, so declaring node types closes the set of node types
     unless ``additional_node_types`` says otherwise.
 
     Attributes:
@@ -176,7 +177,8 @@ class GraphSchema(BaseModel):
         patterns: The allowed (source, relationship, target) combinations.
         constraints: Existence, uniqueness, and key constraints.
         additional_node_types: Whether undeclared node labels are allowed.
-        additional_relationship_types: Whether undeclared relationship types are allowed.
+        additional_relationship_types: Whether undeclared relationship types are
+            allowed.
         additional_patterns: Whether undeclared patterns are allowed.
     """
 

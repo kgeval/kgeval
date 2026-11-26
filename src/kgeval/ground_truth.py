@@ -21,14 +21,14 @@ DocumentSelector: TypeAlias = Annotated[dict[str, str], Field(min_length=1)]
 class GroundTruth(Reference):
     """Hold the facts a graph should contain, and the variants under which they match.
 
-    Facts match as ``Reference`` describes. Validation also accepts a bare list of ground truth
-    facts, the format of ground truths that need none of the other fields.
+    Facts match as ``Reference`` describes. Validation also accepts a bare list of
+    ground truth facts, the format of ground truths that need none of the other fields.
 
     Attributes:
         documents: Selectors of the lexical nodes of the documents the ground truth
             covers. When set, the ground truth lists every fact these documents state,
-            and the ground truth metrics compare only the facts and entities grounded in the
-            documents' chunks; when empty, it covers every chunk.
+            and the ground truth metrics compare only the facts and entities grounded in
+            the documents' chunks; when empty, it covers every chunk.
         facts: The ground truth facts.
     """
 
@@ -50,7 +50,7 @@ class GroundTruth(Reference):
         return self.facts
 
     def named_entities(self) -> Iterable[str]:
-        """Return the ground truth entities: the source and target of every ground truth fact.
+        """Return the source and target names of every ground truth fact.
 
         Returns:
             The entity names.
@@ -70,8 +70,8 @@ def load_ground_truth(path: str | Path) -> GroundTruth:
     """Load a ground truth from a YAML or JSON file.
 
     The file holds either a list of ground truth facts or a mapping with the fields of
-    ``GroundTruth``. Each ground truth fact is a ``[source entity name, relationship type,
-    target entity name]`` list, such as ``[Lee Kuan Yew, BORN_IN, Singapore]``.
+    ``GroundTruth``. Each ground truth fact is a ``[source entity name, relationship
+    type, target entity name]`` list, such as ``[Lee Kuan Yew, BORN_IN, Singapore]``.
 
     Args:
         path: The ground truth file.
@@ -80,8 +80,8 @@ def load_ground_truth(path: str | Path) -> GroundTruth:
         The ground truth.
 
     Raises:
-        InputError: If the file cannot be read or holds no valid ground truth: one
-            without facts, with a part of a ground truth fact that has no letter or digit, or
-            with an alias that conflicts with a ground truth name.
+        InputError: If the file cannot be read or holds no valid ground truth, such as
+            one without facts, with a part of a ground truth fact that has no letter or
+            digit, or with an alias that conflicts with a ground truth name.
     """
     return load_yaml(path, TypeAdapter(GroundTruth))

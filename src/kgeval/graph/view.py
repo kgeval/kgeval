@@ -17,10 +17,11 @@ class GraphView:
     """Index a graph by role so metrics can ask about entities, facts, and chunks.
 
     A fact is a relationship whose source and target nodes are both entities, unless it
-    has one of the layout's expired keys: then it is an expired fact, which metrics do
-    not evaluate. A provenance relationship joins an entity and a lexical node, in either
-    direction; that lexical node is a chunk the entity is grounded in, and ``chunk_ids``
-    returns them. All other relationships are neither facts nor provenance.
+    has one of the layout's expired keys, which makes it an expired fact that metrics
+    do not evaluate. A provenance relationship joins an entity and a lexical node, in
+    either direction; that lexical node is a chunk the entity is grounded in, and
+    ``chunk_ids`` returns them. All other relationships are neither facts nor
+    provenance relationships.
 
     Args:
         graph: The graph to index.
@@ -32,8 +33,8 @@ class GraphView:
         entities: Entity nodes, sorted by ID.
         lexical_nodes: Lexical nodes, sorted by ID.
         chunks: Lexical nodes that share a lexical label with a node some entity is
-            grounded in, sorted by ID: in a lexical graph of documents and chunks, every
-            chunk, whether or not it grounds an entity, and no document.
+            grounded in, sorted by ID. In a lexical graph of documents and chunks, these
+            are every chunk, whether or not it grounds an entity, and no document.
         community_nodes: Community nodes, sorted by ID.
         facts: Facts, sorted by ID.
         expired_facts: Relationships between entities that the layout's expired keys
@@ -120,7 +121,7 @@ class GraphView:
         return self._chunk_ids.get(entity_id, frozenset())
 
     def fact_chunk_ids(self, fact: Relationship) -> frozenset[str]:
-        """Return the IDs of the chunks a fact is grounded in: those that ground both entities.
+        """Return the IDs of the chunks that ground both of a fact's entities.
 
         Args:
             fact: The fact.
@@ -167,7 +168,7 @@ class GraphView:
         return frozenset((selected & chunk_ids) | joined)
 
     def name(self, node: Node) -> str | None:
-        """Return a node's name: the first non-blank string among the layout's name keys.
+        """Return the first non-blank string a node holds under the layout's name keys.
 
         Args:
             node: The node to name.
@@ -178,7 +179,7 @@ class GraphView:
         return _first_text(node, self.layout.name_keys)
 
     def text(self, node: Node) -> str | None:
-        """Return a node's text: the first non-blank string among the layout's text keys.
+        """Return the first non-blank string a node holds under the layout's text keys.
 
         Args:
             node: The node, usually a lexical one.
@@ -222,10 +223,10 @@ class GraphView:
             element: The node or relationship to describe.
 
         Returns:
-            For a node: its quoted name, else a quoted preview of its text, else
-            ``unnamed``, followed by its node types in parentheses. For a relationship:
-            its source and target nodes described as nodes, joined by its relationship
-            type in Cypher arrow notation.
+            A node's quoted name, else a quoted preview of its text, else ``unnamed``,
+            followed by its node types in parentheses. A relationship's source and
+            target nodes, each described as a node, joined by its relationship type in
+            Cypher arrow notation.
         """
         if isinstance(element, Relationship):
             source = self.describe(self.node(element.source_id))

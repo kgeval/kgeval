@@ -50,7 +50,7 @@ Scalar: TypeAlias = str | bool | int | float | datetime | date | time | Duration
 """A single property value of any type Neo4j stores, except vectors and byte arrays."""
 
 PropertyValue: TypeAlias = Scalar | list[Scalar]
-"""A property value: a scalar or a list of scalars."""
+"""A scalar or a list of scalars that a property holds."""
 
 PropertyTypeName: TypeAlias = Literal[
     "BOOLEAN",
@@ -78,7 +78,7 @@ def value_type(value: PropertyValue) -> PropertyTypeName:
     Returns:
         The Neo4j type name; ``"LIST"`` for every list.
     """
-    # Check subclasses first: bool is an int and datetime is a date.
+    # Check subclasses first, since bool is an int and datetime is a date.
     if isinstance(value, bool):
         return "BOOLEAN"
     if isinstance(value, int):

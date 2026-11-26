@@ -29,7 +29,7 @@ def test_vocabulary_uniqueness_counts_every_variant_but_the_intended_one() -> No
 
     result = VocabularyUniqueness().evaluate(graph, Inputs())
 
-    # Break the tie by name: PERSON sorts before Person and Persons.
+    # Break the tie by name, which puts PERSON before Person and Persons.
     assert (result.evaluated, result.failed) == (5, 2)
     [finding] = result.findings
     assert finding.message == "Person and Persons spell the node type PERSON differently"

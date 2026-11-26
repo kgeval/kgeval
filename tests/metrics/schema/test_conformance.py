@@ -40,7 +40,7 @@ def test_entities_need_declared_property_types_and_satisfied_constraints() -> No
 def test_facts_need_a_declared_relationship_type() -> None:
     result = check(FactConformance)
 
-    # Pass the two copies of BORN_IN: its max_targets limits distinct targets, not facts.
+    # Pass the two copies of BORN_IN, since its max_targets limits distinct targets, not facts.
     assert (result.unit, result.evaluated) == ("facts", 11)
     assert messages(result) == [
         '"Lee Kuan Yew" (Person) -[:ATTENDED]-> "Raffles" (Organization): '

@@ -82,7 +82,7 @@ def _collect(question: str, item: object, ids: dict[str, None]) -> None:
     elif isinstance(item, Node | Relationship):
         ids.setdefault(item.element_id)
     elif isinstance(item, GraphPath):
-        # Rank a path's elements in traversal order: each relationship before its end node.
+        # Rank a path's elements in traversal order, each relationship before its end node.
         steps = zip(item.relationships, item.nodes[1:], strict=True)
         for element in (item.start_node, *(element for step in steps for element in step)):
             ids.setdefault(element.element_id)

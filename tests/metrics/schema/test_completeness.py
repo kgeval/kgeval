@@ -40,7 +40,7 @@ def test_schema_completeness_skips_schemas_that_declare_nothing() -> None:
 def test_every_declared_property_of_an_entity_is_one_unit() -> None:
     result = PropertyCompleteness().evaluate(example_view(), Inputs(schema=example_schema()))
 
-    # Count the units: id and born on 5 people, and id on the 5 other entities of declared types.
+    # Count id and born on 5 people, and id on the 5 other entities of declared types.
     assert (result.unit, result.evaluated, result.failed) == ("declared properties", 15, 3)
     assert [(finding.message, finding.node_ids) for finding in result.findings] == [
         ('"Fitzwilliam College" (Person): declared property born is missing', ("fitzwilliam",)),

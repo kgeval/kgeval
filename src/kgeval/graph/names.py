@@ -44,13 +44,13 @@ def normalize_type(type_name: str) -> str:
     """Return the key under which node types or relationship types count as the same type.
 
     The key splits camel case into words, normalizes the result as ``normalize_name``
-    does, and reduces every word to a form its singular and plural share, by the
-    English plural rules: ``ies`` and ``ie`` become ``y``, ``es`` after a sibilant and
-    a final ``s`` are dropped, except after ``s``, ``u``, or ``i`` and in words of three
-    letters or fewer, and a few irregular plurals, such as ``people``, map to their
-    singulars. ``BornIn``, ``BORN_IN``, and ``born in`` share a key, and so do
-    ``Organizations`` and ``ORGANIZATION``, ``Companies`` and ``Company``, ``Classes``
-    and ``Class``, and ``People`` and ``Person``.
+    does, and reduces every word to a form its singular and plural share. By the English
+    plural rules, ``ies`` and ``ie`` become ``y``, ``es`` after a sibilant and a final
+    ``s`` are dropped, except after ``s``, ``u``, or ``i`` and in words of three letters
+    or fewer, and a few irregular plurals, such as ``people``, map to their singulars.
+    ``BornIn``, ``BORN_IN``, and ``born in`` share a key, and so do ``Organizations``
+    and ``ORGANIZATION``, ``Companies`` and ``Company``, ``Classes`` and ``Class``, and
+    ``People`` and ``Person``.
 
     Args:
         type_name: A node type or relationship type.

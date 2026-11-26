@@ -16,12 +16,12 @@ class FactUniqueness(Metric):
     """Measure the share of facts that are distinct, counting repeated facts once.
 
     Facts repeat each other when they share source node, relationship type, and target
-    node, as ``GraphView.relationship_type`` reads the type, whatever their properties:
-    a fact is its source, relationship type, and target, as the ground truth metrics also match
-    it, and its properties describe it. Repeats come from running a ``CREATE``-based
-    import twice, or from storing every extraction of a fact as its own relationship,
-    with its own ID, timestamp, or chunk. ``failed`` counts redundant copies: n repeats of
-    a fact add n - 1.
+    node, as ``GraphView.relationship_type`` reads the type, whatever their properties,
+    since a fact is its source, relationship type, and target, as the ground truth
+    metrics also match it, and its properties describe it. Repeats come from running a
+    ``CREATE``-based import twice, or from storing every extraction of a fact as its own
+    relationship, with its own ID, timestamp, or chunk. ``failed`` counts redundant
+    copies, so n repeats of a fact add n - 1.
     """
 
     name: ClassVar[str] = "fact_uniqueness"

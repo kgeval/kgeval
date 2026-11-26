@@ -14,8 +14,9 @@ def test_model_sees_each_grounded_fact_with_its_shared_chunks() -> None:
 
     result = FactAccuracy().evaluate(example_view(), Inputs(model=model))
 
-    # Leave out duplicate_founded, whose entities share no chunk.
-    assert (result.evaluated, result.failed, result.confidence_interval) == (10, 0, None)
+    # Leave out duplicate_founded, whose entities share no chunk, and the unnamed founding.
+    assert (result.evaluated, result.failed, result.confidence_interval) == (9, 0, None)
+    assert not [prompt for prompt in model.prompts if "unnamed" in prompt]
     [married] = [prompt for prompt in model.prompts if "-[:MARRIED]->" in prompt]
     assert 'Fact: "Kwa Geok Choo" (Person) -[:MARRIED]-> "Lee Kuan Yew" (Person)' in married
     assert "<chunk>\nKwa Geok Choo married Lee Kuan Yew.\n</chunk>" in married
@@ -38,7 +39,7 @@ def test_model_sees_descriptions_and_no_element_ids() -> None:
     graph = view(
         node("c", "Chunk", text="Ada founded a company."),
         node("ada", "__Entity__", "Person", name="Ada"),
-        node("4:a1b2:7", "__Entity__", "Company"),
+        node("4:a1b2:7", "__Entity__", "Company", name="Analytical Engines"),
         relationship("h1", "c", "HAS_ENTITY", "ada"),
         relationship("h2", "c", "HAS_ENTITY", "4:a1b2:7"),
         relationship("r", "ada", "FOUNDED", "4:a1b2:7", description="Ada founded it in 1843."),
@@ -47,9 +48,10 @@ def test_model_sees_descriptions_and_no_element_ids() -> None:
     FactAccuracy().evaluate(graph, Inputs(model=model))
 
     assert (
-        'Fact: "Ada" (Person) -[:FOUNDED]-> unnamed (Company)\n'
+        'Fact: "Ada" (Person) -[:FOUNDED]-> "Analytical Engines" (Company)\n'
         "Description: Ada founded it in 1843.\n\n<chunk>"
     ) in model.prompts[0]
+    assert "4:a1b2:7" not in model.prompts[0]
 
 
 def test_sample_depends_on_content_not_element_ids() -> None:
@@ -81,7 +83,7 @@ def test_metric_skips_graphs_without_grounded_facts() -> None:
     graph = view(node("a", name="Ada"), node("b", name="Bob"), relationship("r", "a", "KNOWS", "b"))
 
     assert FactAccuracy().evaluate(graph, Inputs(model=ScriptedModel())).skip_reason == (
-        "no fact is grounded in a chunk with text"
+        "no fact between entities with a name is grounded in a chunk with text"
     )
 
 

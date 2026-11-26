@@ -31,12 +31,13 @@ class Model:
         model: The model as LiteLLM names it, ``provider/model``, such as
             ``openai/gpt-5-mini``.
         base_url: The server's API base URL; the provider's when omitted.
-        api_key: The API key; read from the provider's environment variable when omitted.
+        api_key: The API key; read from the provider's environment variable when
+            omitted.
         name: Identifies the model in metric signatures and the cache; ``model`` when
             omitted. The settings follow it, since they change the verdicts.
-        cache: A SQLite file that keeps every verdict, so reruns reuse them; created when
-            missing. A verdict is keyed by the model's name, the verdict's JSON schema, and
-            the prompt. Delete the file to ask again.
+        cache: A SQLite file that keeps every verdict, so reruns reuse them; created
+            when missing. A verdict is keyed by the model's name, the verdict's JSON
+            schema, and the prompt. Delete the file to ask again.
         **settings: Arguments for every request, such as ``temperature=0`` or
             ``reasoning_effort="low"``.
 

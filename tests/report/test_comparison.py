@@ -139,7 +139,7 @@ def test_skipping_a_metric_the_base_scored_regresses() -> None:
 
     [change] = compare(base, head).changes
 
-    # Resolve nothing: a skipped metric cannot show that a defect was fixed.
+    # Resolve nothing, since a skipped metric cannot show that a defect was fixed.
     assert (change.regressed, change.score_change, change.resolved_findings) == (True, None, ())
     assert change.trend is None
 

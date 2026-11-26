@@ -47,7 +47,7 @@ The report opens with the size of the graph and how kgeval read it:
 ```text
 - Graph: 19 nodes (11 entities, 7 lexical nodes, 1 community node, 0 other nodes) and 40 relationships (11 facts, 14 provenance relationships)
 - Layout: lexical labels Chunk, Document; community labels __Community__; base labels __Entity__; names from name, title, id
-- Reproduce with kgeval 0.2.0 on graph `sha256:d9dd…3e7e`
+- Reproduce with kgeval 0.2.0 on graph `sha256:142a…b993`
 ```
 
 If the counts look wrong, check the layout first. kgeval detects it from the graph's
@@ -81,13 +81,13 @@ Each finding describes one defect and lists the elements involved:
 ### entity_uniqueness: 1 of 10 entities with a name failed
 
 - 2 entities share the normalized name 'lee kuan yew': "Lee Kuan Yew" (Person), "lee kuan yew" (Person)
-  - nodes: `4:5cda…:4`, `4:5cda…:9`
+  - nodes: `4:74f3…:4`, `4:74f3…:9`
 ```
 
 To inspect those nodes in Neo4j Browser:
 
 ```cypher
-MATCH (n) WHERE elementId(n) IN ['4:5cda…:4', '4:5cda…:9'] RETURN n
+MATCH (n) WHERE elementId(n) IN ['4:74f3…:4', '4:74f3…:9'] RETURN n
 ```
 
 The Markdown report lists up to 10 findings per metric, and `--max-findings` changes

@@ -82,7 +82,7 @@ class Neo4jSource:
                 nodes, relationships = session.execute_read(_read_graph)
         except (Neo4jError, DriverError) as error:
             if isinstance(error, Neo4jError) and error.code == _SYNTAX_ERROR:
-                # Name the cause: the snapshot queries are valid Cypher from Neo4j 5.10 on.
+                # Name the cause, since the snapshot queries are valid Cypher from Neo4j 5.10 on.
                 raise SourceError(
                     "Neo4j rejected the snapshot query; kgeval needs Neo4j 5.10 or later "
                     f"({_describe(error).splitlines()[0]})"
@@ -104,7 +104,7 @@ class Neo4jSource:
 
 
 def _describe(error: Neo4jError | DriverError) -> str:
-    # Prefer the server's message: str() of a server error repeats it among status codes.
+    # Prefer the server's message, since str() of a server error repeats it among status codes.
     if isinstance(error, Neo4jError) and error.message:
         return error.message
     return str(error)

@@ -85,9 +85,9 @@ and relationships involved, so you can find them in the graph:
 
 ## Metrics
 
-kgeval has 29 metrics in five categories: intrinsic, schema, reference, model, and
-retrieval. It runs every metric whose inputs you give. The intrinsic metrics need only the
-graph, and the others need an input, such as a schema or a model:
+kgeval has 29 intrinsic, schema, reference, model, and retrieval metrics. It runs every
+metric whose inputs you give. The intrinsic metrics need only the graph, and the others
+need an input, such as a schema or a model:
 
 | Input          | Evaluates                                                               |
 | -------------- | ----------------------------------------------------------------------- |

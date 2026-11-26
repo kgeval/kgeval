@@ -59,9 +59,9 @@ Then each metric gets one row:
 - **Base** and **Head** show each score with the number of units it counts.
 - **Change** is in percentage points. For a sampled score, it includes a 95% interval.
 - **New** and **Resolved** count the findings that only the head or only the base has,
-  matched by subject: the unit at fault, named by content, such as an entity's name and
-  node types. A finding whose details change, such as a group of duplicates that grows,
-  keeps its subject.
+  matched by subject, which names the unit at fault by content, such as an entity's name
+  and node types. A finding whose details change, such as a group of duplicates that
+  grows, keeps its subject.
 
 The outcome at the top, REGRESSED or NO REGRESSION, says whether any metric scores worse
 in the head, beyond sampling noise and `--max-drop`, with a new defect, or is no longer
@@ -93,8 +93,8 @@ sampled score, the comparison shows a 95% interval for the change, and marks the
 regression. Deterministic scores have no sampling noise, so any change in them is real.
 
 To detect smaller differences, check larger samples with
-[`--sample-size`](models.md#sampling). Keep `--seed` the same in both runs: kgeval
-picks samples by content, so both builds then check the units they have in common.
+[`--sample-size`](models.md#sampling). Keep `--seed` the same in both runs. kgeval picks
+samples by content, so both builds then check the units they have in common.
 
 kgeval computes the interval with Newcombe's method from each score's Wilson interval.
 It treats the two samples as independent, which is conservative when they share units.

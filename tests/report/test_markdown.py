@@ -98,4 +98,7 @@ def test_markdown_counts_expired_facts_and_undecided_units_only_when_there_are_s
     assert "1 relationship (0 facts, 1 expired fact, 0 provenance relationships)" in expired
     assert "; expired facts by expired_at" in expired
     assert "1 expired fact" not in evaluate(example_graph(), [EntityConnectivity()]).to_markdown()
-    assert "| 0 / 9 facts grounded in a chunk with text, 1 undecided |" in undecided
+    assert (
+        "0 / 8 facts between entities with a name, grounded in a chunk with text, 1 undecided |"
+        in (undecided)
+    )

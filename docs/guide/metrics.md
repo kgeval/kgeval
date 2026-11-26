@@ -35,11 +35,10 @@ scores the share that pass:
 score = (evaluated - failed) / evaluated
 ```
 
-The retrieval metrics are the exception: they score the mean of each question's share,
-so that every question counts equally. A score of 1.0 is perfect. A metric with nothing
-to evaluate is skipped, with the reason, instead of scored. When a metric has a
-threshold, it passes if its score is at or above the threshold, and fails if it scores
-lower or is skipped.
+The retrieval metrics instead score the mean of each question's share, so that every
+question counts equally. A score of 1.0 is perfect. A metric with nothing to evaluate is
+skipped, with the reason, instead of scored. When a metric has a threshold, it passes if
+its score is at or above the threshold, and fails if it scores lower or is skipped.
 
 ## Intrinsic metrics
 
@@ -92,14 +91,14 @@ These need a [model](models.md), passed with `--model`. All but `vocabulary_reso
 check a reproducible sample, so their scores come with a 95% confidence interval when
 the checked units are fewer than the population.
 
-| Metric                                                     | Unit                                                     | Passes when                                                                                                                                      |
-| ---------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`entity_resolution`][kgeval.EntityResolution]             | entities with a name                                     | no other entity is the same thing under another name, such as "IBM" and "International Business Machines"                                        |
-| [`entity_disambiguation`][kgeval.EntityDisambiguation]     | entities with a name in two or more chunks with text     | it stands for one thing in all its chunks, not several things that share a name                                                                  |
-| [`node_type_accuracy`][kgeval.NodeTypeAccuracy]            | entities with a name, a node type, and a chunk with text | its chunks support its node types                                                                                                                |
-| [`fact_accuracy`][kgeval.FactAccuracy]                     | facts grounded in a chunk with text                      | the chunks its entities share support it, in its direction                                                                                       |
-| [`vocabulary_resolution`][kgeval.VocabularyResolution]     | distinct vocabulary terms                                | the graph uses no more common term for the same thing, as it may use `EMPLOYED_BY` for what `WORKS_AT` says; spelling variants count as one term |
-| [`extraction_completeness`][kgeval.ExtractionCompleteness] | facts stated in chunks                                   | the graph has the fact that the chunk states                                                                                                     |
+| Metric                                                     | Unit                                                              | Passes when                                                                                                                                      |
+| ---------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`entity_resolution`][kgeval.EntityResolution]             | entities with a name                                              | no other entity is the same thing under another name, such as "IBM" and "International Business Machines"                                        |
+| [`entity_disambiguation`][kgeval.EntityDisambiguation]     | entities with a name in two or more chunks with text              | it stands for one thing in all its chunks, not several things that share a name                                                                  |
+| [`node_type_accuracy`][kgeval.NodeTypeAccuracy]            | entities with a name, a node type, and a chunk with text          | its chunks support its node types                                                                                                                |
+| [`fact_accuracy`][kgeval.FactAccuracy]                     | facts between entities with a name, grounded in a chunk with text | the chunks its entities share support it, in its direction                                                                                       |
+| [`vocabulary_resolution`][kgeval.VocabularyResolution]     | distinct vocabulary terms                                         | the graph uses no more common term for the same thing, as it may use `EMPLOYED_BY` for what `WORKS_AT` says; spelling variants count as one term |
+| [`extraction_completeness`][kgeval.ExtractionCompleteness] | facts stated in chunks                                            | the graph has the fact that the chunk states                                                                                                     |
 
 ## Retrieval metrics
 
@@ -123,10 +122,10 @@ When an answer is wrong, the fault lies either with the graph, which lacks a fac
 with the retriever, which missed one. Test questions list the facts each answer
 needs, so kgeval can tell which:
 
-| `competency` | `retrieval_recall`              | Fix                                            |
-| ------------ | ------------------------------- | ---------------------------------------------- |
-| fails        | does not count the missing fact | The graph: extraction missed the fact.         |
-| passes       | fails                           | The retriever: it missed a fact the graph has. |
+| `competency` | `retrieval_recall`              | Fix                                                  |
+| ------------ | ------------------------------- | ---------------------------------------------------- |
+| fails        | does not count the missing fact | The graph, since extraction missed the fact.         |
+| passes       | fails                           | The retriever, since it missed a fact the graph has. |
 
 `retrieval_recall` evaluates only the supporting facts that the graph has, so the
 retriever is never blamed for a gap in the graph.
