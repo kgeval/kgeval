@@ -31,3 +31,11 @@ def test_files_reject_repeated_keys(
 
     with pytest.raises(InputError, match="repeated keys: name"):
         load(path, TypeAdapter(dict[str, str]))
+
+
+def test_yaml_files_reject_keys_that_cannot_be_dictionary_keys(tmp_path: Path) -> None:
+    path = tmp_path / "file.yaml"
+    path.write_text("? [Lee, Kuan Yew]\n: 1\n", encoding="utf-8")
+
+    with pytest.raises(InputError, match="found unhashable key"):
+        load_yaml(path, TypeAdapter(dict[str, int]))

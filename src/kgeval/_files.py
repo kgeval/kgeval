@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+from collections import Counter
+from collections.abc import Hashable
 from pathlib import Path
 from typing import Any, TypeVar
 
@@ -80,4 +82,6 @@ def _unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
 
 def _repeated(keys: list[Any]) -> str:
     """Return the keys that occur more than once, sorted and joined by commas."""
-    return ", ".join(sorted({str(key) for key in keys if keys.count(key) > 1}))
+    # Count only hashable keys, since the YAML loader rejects the others itself.
+    counts = Counter(key for key in keys if isinstance(key, Hashable))
+    return ", ".join(sorted(str(key) for key, count in counts.items() if count > 1))
