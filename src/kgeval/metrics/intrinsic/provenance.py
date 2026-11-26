@@ -42,10 +42,10 @@ class EntityProvenance(Metric):
         if not graph.lexical_nodes:
             return self.skip(inputs, NO_LEXICAL_NODES)
         findings = [
-            Finding(
-                message=f"{graph.describe(entity)} is grounded in no chunk",
+            Finding.about(
+                entity,
+                f"{graph.describe(entity)} is grounded in no chunk",
                 subject=graph.describe(entity),
-                node_ids=(entity.id,),
             )
             for entity in graph.entities
             if not graph.chunk_ids(entity.id)
@@ -79,11 +79,10 @@ class FactProvenance(Metric):
         if not graph.lexical_nodes:
             return self.skip(inputs, NO_LEXICAL_NODES)
         findings = [
-            Finding(
-                message=f"no chunk grounds both entities of {graph.describe(fact)}",
+            Finding.about(
+                fact,
+                f"no chunk grounds both entities of {graph.describe(fact)}",
                 subject=graph.describe(fact),
-                node_ids=fact.node_ids,
-                relationship_ids=(fact.id,),
             )
             for fact in graph.facts
             if not graph.fact_chunk_ids(fact)
@@ -121,10 +120,10 @@ class ExtractionCoverage(Metric):
             chunk_id for entity in graph.entities for chunk_id in graph.chunk_ids(entity.id)
         }
         findings = [
-            Finding(
-                message=f"no entity was extracted from {graph.describe(chunk)}",
+            Finding.about(
+                chunk,
+                f"no entity was extracted from {graph.describe(chunk)}",
                 subject=graph.describe(chunk),
-                node_ids=(chunk.id,),
             )
             for chunk in graph.chunks
             if chunk.id not in grounding

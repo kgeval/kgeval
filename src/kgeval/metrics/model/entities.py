@@ -201,10 +201,10 @@ class EntityResolution(SampledMetric):
                 entity = named[index][0]
                 others = ", ".join(graph.describe(duplicate) for duplicate in duplicates)
                 findings.append(
-                    Finding(
-                        message=f"{graph.describe(entity)} duplicates {others}: {verdict.reason}",
+                    Finding.about(
+                        [entity, *duplicates],
+                        f"{graph.describe(entity)} duplicates {others}: {verdict.reason}",
                         subject=graph.describe(entity),
-                        node_ids=(entity.id, *(duplicate.id for duplicate in duplicates)),
                     )
                 )
         return self.estimate(inputs, len(named), len(sample), findings, verdicts.count(None))
@@ -259,11 +259,10 @@ class EntityDisambiguation(SampledMetric):
             IdentityVerdict,
         )
         findings = [
-            Finding(
-                message=f"{graph.describe(entity)} stands for more than one thing: "
-                + verdict.reason,
+            Finding.about(
+                entity,
+                f"{graph.describe(entity)} stands for more than one thing: {verdict.reason}",
                 subject=graph.describe(entity),
-                node_ids=(entity.id,),
             )
             for (entity, _), verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.one_thing
@@ -317,11 +316,11 @@ class NodeTypeAccuracy(SampledMetric):
             inputs, [_prompt(_TYPE_PROMPT, graph, *item) for item in sample], TypeVerdict
         )
         findings = [
-            Finding(
-                message=f"the chunks do not support the node types of {graph.describe(entity)}: "
+            Finding.about(
+                entity,
+                f"the chunks do not support the node types of {graph.describe(entity)}: "
                 + verdict.reason,
                 subject=graph.describe(entity),
-                node_ids=(entity.id,),
             )
             for (entity, _), verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.correct

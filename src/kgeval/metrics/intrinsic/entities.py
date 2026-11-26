@@ -61,11 +61,11 @@ class EntityUniqueness(Metric):
             (item for item in groups.items() if len(item[1]) > 1), key=lambda item: item[0]
         )
         findings = [
-            Finding(
-                message=f"{len(group)} entities share the normalized name {key!r}: "
+            Finding.about(
+                group,
+                f"{len(group)} entities share the normalized name {key!r}: "
                 + ", ".join(sorted(graph.describe(entity) for entity in group)),
                 subject=key,
-                node_ids=tuple(entity.id for entity in group),
             )
             for key, group in duplicates
         ]
@@ -102,10 +102,10 @@ class EntityConnectivity(Metric):
             for node_id in (fact.source_id, fact.target_id)
         }
         findings = [
-            Finding(
-                message=f"{graph.describe(entity)} is in no fact with another entity",
+            Finding.about(
+                entity,
+                f"{graph.describe(entity)} is in no fact with another entity",
                 subject=graph.describe(entity),
-                node_ids=(entity.id,),
             )
             for entity in graph.entities
             if entity.id not in connected
@@ -143,10 +143,8 @@ class EntityNaming(Metric):
         """
         keys = ", ".join(graph.layout.name_keys)
         findings = [
-            Finding(
-                message=f"{graph.describe(entity)} {problem}",
-                subject=graph.describe(entity),
-                node_ids=(entity.id,),
+            Finding.about(
+                entity, f"{graph.describe(entity)} {problem}", subject=graph.describe(entity)
             )
             for entity in graph.entities
             if (problem := _naming_problem(graph.name(entity), keys)) is not None

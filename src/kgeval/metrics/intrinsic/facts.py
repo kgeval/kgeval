@@ -43,11 +43,10 @@ class FactUniqueness(Metric):
             groups[(fact.source_id, graph.relationship_type(fact), fact.target_id)].append(fact)
         duplicates = [group for group in groups.values() if len(group) > 1]
         findings = [
-            Finding(
-                message=f"{len(group)} facts repeat {graph.describe(group[0])}",
+            Finding.about(
+                group,
+                f"{len(group)} facts repeat {graph.describe(group[0])}",
                 subject=graph.describe(group[0]),
-                node_ids=group[0].node_ids,
-                relationship_ids=tuple(fact.id for fact in group),
             )
             for group in duplicates
         ]

@@ -91,11 +91,10 @@ class FactAccuracy(SampledMetric):
         sample = self.sample(grounded, lambda fact: _statement(graph, fact))
         verdicts = self.ask_all(inputs, [_prompt(graph, fact) for fact in sample], SupportVerdict)
         findings = [
-            Finding(
-                message=f"the chunks do not support {graph.describe(fact)}: {verdict.reason}",
+            Finding.about(
+                fact,
+                f"the chunks do not support {graph.describe(fact)}: {verdict.reason}",
                 subject=graph.describe(fact),
-                node_ids=fact.node_ids,
-                relationship_ids=(fact.id,),
             )
             for fact, verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.supported

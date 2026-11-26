@@ -115,13 +115,10 @@ class _FactMetric(GroundTruthMetric):
                 groups[key].append(fact)
         # Describe each group by its alphabetically first description, which no element ID changes.
         return {
-            key: Finding(
-                message=f"{min(map(graph.describe, facts))} is not in the ground truth",
+            key: Finding.about(
+                facts,
+                f"{min(map(graph.describe, facts))} is not in the ground truth",
                 subject=_fact_subject(key),
-                node_ids=tuple(
-                    dict.fromkeys(node_id for fact in facts for node_id in fact.node_ids)
-                ),
-                relationship_ids=tuple(fact.id for fact in facts),
             )
             for key, facts in groups.items()
         }
@@ -152,10 +149,10 @@ class _EntityMetric(GroundTruthMetric):
             if key := ground_truth.entity_key(graph.name(entity) or ""):
                 groups[(key,)].append(entity)
         return {
-            key: Finding(
-                message=f"{min(map(graph.describe, entities))} is not in the ground truth",
+            key: Finding.about(
+                entities,
+                f"{min(map(graph.describe, entities))} is not in the ground truth",
                 subject=key[0],
-                node_ids=tuple(entity.id for entity in entities),
             )
             for key, entities in groups.items()
         }

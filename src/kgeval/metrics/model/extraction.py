@@ -131,11 +131,11 @@ class ExtractionCompleteness(SampledMetric):
             clusters.append((len(verdict.facts), len(verdict.facts) - len(missing)))
             if missing:
                 findings.append(
-                    Finding(
-                        message=f"{graph.describe(chunk)} states facts the graph lacks: "
+                    Finding.about(
+                        chunk,
+                        f"{graph.describe(chunk)} states facts the graph lacks: "
                         + " ".join(_sentence(fact) for fact in missing),
                         subject=graph.describe(chunk),
-                        node_ids=(chunk.id,),
                     )
                 )
         return self.estimate_clusters(inputs, len(chunks), clusters, findings, verdicts.count(None))
