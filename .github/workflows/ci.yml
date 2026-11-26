@@ -19,6 +19,7 @@ jobs:
         with:
           python-version: "3.x"
       - run: pipx install poetry && poetry install
+      - run: poetry check --lock
       - run: poetry run ruff check
       - run: poetry run ruff format --check
       - run: poetry run mypy
