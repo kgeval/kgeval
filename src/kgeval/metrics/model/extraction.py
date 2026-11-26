@@ -142,8 +142,8 @@ class ExtractionCompleteness(SampledMetric):
 
 
 def _listing(graph: GraphView, elements: list[Node] | list[Relationship]) -> str:
-    """Return entities or facts spelled out one per line, or a note that there are none."""
-    return "\n".join(f"- {spell(graph, element)}" for element in elements) or "(none)"
+    """Return entities or facts spelled out one per line, sorted, or a note that there are none."""
+    return "\n".join(sorted(f"- {spell(graph, element)}" for element in elements)) or "(none)"
 
 
 def _sentence(fact: str) -> str:

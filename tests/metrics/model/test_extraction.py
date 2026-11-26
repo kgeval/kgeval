@@ -24,6 +24,21 @@ def test_model_sees_each_chunk_with_what_was_extracted_from_it() -> None:
     assert "Entities extracted from the chunk:\n(none)" in contents
 
 
+def test_model_sees_what_was_extracted_in_order_of_content_not_element_id() -> None:
+    model = ScriptedModel()
+    graph = view(
+        node("c", "Chunk", text="Ada met Zoe."),
+        node("a", "__Entity__", name="Zoe"),
+        node("z", "__Entity__", name="Ada"),
+        relationship("h1", "c", "HAS_ENTITY", "a"),
+        relationship("h2", "c", "HAS_ENTITY", "z"),
+    )
+
+    ExtractionCompleteness().evaluate(graph, Inputs(model=model))
+
+    assert 'Entities extracted from the chunk:\n- "Ada"\n- "Zoe"\n' in model.prompts[0]
+
+
 def test_chunks_that_state_missing_facts_fail_with_the_facts_listed() -> None:
     model = ScriptedModel(
         "born in Singapore",

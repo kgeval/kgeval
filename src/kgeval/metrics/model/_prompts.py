@@ -32,8 +32,8 @@ def entity_name(graph: GraphView, entity: Node) -> str | None:
 def chunk_texts(graph: GraphView, chunk_ids: Iterable[str], names: Iterable[str]) -> list[str]:
     """Return the texts of up to ``MAX_CHUNKS`` chunks, preferring relevant ones.
 
-    Texts that contain every name, ignoring case, come first; ties go to element ID
-    order. Chunks without text are left out.
+    Texts that contain every name, ignoring case, come first; ties go to the
+    alphabetically first text. Chunks without text are left out.
 
     Args:
         graph: The graph the chunks belong to.
@@ -44,9 +44,9 @@ def chunk_texts(graph: GraphView, chunk_ids: Iterable[str], names: Iterable[str]
         The texts.
     """
     folded = [name.casefold() for name in names]
-    texts = [text for chunk_id in sorted(chunk_ids) if (text := graph.text(graph.node(chunk_id)))]
-    # Rely on the stable sort to keep element ID order among equally relevant texts.
-    texts.sort(key=lambda text: not all(name in text.casefold() for name in folded))
+    texts = [text for chunk_id in chunk_ids if (text := graph.text(graph.node(chunk_id)))]
+    # Order by content, not element ID, so that a rebuilt graph gets the same prompts.
+    texts.sort(key=lambda text: (not all(name in text.casefold() for name in folded), text))
     return texts[:MAX_CHUNKS]
 
 

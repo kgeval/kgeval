@@ -54,18 +54,23 @@ def test_model_sees_descriptions_and_no_element_ids() -> None:
     assert "4:a1b2:7" not in model.prompts[0]
 
 
-def test_sample_depends_on_content_not_element_ids() -> None:
-    def sampled(prefix: str) -> set[str]:
+def test_sample_and_prompts_depend_on_content_not_element_ids() -> None:
+    def sampled(prefix: str, chunk_ids: tuple[str, str]) -> set[str]:
         people = [f"Person {number}" for number in range(10)]
         model = ScriptedModel()
+        chunks = [
+            node(f"{prefix}{chunk_id}", "Chunk", text=f"Hub {verb} {', '.join(people)}.")
+            for chunk_id, verb in zip(chunk_ids, ("knows", "met"), strict=True)
+        ]
+        names = ["hub", *people]
         graph = view(
-            node(f"{prefix}c", "Chunk", text=" ".join(people)),
+            *chunks,
             node(f"{prefix}hub", "__Entity__", name="Hub"),
-            relationship(f"{prefix}h", f"{prefix}c", "HAS_ENTITY", f"{prefix}hub"),
             *(node(f"{prefix}{name}", "__Entity__", name=name) for name in people),
             *(
-                relationship(f"{prefix}h{name}", f"{prefix}c", "HAS_ENTITY", f"{prefix}{name}")
-                for name in people
+                relationship(f"{chunk.id}>{name}", chunk.id, "HAS_ENTITY", f"{prefix}{name}")
+                for chunk in chunks
+                for name in names
             ),
             *(
                 relationship(f"{prefix}r{name}", f"{prefix}hub", "KNOWS", f"{prefix}{name}")
@@ -75,8 +80,9 @@ def test_sample_depends_on_content_not_element_ids() -> None:
         FactAccuracy(sample_size=3).evaluate(graph, Inputs(model=model))
         return set(model.prompts)
 
-    assert len(sampled("4:x:")) == 3
-    assert sampled("4:x:") == sampled("5:y:")
+    # Reverse the chunks' element ID order, which must change neither the sample nor its prompts.
+    assert len(sampled("4:x:", ("a", "b"))) == 3
+    assert sampled("4:x:", ("a", "b")) == sampled("5:y:", ("b", "a"))
 
 
 def test_metric_skips_graphs_without_grounded_facts() -> None:
