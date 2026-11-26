@@ -10,7 +10,6 @@ from typing import NamedTuple
 from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, model_validator
 
 from kgeval._yaml import load_yaml
-from kgeval.graph.model import content_digest
 from kgeval.graph.view import GraphView
 from kgeval.reference import Name, NamedFact, Reference
 
@@ -164,14 +163,6 @@ class QuestionSet(Reference):
                 )
             supports.append(support)
         return supports
-
-    def digest(self) -> str:
-        """Return a short digest that changes whenever the question set changes.
-
-        Returns:
-            The first 12 hex digits of the question set's content digest.
-        """
-        return content_digest(self.model_dump(mode="json"))[:12]
 
 
 def load_questions(path: str | Path) -> QuestionSet:

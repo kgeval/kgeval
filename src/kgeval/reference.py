@@ -8,7 +8,7 @@ from typing import Annotated, TypeAlias
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
-from kgeval.graph.model import Relationship
+from kgeval.graph.model import Relationship, content_digest
 from kgeval.graph.names import normalize_name, normalize_type
 from kgeval.graph.view import GraphView
 
@@ -87,6 +87,14 @@ class Reference(BaseModel, ABC):
                 raise ValueError(f"no fact has the symmetric relationship type {name!r}")
         self._symmetric_keys = frozenset(map(normalize_type, self.symmetric_relationship_types))
         return self
+
+    def digest(self) -> str:
+        """Return a short digest that changes whenever the reference changes.
+
+        Returns:
+            The first 12 hex digits of the reference's content digest.
+        """
+        return content_digest(self.model_dump(mode="json"))[:12]
 
     def entity_key(self, name: str) -> str:
         """Return the key under which an entity name matches the reference's names.

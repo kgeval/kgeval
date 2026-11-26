@@ -9,7 +9,6 @@ from typing import Annotated, TypeAlias
 from pydantic import Field, TypeAdapter, model_validator
 
 from kgeval._yaml import load_yaml
-from kgeval.graph.model import content_digest
 from kgeval.reference import NamedFact, Reference
 
 __all__ = ["DocumentSelector", "GroundTruth", "load_ground_truth"]
@@ -56,14 +55,6 @@ class GroundTruth(Reference):
             The entity names.
         """
         return [name for source, _, target in self.facts for name in (source, target)]
-
-    def digest(self) -> str:
-        """Return a short digest that changes whenever the ground truth changes.
-
-        Returns:
-            The first 12 hex digits of the ground truth's content digest.
-        """
-        return content_digest(self.model_dump(mode="json"))[:12]
 
 
 def load_ground_truth(path: str | Path) -> GroundTruth:
