@@ -31,7 +31,7 @@ class _Loader(yaml.SafeLoader):
 
 
 def load_yaml(path: str | Path, adapter: TypeAdapter[_T]) -> _T:
-    """Read a YAML file, which may also be JSON, and validate its content.
+    """Read a YAML file, or a JSON file when its name ends in .json, and validate its content.
 
     Args:
         path: The file to read, in UTF-8, or in UTF-16 with a byte order mark.
@@ -43,6 +43,9 @@ def load_yaml(path: str | Path, adapter: TypeAdapter[_T]) -> _T:
     Raises:
         InputError: If the file cannot be read, parsed, or validated.
     """
+    # Read JSON as JSON, since YAML 1.1 parses some of it differently, such as escaped emoji.
+    if Path(path).suffix.lower() == ".json":
+        return load_json(path, adapter)
     try:
         content = yaml.load(Path(path).read_bytes(), Loader=_Loader)
         return adapter.validate_python(content)
