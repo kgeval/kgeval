@@ -19,7 +19,7 @@ from kgeval.metrics.catalog import (
     load_suite,
 )
 from kgeval.metrics.intrinsic import EntityUniqueness
-from kgeval.metrics.model import EntityResolution, FactAccuracy
+from kgeval.metrics.model import EntityCriterion, EntityResolution, FactAccuracy
 from kgeval.questions import load_questions
 from kgeval.schema.model import load_schema
 from tests.doubles import ScriptedModel
@@ -76,13 +76,15 @@ def test_load_suite_builds_the_listed_metrics_with_their_settings_in_order(
         tmp_path,
         "fact_accuracy: {threshold: 0.9, sample_size: 5}\n"
         "entity_uniqueness:\n"
-        "entity_resolution: {threshold: 0.8}\n",
+        "entity_resolution: {threshold: 0.8}\n"
+        "dated_people: {criterion: It gives a birth date., applies_to: entities}\n",
     )
 
     assert load_suite(path) == [
         FactAccuracy(threshold=0.9, sample_size=5),
         EntityUniqueness(),
         EntityResolution(threshold=0.8),
+        EntityCriterion(name="dated_people", criterion="It gives a birth date."),
     ]
 
 
@@ -94,6 +96,9 @@ def test_load_suite_builds_the_listed_metrics_with_their_settings_in_order(
         ("entity_uniqueness: {threshold: 2}\n", "less than or equal to 1"),
         ("entity_uniqueness: {treshold: 0.9}\n", "Extra inputs"),
         ("entity_uniqueness: {threshold: 0.9}\nentity_uniqueness:\n", "repeated keys"),
+        ("fact_accuracy: {criterion: It is right., applies_to: facts}\n", "no built-in"),
+        ("dated: {criterion: It is dated., applies_to: facts, name: x}\n", "its entry"),
+        ("dated: {criterion: It is dated.}\n", "Unable to extract tag"),
     ],
 )
 def test_load_suite_rejects_invalid_suites(tmp_path: Path, content: str, message: str) -> None:

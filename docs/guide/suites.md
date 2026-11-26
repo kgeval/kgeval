@@ -2,7 +2,8 @@
 
 A suite lists the metrics to run and their settings, in a YAML or JSON file. Without a
 suite, kgeval runs every metric whose inputs you give. With a suite, it runs exactly the
-metrics the suite lists, in that order.
+metrics the suite lists, in that order. A suite can also define
+[criteria](custom-metrics.md#check-a-criterion), metrics of your own in one sentence.
 
 ```yaml title="suite.yaml"
 entity_uniqueness:

@@ -78,15 +78,16 @@ def merge_findings(
     return failed, findings
 
 
-def enumerate_terms(terms: Sequence[str]) -> str:
+def enumerate_terms(terms: Sequence[str], conjunction: str = "and") -> str:
     """Join terms into a list in words, such as ``"A, B, and C"``.
 
     Args:
         terms: At least one term.
+        conjunction: The word before the last term, such as ``"or"``.
 
     Returns:
         The list.
     """
     if len(terms) <= 2:
-        return " and ".join(terms)
-    return f"{', '.join(terms[:-1])}, and {terms[-1]}"
+        return f" {conjunction} ".join(terms)
+    return f"{', '.join(terms[:-1])}, {conjunction} {terms[-1]}"

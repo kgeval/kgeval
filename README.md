@@ -16,6 +16,7 @@ regressed.
 ## Features
 
 - Score a graph on 29 built-in metrics
+- Define metrics of your own in one sentence
 - Trace every finding to the nodes and relationships involved
 - Run reference-free and reference-based evaluation
 - Compare evaluation runs over time

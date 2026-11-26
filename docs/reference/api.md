@@ -231,6 +231,17 @@ report.passed  # False when a metric misses its threshold
 ::: kgeval.ExtractionCompleteness
     options: {heading_level: 4, members: false}
 
+### Criteria
+
+::: kgeval.CriterionMetric
+    options: {heading_level: 4, members: false}
+
+::: kgeval.EntityCriterion
+    options: {heading_level: 4, members: false}
+
+::: kgeval.FactCriterion
+    options: {heading_level: 4, members: false}
+
 ### Retrieval metrics
 
 ::: kgeval.RetrievalRecall

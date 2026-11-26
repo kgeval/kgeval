@@ -2,6 +2,12 @@
 
 from kgeval.metrics.model._prompts import MAX_CHUNKS
 from kgeval.metrics.model.base import DEFAULT_SAMPLE_SIZE, ModelMetric, SampledMetric
+from kgeval.metrics.model.criteria import (
+    CriterionMetric,
+    CriterionVerdict,
+    EntityCriterion,
+    FactCriterion,
+)
 from kgeval.metrics.model.entities import (
     DuplicateVerdict,
     EntityDisambiguation,
@@ -22,11 +28,15 @@ __all__ = [
     "DEFAULT_SAMPLE_SIZE",
     "MAX_CHUNKS",
     "CompletenessVerdict",
+    "CriterionMetric",
+    "CriterionVerdict",
     "DuplicateVerdict",
+    "EntityCriterion",
     "EntityDisambiguation",
     "EntityResolution",
     "ExtractionCompleteness",
     "FactAccuracy",
+    "FactCriterion",
     "IdentityVerdict",
     "ModelMetric",
     "NodeTypeAccuracy",

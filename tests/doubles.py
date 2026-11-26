@@ -3,7 +3,7 @@
 import threading
 import time
 from collections.abc import Mapping
-from typing import TypeVar
+from typing import Literal, TypeVar, get_args, get_origin
 
 from pydantic import BaseModel
 
@@ -16,8 +16,9 @@ OutputT = TypeVar("OutputT", bound=BaseModel)
 class ScriptedModel(Model):
     """Approve every prompt except those containing one of the given texts; record every prompt.
 
-    Approving verdicts set their flag and leave their lists empty; rejecting verdicts
-    clear their flag and take their lists from ``rejection``.
+    Approving verdicts set their flag, pick the first option of each choice, and leave
+    their lists empty; rejecting verdicts clear their flag and take their choices and
+    lists from ``rejection``, or else the second option and an empty list.
     """
 
     name = "scripted"
@@ -38,6 +39,9 @@ class ScriptedModel(Model):
                 verdict[name] = not rejected
             elif field.annotation is str:
                 verdict[name] = "Scripted."
+            elif get_origin(field.annotation) is Literal:
+                choices = get_args(field.annotation)
+                verdict[name] = self.rejection.get(name, choices[1]) if rejected else choices[0]
             else:
                 verdict[name] = self.rejection.get(name, []) if rejected else []
         return output_type.model_validate(verdict)

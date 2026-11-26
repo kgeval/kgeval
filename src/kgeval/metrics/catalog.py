@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import difflib
+from collections.abc import Collection, Mapping
 from pathlib import Path
 from typing import Annotated, Any
 
-from pydantic import Field, TypeAdapter, ValidationError
+from pydantic import Field, TypeAdapter
 
 from kgeval._files import load_yaml
 from kgeval.errors import InputError
@@ -24,10 +25,13 @@ from kgeval.metrics.intrinsic import (
     VocabularyUniqueness,
 )
 from kgeval.metrics.model import (
+    CriterionMetric,
+    EntityCriterion,
     EntityDisambiguation,
     EntityResolution,
     ExtractionCompleteness,
     FactAccuracy,
+    FactCriterion,
     ModelMetric,
     NodeTypeAccuracy,
     VocabularyResolution,
@@ -122,13 +126,21 @@ BUILTIN_METRICS: tuple[type[Metric], ...] = (
 
 _Suite = Annotated[dict[str, dict[str, Any] | None], Field(min_length=1)]
 
+_CRITERION: TypeAdapter[EntityCriterion | FactCriterion] = TypeAdapter(
+    Annotated[EntityCriterion | FactCriterion, Field(discriminator="applies_to")]
+)
+_CRITERION_SETTINGS = frozenset({"criterion", "applies_to"})
+
 
 def load_suite(path: str | Path) -> list[Metric]:
     """Load the metrics that a suite file lists, with their settings.
 
-    A suite maps built-in metric names to settings, which are the metrics' parameters,
-    such as ``threshold``, ``sample_size``, or ``k``; a metric without settings needs
-    only its name. A suite holds no inputs, so one suite serves every graph and model.
+    A suite maps metric names to settings, which are the metrics' parameters, such as
+    ``threshold``, ``sample_size``, or ``k``; a built-in metric without settings needs
+    only its name. An entry with a ``criterion`` or ``applies_to`` setting defines a
+    criterion under its name: an ``EntityCriterion`` when ``applies_to`` is
+    ``entities``, and a ``FactCriterion`` when it is ``facts``. A suite holds no inputs,
+    so one suite serves every graph and model.
 
     Args:
         path: The suite file, YAML or JSON.
@@ -137,19 +149,36 @@ def load_suite(path: str | Path) -> list[Metric]:
         The metrics, in the order the suite lists them.
 
     Raises:
-        InputError: If the file cannot be read, names an unknown metric, or holds an
-            invalid setting.
+        InputError: If the file cannot be read, names an unknown metric, holds an
+            invalid setting, or defines a criterion under a built-in metric's name.
     """
     suite = load_yaml(path, TypeAdapter(_Suite))
     metric_types = {metric_type.name: metric_type for metric_type in BUILTIN_METRICS}
     metrics: list[Metric] = []
     for name, settings in suite.items():
-        if name not in metric_types:
+        fields = settings or {}
+        is_criterion = not _CRITERION_SETTINGS.isdisjoint(fields)
+        if not is_criterion and name not in metric_types:
             matches = difflib.get_close_matches(name, metric_types, n=1)
             hint = f"; did you mean {matches[0]}?" if matches else ""
             raise InputError(f"invalid suite {path}: unknown metric {name}{hint}")
         try:
-            metrics.append(metric_types[name].model_validate(settings or {}))
-        except ValidationError as error:
+            metric = (
+                _criterion(name, fields, metric_types)
+                if is_criterion
+                else metric_types[name].model_validate(fields)
+            )
+        # Catch our errors with pydantic's, since a ValidationError is a ValueError.
+        except ValueError as error:
             raise InputError(f"invalid suite {path}: {name}: {error}") from error
+        metrics.append(metric)
     return metrics
+
+
+def _criterion(name: str, settings: Mapping[str, Any], builtin: Collection[str]) -> CriterionMetric:
+    """Return the criterion that a suite defines under a name."""
+    if name in builtin:
+        raise ValueError("a criterion needs a name that no built-in metric has")
+    if "name" in settings:
+        raise ValueError("a criterion takes its name from its entry")
+    return _CRITERION.validate_python({**settings, "name": name})

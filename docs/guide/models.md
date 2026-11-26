@@ -2,7 +2,8 @@
 
 Some qualities cannot be checked by rules, such as whether two names refer to the same
 thing or whether a chunk actually states a fact. The six
-[model metrics](metrics.md#model-metrics) ask a model instead. Any model that
+[model metrics](metrics.md#model-metrics) ask a model instead, as do
+[criteria](custom-metrics.md#check-a-criterion) of your own. Any model that
 [LiteLLM](https://docs.litellm.ai/) supports works, from a hosted provider or a local
 server.
 
