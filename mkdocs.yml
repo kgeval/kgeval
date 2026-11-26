@@ -16,6 +16,7 @@ nav:
       - Inputs: guide/inputs.md
       - Models: guide/models.md
       - Suites: guide/suites.md
+      - Custom metrics: guide/custom-metrics.md
       - Comparing builds: guide/comparing.md
       - Testing with pytest: guide/testing.md
       - Configuration: guide/configuration.md

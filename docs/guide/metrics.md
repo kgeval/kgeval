@@ -4,7 +4,8 @@ kgeval has 29 metrics in five categories. It runs every metric whose inputs you 
 or the metrics you choose with `--metric` or a [suite](suites.md). Run `kgeval metrics`
 to list them all with the inputs each needs.
 Each metric name below links to its full definition in the
-[Python API reference](../reference/api.md).
+[Python API reference](../reference/api.md). To check a quality that no built-in metric
+covers, write a [custom metric](custom-metrics.md).
 
 ## How kgeval reads a graph
 

@@ -98,7 +98,7 @@ class SampledMetric(ModelMetric):
     """Estimate, with a model, a quality of a population from a reproducible sample.
 
     Subclasses choose the population, write one prompt per sampled unit, and decide
-    which verdicts fail; this class samples, selects chunk texts, and builds the result.
+    which verdicts fail; this class samples, asks the model, and builds the result.
     The sample is the ``sample_size`` units with the lowest SHA-256 of
     ``"{seed}:{key}"``, where a unit's key describes its content, so the sample is the
     same on every run and platform, and only extended when ``sample_size`` grows. Since
