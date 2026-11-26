@@ -5,6 +5,7 @@
 | [`kgeval run`](#kgeval-run)                   | Evaluate a graph and report scores and findings. |
 | [`kgeval compare`](#kgeval-compare)           | Compare two reports metric by metric.            |
 | [`kgeval infer-schema`](#kgeval-infer-schema) | Draft a schema from the graph.                   |
+| [`kgeval snapshot`](#kgeval-snapshot)         | Write a snapshot of the graph as JSON.           |
 | [`kgeval metrics`](#kgeval-metrics)           | List the built-in metrics and their inputs.      |
 
 Every command accepts `--help`, and `kgeval --version` prints the installed version.
@@ -15,8 +16,9 @@ Every command accepts `--help`, and `kgeval --version` prints the installed vers
 kgeval run [OPTIONS]
 ```
 
-Evaluate a Neo4j knowledge graph and report scores and findings. Without `--metric` or
-`--suite`, kgeval runs every metric whose inputs are given.
+Evaluate a knowledge graph in Neo4j, or a snapshot of one, and report scores and
+findings. Without `--metric` or `--suite`, kgeval runs every metric whose inputs are
+given.
 
 ### Graph
 
@@ -26,10 +28,12 @@ Evaluate a Neo4j knowledge graph and report scores and findings. Without `--metr
 | `--username`    | `neo4j`                  | The user. Reads `NEO4J_USERNAME`.                                                                |
 | `--password`    | None                     | The password. Reads `NEO4J_PASSWORD`. Without one, kgeval connects without authentication.       |
 | `--database`    | The server's default     | The database to read. Reads `NEO4J_DATABASE`.                                                    |
+| `--graph FILE`  | None                     | A [snapshot](../guide/configuration.md#snapshots) to read instead of Neo4j.                      |
 | `--layout FILE` | Detected                 | A [layout file](../guide/configuration.md#custom-layout) whose fields replace the detected ones. |
 
-In a terminal, kgeval prompts for the URI, user, and password when they are unset, and
-offers the defaults. Elsewhere, such as in CI, it uses the defaults.
+Without `--graph`, kgeval connects to Neo4j. In a terminal, it prompts for the URI,
+user, and password when they are unset, and offers the defaults. Elsewhere, such as in
+CI, it uses the defaults.
 
 ### Inputs
 
@@ -158,12 +162,29 @@ the draft before passing it to `--schema`, because it copies the graph's defects
 
 ### Options
 
-| Option                                            | Default             | Description                                           |
-| ------------------------------------------------- | ------------------- | ----------------------------------------------------- |
-| `--uri`, `--username`, `--password`, `--database` | As for `kgeval run` | The [graph options](#graph) of `kgeval run`.          |
-| `--layout FILE`                                   | None                | A layout file whose fields replace the detected ones. |
-| `-o`, `--output FILE`                             | Standard output     | The file to write the schema to.                      |
-| `-v`, `--verbose`                                 | Off                 | Log progress to standard error.                       |
+| Option                                                       | Default             | Description                                           |
+| ------------------------------------------------------------ | ------------------- | ----------------------------------------------------- |
+| `--uri`, `--username`, `--password`, `--database`, `--graph` | As for `kgeval run` | The [graph options](#graph) of `kgeval run`.          |
+| `--layout FILE`                                              | None                | A layout file whose fields replace the detected ones. |
+| `-o`, `--output FILE`                                        | Standard output     | The file to write the schema to.                      |
+| `-v`, `--verbose`                                            | Off                 | Log progress to standard error.                       |
+
+## kgeval snapshot
+
+```console
+kgeval snapshot [OPTIONS]
+```
+
+Write a snapshot of the graph in Neo4j as JSON, for `--graph` to read.
+[Snapshots](../guide/configuration.md#snapshots) describes the format.
+
+### Options
+
+| Option                                            | Default             | Description                                       |
+| ------------------------------------------------- | ------------------- | ------------------------------------------------- |
+| `--uri`, `--username`, `--password`, `--database` | As for `kgeval run` | The [connection options](#graph) of `kgeval run`. |
+| `-o`, `--output FILE`                             | Standard output     | The file to write the snapshot to.                |
+| `-v`, `--verbose`                                 | Off                 | Log progress to standard error.                   |
 
 ## kgeval metrics
 

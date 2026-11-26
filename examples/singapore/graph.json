@@ -1,0 +1,543 @@
+{
+  "snapshot_format": 1,
+  "nodes": [
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:0",
+      "labels": [
+        "Document"
+      ],
+      "properties": {
+        "fileName": "singapore.txt"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:1",
+      "labels": [
+        "Chunk"
+      ],
+      "properties": {
+        "text": "Lee Kuan Yew was born in Singapore. He co-founded the People's Action Party and the law firm Lee & Lee."
+      },
+      "embedding_dimensions": {
+        "embedding": 2
+      }
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:10",
+      "labels": [
+        "Landmark",
+        "__Entity__"
+      ],
+      "properties": {
+        "id": "Marina Bay Sands"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:11",
+      "labels": [
+        "PERSON",
+        "__Entity__"
+      ],
+      "properties": {
+        "id": "He"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:12",
+      "labels": [
+        "Document"
+      ],
+      "properties": {
+        "fileName": "early-years.txt"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:13",
+      "labels": [
+        "Chunk"
+      ],
+      "properties": {
+        "text": "Lee studied law at Fitzwilliam College, Cambridge. As a boy, Lee Kuan Yew attended Raffles Institution."
+      },
+      "embedding_dimensions": {
+        "embedding": 2
+      }
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:14",
+      "labels": [
+        "Chunk"
+      ],
+      "properties": {
+        "text": "Raffles founded modern Singapore in 1819. Lee Kuan Yew became its first prime minister in 1959."
+      },
+      "embedding_dimensions": {
+        "embedding": 2
+      }
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:15",
+      "labels": [
+        "Person",
+        "__Entity__"
+      ],
+      "properties": {
+        "id": "Lee"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:16",
+      "labels": [
+        "Person",
+        "__Entity__"
+      ],
+      "properties": {
+        "id": "Fitzwilliam College"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:17",
+      "labels": [
+        "Organization",
+        "__Entity__"
+      ],
+      "properties": {
+        "id": "Raffles"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:18",
+      "labels": [
+        "__Community__"
+      ],
+      "properties": {
+        "title": "Lee Kuan Yew and the People's Action Party",
+        "id": "0-0",
+        "level": 0
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:2",
+      "labels": [
+        "Chunk"
+      ],
+      "properties": {
+        "text": "Kwa Geok Choo married Lee Kuan Yew."
+      },
+      "embedding_dimensions": {
+        "embedding": 2
+      }
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:3",
+      "labels": [
+        "Chunk"
+      ],
+      "properties": {
+        "text": "Table of contents"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "labels": [
+        "Person",
+        "__Entity__"
+      ],
+      "properties": {
+        "born": {
+          "date": "1923-09-16"
+        },
+        "id": "Lee Kuan Yew"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:5",
+      "labels": [
+        "Location",
+        "__Entity__"
+      ],
+      "properties": {
+        "id": "Singapore"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:6",
+      "labels": [
+        "Organization",
+        "__Entity__"
+      ],
+      "properties": {
+        "id": "People's Action Party"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:7",
+      "labels": [
+        "Organization",
+        "__Entity__"
+      ],
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:8",
+      "labels": [
+        "Person",
+        "__Entity__"
+      ],
+      "properties": {
+        "born": "1920",
+        "id": "Kwa Geok Choo"
+      },
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:9",
+      "labels": [
+        "Person",
+        "__Entity__"
+      ],
+      "properties": {
+        "born": {
+          "date": "1923-09-16"
+        },
+        "id": "lee kuan yew"
+      },
+      "embedding_dimensions": {}
+    }
+  ],
+  "relationships": [
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:0",
+      "type": "PART_OF",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:1",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:0",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:1",
+      "type": "PART_OF",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:2",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:0",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:10",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:2",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:11",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:2",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:8",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:12",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:2",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:9",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:13",
+      "type": "BORN_IN",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:5",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:14",
+      "type": "BORN_IN",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:5",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:15",
+      "type": "FOUNDED",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:6",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:16",
+      "type": "FOUNDED",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:7",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:17",
+      "type": "FOUNDED",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:9",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:6",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:18",
+      "type": "Founded",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:11",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:6",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:19",
+      "type": "MARRIED",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:8",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:2",
+      "type": "PART_OF",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:3",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:0",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:20",
+      "type": "KNOWS",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:8",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:8",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:21",
+      "type": "PART_OF",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:13",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:12",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:22",
+      "type": "PART_OF",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:14",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:12",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:23",
+      "type": "NEXT_CHUNK",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:13",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:14",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:24",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:13",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:25",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:13",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:15",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:26",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:13",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:16",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:27",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:13",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:17",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:28",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:14",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:17",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:29",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:14",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:5",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:3",
+      "type": "NEXT_CHUNK",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:1",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:2",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:30",
+      "type": "STUDIED_AT",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:15",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:16",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:31",
+      "type": "ATTENDED",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:17",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:32",
+      "type": "FOUNDED",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:17",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:5",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:33",
+      "type": "IN_COMMUNITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:18",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:34",
+      "type": "IN_COMMUNITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:5",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:18",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:35",
+      "type": "IN_COMMUNITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:6",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:18",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:36",
+      "type": "IN_COMMUNITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:7",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:18",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:37",
+      "type": "IN_COMMUNITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:8",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:18",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:38",
+      "type": "IN_COMMUNITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:9",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:18",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:39",
+      "type": "IN_COMMUNITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:11",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:18",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "type": "NEXT_CHUNK",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:2",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:3",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:5",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:1",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:4",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:6",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:1",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:5",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:7",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:1",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:6",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:8",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:1",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:7",
+      "properties": {},
+      "embedding_dimensions": {}
+    },
+    {
+      "id": "5:3e50a23b-8d29-4861-a4c9-614d64456544:9",
+      "type": "HAS_ENTITY",
+      "source_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:1",
+      "target_id": "4:3e50a23b-8d29-4861-a4c9-614d64456544:11",
+      "properties": {},
+      "embedding_dimensions": {}
+    }
+  ]
+}

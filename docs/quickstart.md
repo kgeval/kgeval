@@ -114,8 +114,15 @@ kgeval run --schema schema.yaml --ground-truth ground_truth.yaml --questions que
 [Models](guide/models.md) covers choosing a model. To choose which metrics run, name them
 with `--metric` or list them in a [suite](guide/suites.md).
 
-## Try the example notebook
+## Try the example
 
 The [example notebook](https://github.com/kgeval/kgeval/blob/main/examples/singapore/evaluate.ipynb)
 evaluates a small graph shaped like LLM Graph Builder output, with one defect planted for
-every metric, and walks through every feature.
+every metric, and walks through every feature. To evaluate the same graph without a
+database, download its
+[snapshot](https://raw.githubusercontent.com/kgeval/kgeval/main/examples/singapore/graph.json)
+and run:
+
+```console
+kgeval run --graph graph.json
+```

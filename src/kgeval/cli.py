@@ -22,7 +22,7 @@ from rich.markdown import Markdown
 from kgeval._yaml import load_yaml
 from kgeval.errors import InputError, KgevalError, SourceError
 from kgeval.evaluation import evaluate
-from kgeval.graph import GraphView, Layout
+from kgeval.graph import Graph, GraphView, Layout, load_graph
 from kgeval.ground_truth import load_ground_truth
 from kgeval.metrics import (
     BUILTIN_METRICS,
@@ -123,6 +123,16 @@ Database = Annotated[
         rich_help_panel=_GRAPH,
     ),
 ]
+GraphFile = Annotated[
+    Path | None,
+    typer.Option(
+        "--graph",
+        help="Graph snapshot (JSON) to read instead of Neo4j.",
+        exists=True,
+        dir_okay=False,
+        rich_help_panel=_GRAPH,
+    ),
+]
 LayoutFile = Annotated[
     Path | None,
     typer.Option(
@@ -165,6 +175,7 @@ def run(
     username: Username = None,
     password: Password = None,
     database: Database = None,
+    graph_file: GraphFile = None,
     layout: LayoutFile = None,
     schema: Annotated[
         Path | None,
@@ -292,7 +303,7 @@ def run(
     ] = None,
     verbose: Verbose = False,
 ) -> None:
-    """Evaluate a Neo4j knowledge graph and report scores and findings.
+    """Evaluate a knowledge graph in Neo4j, or a snapshot of one, and report scores and findings.
 
     Without --metric or --suite, every metric whose inputs are given runs. Exits with
     status 1 when a metric scores below its threshold and 2 on errors.
@@ -324,8 +335,7 @@ def run(
             suite,
             {"sample_size": sample_size, "seed": seed, "k": top_k},
         )
-        with _connect(uri, username, password) as driver:
-            graph = Neo4jSource(driver, database).load()
+        graph = _load_graph(graph_file, uri, username, password, database)
         report = evaluate(
             graph,
             metrics,
@@ -377,6 +387,7 @@ def infer_schema_command(
     username: Username = None,
     password: Password = None,
     database: Database = None,
+    graph_file: GraphFile = None,
     layout: LayoutFile = None,
     output: Output = None,
     verbose: Verbose = False,
@@ -385,12 +396,29 @@ def infer_schema_command(
     _configure_logging(verbose)
     try:
         layout_overrides = _load_layout(layout)
-        with _connect(uri, username, password) as driver:
-            graph = Neo4jSource(driver, database).load()
+        graph = _load_graph(graph_file, uri, username, password, database)
         schema = infer_schema(GraphView(graph, Layout.detect(graph, layout_overrides)))
     except KgevalError as error:
         _fail(str(error))
     _write(schema.to_yaml(), output)
+
+
+@app.command()
+def snapshot(
+    uri: Uri = None,
+    username: Username = None,
+    password: Password = None,
+    database: Database = None,
+    output: Output = None,
+    verbose: Verbose = False,
+) -> None:
+    """Write a snapshot of the graph in Neo4j as JSON, for --graph to read."""
+    _configure_logging(verbose)
+    try:
+        graph = _load_graph(None, uri, username, password, database)
+    except KgevalError as error:
+        _fail(str(error))
+    _write(graph.model_dump_json(indent=2) + "\n", output)
 
 
 @app.command("metrics")
@@ -449,6 +477,19 @@ def _connect(uri: str | None, username: str | None, password: str | None) -> Ite
         raise SourceError(f"cannot connect to {uri}: {error}") from error
     with driver:
         yield driver
+
+
+def _load_graph(
+    path: Path | None,
+    uri: str | None,
+    username: str | None,
+    password: str | None,
+    database: str | None,
+) -> Graph:
+    if path is not None:
+        return load_graph(path)
+    with _connect(uri, username, password) as driver:
+        return Neo4jSource(driver, database).load()
 
 
 def _parse_thresholds(values: list[str]) -> dict[str, float]:

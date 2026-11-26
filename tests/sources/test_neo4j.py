@@ -3,7 +3,6 @@
 import json
 import os
 import shutil
-from collections import Counter
 from collections.abc import Callable, Iterator
 from datetime import UTC, date, datetime, time
 from pathlib import Path
@@ -19,11 +18,11 @@ from neo4j.exceptions import Neo4jError
 
 from kgeval.errors import SourceError
 from kgeval.evaluation import evaluate
-from kgeval.graph.model import Duration, Graph, Point, PropertyValue, canonical_json
+from kgeval.graph.model import Duration, Point, PropertyValue
 from kgeval.report import compare
 from kgeval.sources.neo4j import Neo4jSource, _convert, _read_graph
 from tests.doubles import ScriptedModel
-from tests.factories import EXAMPLE_DIR, example_graph
+from tests.factories import EXAMPLE_DIR, content, example_graph
 
 _TEST_URI = os.environ.get("KGEVAL_TEST_NEO4J_URI")
 
@@ -197,24 +196,6 @@ def example_source(driver: neo4j.Driver) -> Neo4jSource:
     with driver.session() as session:
         session.run((EXAMPLE_DIR / "seed.cypher").read_text(encoding="utf-8")).consume()
     return Neo4jSource(driver)
-
-
-def content(graph: Graph) -> tuple[Counter[str], Counter[tuple[str, str, str, str]]]:
-    """Return a graph's nodes and relationships by content, without element IDs."""
-    nodes = {
-        node.id: canonical_json([node.labels, node.properties, node.embedding_dimensions])
-        for node in graph.nodes
-    }
-    relationships = Counter(
-        (
-            nodes[link.source_id],
-            link.type,
-            nodes[link.target_id],
-            canonical_json([link.properties, link.embedding_dimensions]),
-        )
-        for link in graph.relationships
-    )
-    return Counter(nodes.values()), relationships
 
 
 @pytest.mark.integration

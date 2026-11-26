@@ -52,6 +52,8 @@ report.passed  # False when a metric misses its threshold
 
 ::: kgeval.Neo4jSource
 
+::: kgeval.load_graph
+
 ::: kgeval.Graph
 
 ::: kgeval.Node

@@ -2,6 +2,7 @@
 
 from kgeval.graph.layout import BASE_LABELS, COMMUNITY_LABELS, LEXICAL_LABELS, Layout, Role
 from kgeval.graph.model import (
+    SNAPSHOT_FORMAT,
     Duration,
     EmbeddingDimensions,
     Graph,
@@ -13,6 +14,7 @@ from kgeval.graph.model import (
     Scalar,
     canonical_json,
     content_digest,
+    load_graph,
     property_types,
     value_type,
 )
@@ -23,6 +25,7 @@ __all__ = [
     "BASE_LABELS",
     "COMMUNITY_LABELS",
     "LEXICAL_LABELS",
+    "SNAPSHOT_FORMAT",
     "Duration",
     "EmbeddingDimensions",
     "Graph",
@@ -37,6 +40,7 @@ __all__ = [
     "Scalar",
     "canonical_json",
     "content_digest",
+    "load_graph",
     "normalize_name",
     "normalize_type",
     "property_types",

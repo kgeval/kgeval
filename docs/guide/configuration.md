@@ -26,6 +26,51 @@ name as its second argument if it is not the default:
 graph = kgeval.Neo4jSource(driver, "neo4j").load()
 ```
 
+## Snapshots
+
+A snapshot holds every node and relationship that kgeval reads from the graph. Save one
+to evaluate the same graph again without a database:
+
+=== "CLI"
+
+    ```console
+    kgeval snapshot -o graph.json
+    kgeval run --graph graph.json
+    ```
+
+=== "Python"
+
+    ```python
+    Path("graph.json").write_text(graph.model_dump_json(), encoding="utf-8")
+    graph = kgeval.load_graph("graph.json")
+    ```
+
+A snapshot file holds a [`Graph`][kgeval.Graph] as JSON, so a graph from another
+database can be evaluated by writing one:
+
+```json title="graph.json"
+{
+  "snapshot_format": 1,
+  "nodes": [
+    {"id": "lee", "labels": ["Person"], "properties": {"name": "Lee Kuan Yew"}},
+    {"id": "singapore", "labels": ["Location"], "properties": {"name": "Singapore"}}
+  ],
+  "relationships": [
+    {"id": "born_in", "type": "BORN_IN", "source_id": "lee", "target_id": "singapore"}
+  ]
+}
+```
+
+A property value is a string, a number, a boolean, one of these objects, or a list of
+them:
+
+- A date, time, or datetime is an object with one key, `date`, `time`, or `datetime`,
+  whose value is in ISO 8601 format, such as `{"date": "1923-09-16"}`.
+- A duration is an object with the fields of [`Duration`][kgeval.Duration].
+- A point is an object with the fields of [`Point`][kgeval.Point].
+
+Embeddings appear only as their dimensions, under `embedding_dimensions`.
+
 ## Graph layout
 
 The layout decides which nodes are entities, lexical nodes, and community nodes, and

@@ -1,7 +1,8 @@
-"""Implement the factories of the example graph and of small graphs for edge cases."""
+"""Implement the factories of test graphs, and the comparison of graphs by content."""
 
 from __future__ import annotations
 
+from collections import Counter
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -9,7 +10,7 @@ from typing import Any
 import yaml
 
 from kgeval.graph.layout import Layout
-from kgeval.graph.model import Graph, Node, PropertyValue, Relationship
+from kgeval.graph.model import Graph, Node, PropertyValue, Relationship, canonical_json
 from kgeval.graph.view import GraphView
 from kgeval.schema.model import GraphSchema
 
@@ -71,6 +72,24 @@ def graph(*elements: Node | Relationship) -> Graph:
 
 def view(*elements: Node | Relationship, layout: Layout | None = None) -> GraphView:
     return GraphView(graph(*elements), layout)
+
+
+def content(graph: Graph) -> tuple[Counter[str], Counter[tuple[str, str, str, str]]]:
+    """Return a graph's nodes and relationships by content, without element IDs."""
+    nodes = {
+        node.id: canonical_json([node.labels, node.properties, node.embedding_dimensions])
+        for node in graph.nodes
+    }
+    relationships = Counter(
+        (
+            nodes[link.source_id],
+            link.type,
+            nodes[link.target_id],
+            canonical_json([link.properties, link.embedding_dimensions]),
+        )
+        for link in graph.relationships
+    )
+    return Counter(nodes.values()), relationships
 
 
 def example_graph() -> Graph:

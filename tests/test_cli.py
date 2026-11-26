@@ -310,6 +310,23 @@ def test_infer_schema_writes_a_schema_that_loads_back(runner: CliRunner, tmp_pat
     assert [node_type.label for node_type in schema.node_types][:2] == ["Person", "Organization"]
 
 
+def test_snapshot_writes_a_graph_that_run_and_infer_schema_read_without_neo4j(
+    runner: CliRunner, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "graph.json"
+    assert runner.invoke(cli.app, ["snapshot", "--output", str(path)]).exit_code == 0
+    # Fail every read from Neo4j, so only the snapshot can supply the graph.
+    monkeypatch.setattr(FakeSource, "graph", None)
+
+    report = runner.invoke(cli.app, ["run", "--graph", str(path)])
+    schema = runner.invoke(cli.app, ["infer-schema", "--graph", str(path)])
+
+    assert report.exit_code == 0, report.output
+    assert "| entity_uniqueness | 90.0% |" in report.stdout
+    assert schema.exit_code == 0, schema.output
+    assert "label: Person" in schema.stdout
+
+
 def run_json(runner: CliRunner, path: Path) -> Path:
     result = runner.invoke(cli.app, ["run", "--format", "json", "--output", str(path)])
     assert result.exit_code == 0, result.output

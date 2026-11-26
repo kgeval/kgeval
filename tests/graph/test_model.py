@@ -1,10 +1,13 @@
 """Test the immutable property graph snapshot that every metric evaluates."""
 
+import math
 from datetime import UTC, date, datetime, time
+from pathlib import Path
 
 import pytest
 from pydantic import ValidationError
 
+from kgeval.errors import InputError
 from kgeval.graph.model import (
     Duration,
     Graph,
@@ -13,9 +16,10 @@ from kgeval.graph.model import (
     PropertyTypeName,
     PropertyValue,
     canonical_json,
+    load_graph,
     value_type,
 )
-from tests.factories import graph, node, relationship
+from tests.factories import EXAMPLE_DIR, content, example_graph, graph, node, relationship
 
 
 @pytest.mark.parametrize(
@@ -123,6 +127,8 @@ def test_graphs_keep_every_property_type_and_their_fingerprint_through_json() ->
         True,
         1,
         1.0,
+        math.inf,
+        -math.inf,
         "2020-01-02",
         date(2020, 1, 2),
         datetime(2020, 1, 2, 3, 4),
@@ -140,3 +146,25 @@ def test_graphs_keep_every_property_type_and_their_fingerprint_through_json() ->
 
     assert loaded == original
     assert loaded.fingerprint() == original.fingerprint()
+
+
+def test_example_snapshot_holds_the_example_graph_of_the_unit_tests() -> None:
+    assert content(load_graph(EXAMPLE_DIR / "graph.json")) == content(example_graph())
+
+
+@pytest.mark.parametrize(
+    ("data", "message"),
+    [
+        (b'{"snapshot_format": 2}', "the snapshot has format 2, which needs a newer kgeval"),
+        (b'{"snapshot_format": "2"}', "Input should be a valid integer"),
+        (b'{"nodes": [', "Invalid JSON"),
+        ('{"nodes": []}'.encode("utf-16"), "Invalid JSON"),
+    ],
+)
+def test_load_graph_rejects_invalid_snapshots(tmp_path: Path, data: bytes, message: str) -> None:
+    path = tmp_path / "graph.json"
+    path.write_bytes(data)
+
+    with pytest.raises(InputError, match=r"graph\.json") as error:
+        load_graph(path)
+    assert message in str(error.value)

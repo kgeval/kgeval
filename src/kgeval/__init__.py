@@ -14,6 +14,7 @@ from kgeval.graph import (
     PropertyValue,
     Relationship,
     Role,
+    load_graph,
     value_type,
 )
 from kgeval.ground_truth import GroundTruth, load_ground_truth
@@ -145,6 +146,7 @@ __all__ = [
     "compare",
     "evaluate",
     "infer_schema",
+    "load_graph",
     "load_ground_truth",
     "load_questions",
     "load_retrievals",

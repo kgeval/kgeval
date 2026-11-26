@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+import logging
+from collections.abc import Mapping
 from datetime import date, datetime, time
+from pathlib import Path
 from typing import Annotated, Literal, TypeAlias, TypeVar
 
 from pydantic import (
@@ -13,12 +16,16 @@ from pydantic import (
     ConfigDict,
     Field,
     SerializerFunctionWrapHandler,
+    ValidationError,
     WrapSerializer,
     field_validator,
     model_validator,
 )
 
+from kgeval.errors import InputError
+
 __all__ = [
+    "SNAPSHOT_FORMAT",
     "Duration",
     "EmbeddingDimensions",
     "Graph",
@@ -30,15 +37,28 @@ __all__ = [
     "Scalar",
     "canonical_json",
     "content_digest",
+    "load_graph",
     "property_types",
     "value_type",
 ]
+
+logger = logging.getLogger(__name__)
+
+SNAPSHOT_FORMAT = 1
+"""The version of the snapshot format that this kgeval writes and reads.
+
+It grows whenever a snapshot could hold what an older kgeval cannot read, so that older
+releases reject newer snapshots with a clear message rather than misread them.
+"""
+
+# Write NaN and infinite floats as JSON constants, which load back, rather than as null.
+_MODEL_CONFIG = ConfigDict(frozen=True, extra="forbid", ser_json_inf_nan="constants")
 
 
 class Duration(BaseModel):
     """Represent a Neo4j duration, which keeps calendar months apart from exact time."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = _MODEL_CONFIG
 
     months: int = 0
     days: int = 0
@@ -49,7 +69,7 @@ class Duration(BaseModel):
 class Point(BaseModel):
     """Represent a Neo4j spatial point."""
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = _MODEL_CONFIG
 
     srid: int
     coordinates: tuple[float, ...]
@@ -202,7 +222,7 @@ class Node(BaseModel):
             not kept.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = _MODEL_CONFIG
 
     id: str
     labels: tuple[str, ...] = ()
@@ -229,7 +249,7 @@ class Relationship(BaseModel):
             not kept.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = _MODEL_CONFIG
 
     id: str
     type: str
@@ -253,12 +273,31 @@ class Graph(BaseModel):
     Nodes and relationships are kept sorted by ID, so every computation over a graph
     is deterministic whatever order its source returned them in. Construction fails
     on duplicate IDs and on relationships whose source or target node is missing.
+
+    Attributes:
+        snapshot_format: The version of the snapshot format.
+        nodes: Its nodes, sorted by ID.
+        relationships: Its relationships, sorted by ID.
     """
 
-    model_config = ConfigDict(frozen=True, extra="forbid")
+    model_config = _MODEL_CONFIG
 
+    snapshot_format: int = Field(default=SNAPSHOT_FORMAT, ge=1, strict=True)
     nodes: tuple[Node, ...] = ()
     relationships: tuple[Relationship, ...] = ()
+
+    @model_validator(mode="before")
+    @classmethod
+    def _check_format(cls, data: object) -> object:
+        # Reject newer formats before their fields fail validation with obscure messages.
+        if isinstance(data, Mapping):
+            snapshot_format = data.get("snapshot_format", SNAPSHOT_FORMAT)
+            if isinstance(snapshot_format, int) and snapshot_format > SNAPSHOT_FORMAT:
+                raise ValueError(
+                    f"the snapshot has format {snapshot_format}, which needs a newer kgeval; "
+                    f"this one reads format {SNAPSHOT_FORMAT}"
+                )
+        return data
 
     @field_validator("nodes", "relationships")
     @classmethod
@@ -306,3 +345,24 @@ class Graph(BaseModel):
             for relationship in self.relationships
         ]
         return "sha256:" + content_digest((nodes, relationships))
+
+
+def load_graph(path: str | Path) -> Graph:
+    """Load a graph snapshot from a JSON file.
+
+    Args:
+        path: The snapshot file, as ``kgeval snapshot`` or ``Graph.model_dump_json``
+            writes it.
+
+    Returns:
+        The snapshot.
+
+    Raises:
+        InputError: If the file cannot be read or holds no valid snapshot.
+    """
+    try:
+        graph = Graph.model_validate_json(Path(path).read_bytes())
+    except (OSError, ValidationError) as error:
+        raise InputError(f"invalid file {path}: {error}") from error
+    logger.info("Loaded %d nodes and %d relationships", len(graph.nodes), len(graph.relationships))
+    return graph
