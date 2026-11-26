@@ -275,7 +275,7 @@ def _carrier(graph: GraphView, element: Node | Relationship) -> str:
     """Return an entity's node types or a fact's relationship type, which carry its properties."""
     if isinstance(element, Relationship):
         return graph.relationship_type(element)
-    return ":".join(graph.layout.node_types(element)) or "(no node type)"
+    return _types(graph, element.id)
 
 
 def _fact_sample(graph: GraphView, fact: Relationship) -> str:
