@@ -16,7 +16,7 @@ Define criteria in a [suite](suites.md), each under its own name:
 
 ```yaml title="suite.yaml"
 dated_people:
-  criterion: The entity gives the person's date of birth.
+  criterion: The entity gives the day, month, and year of the person's birth.
   applies_to: entities
   node_types: [Person]
   threshold: 0.9
