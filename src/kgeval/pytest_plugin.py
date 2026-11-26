@@ -107,8 +107,13 @@ def _merge(reports: Sequence[Report]) -> Report:
                 "a report has one result per metric, but the tests checked "
                 f"{result.metric} with different parameters"
             )
-        # Keep the strictest threshold, so the report fails whenever a test of the metric did.
-        if (result.threshold or 0) > (kept.threshold or 0):
+        # Prefer a failing result, then the strictest threshold, so a failed test fails the report.
+        if _strictness(result) > _strictness(kept):
             results[result.metric] = result
     # Sort by metric, since pytest-xdist workers finish tests in any order.
     return first.model_copy(update={"results": tuple(results[name] for name in sorted(results))})
+
+
+def _strictness(result: MetricResult) -> tuple[bool, float]:
+    # Rank failing results first, since a model's verdicts can vary from test to test.
+    return result.passed is False, result.threshold or 0

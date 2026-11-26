@@ -72,3 +72,20 @@ def test_a_report_has_one_result_per_metric() -> None:
 
     with pytest.raises(InputError, match="checked entity_naming with different parameters"):
         _merge([report, report.model_copy(update={"results": (changed,)})])
+
+
+def test_the_report_keeps_a_failing_result_over_a_passing_one_with_a_higher_threshold() -> None:
+    # Score the metric differently in each test, as a model's varying verdicts can.
+    report = evaluate(example_graph(), [EntityNaming()])
+    [result] = report.results
+    failing = result.model_copy(
+        update={"evaluated": 10, "failed": 6, "score": 0.4, "threshold": 0.5}
+    )
+    passing = result.model_copy(
+        update={"evaluated": 20, "failed": 1, "score": 0.95, "threshold": 0.9}
+    )
+
+    merged = _merge([report.model_copy(update={"results": (item,)}) for item in (failing, passing)])
+
+    assert merged["entity_naming"] == failing
+    assert not merged.passed
