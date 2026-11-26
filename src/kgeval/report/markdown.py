@@ -1,4 +1,4 @@
-"""Render reports and comparisons as Markdown."""
+"""Implement the Markdown rendering of reports and comparisons."""
 
 from __future__ import annotations
 
@@ -24,7 +24,7 @@ _CATEGORY_TITLES = {
     MetricCategory.INTRINSIC: "Intrinsic graph metrics (deterministic)",
     MetricCategory.SCHEMA: "Schema graph metrics (deterministic)",
     MetricCategory.REFERENCE: "Reference graph metrics (deterministic)",
-    MetricCategory.JUDGED: "Judged graph metrics (LLM judge)",
+    MetricCategory.MODEL: "Model graph metrics (LLM)",
     MetricCategory.RETRIEVAL: "Retrieval metrics (deterministic)",
 }
 
@@ -210,8 +210,8 @@ def _score_row(result: MetricResult) -> str:
         score += f" (95% CI {_percent(low)} to {_percent(high)})"
     outcome = {None: "", True: "pass", False: "**FAIL**"}[result.passed]
     failed = f"{result.failed:,} / {result.evaluated:,} {result.unit}"
-    if result.unjudged:
-        failed += f", {result.unjudged:,} unjudged"
+    if result.undecided:
+        failed += f", {result.undecided:,} undecided"
     return f"| {result.metric} | {score} | {failed} | {threshold} | {outcome} |"
 
 
@@ -230,9 +230,9 @@ def _change_row(change: MetricChange) -> str:
     if change.regressed:
         notes.append("**REGRESSED**")
     new, resolved = f"{len(change.new_findings):,}", f"{len(change.resolved_findings):,}"
-    if change.category is MetricCategory.JUDGED:
+    if change.category is MetricCategory.MODEL:
         new = resolved = "—"
-        notes.append("findings of judged metrics are not compared")
+        notes.append("findings of model metrics are not compared")
     elif change.base is not None and change.head is not None and not change.comparable:
         new = resolved = "—"
     score_change = "—" if change.score_change is None else _points(change.score_change)

@@ -1,4 +1,4 @@
-"""Define the immutable property graph snapshot that every metric evaluates."""
+"""Implement the immutable property graph snapshot that every metric evaluates."""
 
 from __future__ import annotations
 
@@ -245,7 +245,7 @@ class Graph(BaseModel):
         return self
 
     def fingerprint(self) -> str:
-        """Return a digest that changes when any element, property or embedding dimension does.
+        """Return a digest that changes when any element, property, or embedding dimension does.
 
         Returns:
             The graph's ``content_digest``, as ``"sha256:<hex>"``.

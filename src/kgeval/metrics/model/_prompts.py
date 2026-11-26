@@ -1,4 +1,4 @@
-"""Show the graph to a judge: entity names, chunk texts, and facts as prompts spell them."""
+"""Implement the helpers that show entities, facts, and chunk texts to a model."""
 
 from __future__ import annotations
 
@@ -11,11 +11,11 @@ from kgeval.graph.view import GraphView
 __all__ = ["MAX_CHUNKS", "chunk_texts", "entity_name", "excerpt", "quote_chunks", "spell"]
 
 MAX_CHUNKS = 3
-"""The most chunks a judge is shown for one entity or fact."""
+"""The most chunks a model is shown for one entity or fact."""
 
 
 def entity_name(graph: GraphView, entity: Node) -> str | None:
-    """Return an entity's name when it has a letter or digit, which a judge can look up.
+    """Return an entity's name when it has a letter or digit, which a model can look up.
 
     Args:
         graph: The graph the entity belongs to.
@@ -69,7 +69,7 @@ def excerpt(text: str, name: str, radius: int) -> str:
 
 
 def quote_chunks(texts: Iterable[str]) -> str:
-    """Return chunk texts as a judge reads them, each between ``<chunk>`` tags.
+    """Return chunk texts as a model reads them, each between ``<chunk>`` tags.
 
     Args:
         texts: The chunk texts.
@@ -81,9 +81,9 @@ def quote_chunks(texts: Iterable[str]) -> str:
 
 
 def spell(graph: GraphView, element: Node | Relationship) -> str:
-    """Return an entity or fact as a judge reads it, with names in full.
+    """Return an entity or fact as a model reads it, with names in full.
 
-    ``GraphView.describe`` shortens long names for display; a judge needs them whole.
+    ``GraphView.describe`` shortens long names for display; a model needs them whole.
 
     Args:
         graph: The graph the element belongs to.

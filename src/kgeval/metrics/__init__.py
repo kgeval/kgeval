@@ -1,15 +1,15 @@
 """Provide the built-in metrics and the interface for new ones."""
 
-from kgeval.metrics.base import Finding, Metric, MetricCategory, MetricResult
+from kgeval.metrics.base import Finding, InputName, Inputs, Metric, MetricCategory, MetricResult
 from kgeval.metrics.catalog import (
     BUILTIN_METRICS,
     GROUND_TRUTH_METRICS,
     INTRINSIC_METRICS,
-    JUDGED_METRICS,
+    MODEL_METRICS,
     REFERENCE_METRICS,
     RETRIEVAL_METRICS,
     SCHEMA_METRICS,
-    default_metrics,
+    load_suite,
 )
 from kgeval.metrics.intrinsic import (
     EmbeddingConsistency,
@@ -23,12 +23,12 @@ from kgeval.metrics.intrinsic import (
     PropertyTypeConsistency,
     VocabularyUniqueness,
 )
-from kgeval.metrics.judged import (
+from kgeval.metrics.model import (
     EntityDisambiguation,
     EntityResolution,
     ExtractionCompleteness,
     FactAccuracy,
-    JudgedMetric,
+    ModelMetric,
     NodeTypeAccuracy,
     SampledMetric,
     VocabularyResolution,
@@ -56,7 +56,7 @@ __all__ = [
     "BUILTIN_METRICS",
     "GROUND_TRUTH_METRICS",
     "INTRINSIC_METRICS",
-    "JUDGED_METRICS",
+    "MODEL_METRICS",
     "REFERENCE_METRICS",
     "RETRIEVAL_METRICS",
     "SCHEMA_METRICS",
@@ -83,10 +83,12 @@ __all__ = [
     "FactUniqueness",
     "Finding",
     "GroundTruthMetric",
-    "JudgedMetric",
+    "InputName",
+    "Inputs",
     "Metric",
     "MetricCategory",
     "MetricResult",
+    "ModelMetric",
     "NodeTypeAccuracy",
     "PropertyCompleteness",
     "PropertyTypeConsistency",
@@ -98,5 +100,5 @@ __all__ = [
     "SchemaMetric",
     "VocabularyResolution",
     "VocabularyUniqueness",
-    "default_metrics",
+    "load_suite",
 ]

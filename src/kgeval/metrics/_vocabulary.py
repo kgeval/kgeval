@@ -1,4 +1,4 @@
-"""Collect the vocabulary a graph uses, and report the terms that duplicate another."""
+"""Implement the helpers that collect a graph's vocabulary and report duplicate terms."""
 
 from __future__ import annotations
 

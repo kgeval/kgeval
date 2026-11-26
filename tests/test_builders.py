@@ -9,8 +9,9 @@ from kgeval.evaluation import evaluate
 from kgeval.graph.layout import Layout
 from kgeval.graph.model import Graph
 from kgeval.graph.view import GraphView
-from kgeval.metrics.judged.facts import FactAccuracy
-from tests.doubles import ScriptedJudge
+from kgeval.metrics.base import Inputs
+from kgeval.metrics.model.facts import FactAccuracy
+from tests.doubles import ScriptedModel
 from tests.factories import graph, node, relationship
 
 TEXT = "Ada Lovelace worked with Charles Babbage on the Analytical Engine."
@@ -21,7 +22,7 @@ UNGROUNDED = frozenset({"entity_provenance", "fact_provenance", "extraction_cove
 
 @dataclass(frozen=True)
 class Shape:
-    """Hold a builder's graph with the layout and judge prompt it should get."""
+    """Hold a builder's graph with the layout and model prompt it should get."""
 
     graph: Graph
     layout: Layout
@@ -258,15 +259,15 @@ def test_every_intrinsic_metric_passes_or_skips_for_the_builders_shape(shape: Sh
     assert all(result.score == 1.0 for result in report.results if result.score is not None)
 
 
-def test_judge_sees_the_relationship_type_and_description_of_the_builders_facts(
+def test_model_sees_the_relationship_type_and_description_of_the_builders_facts(
     shape: Shape,
 ) -> None:
-    judge = ScriptedJudge()
+    model = ScriptedModel()
 
-    result = FactAccuracy(judge=judge).evaluate(GraphView(shape.graph))
+    result = FactAccuracy().evaluate(GraphView(shape.graph), Inputs(model=model))
 
     if shape.statement:
         assert (result.evaluated, result.failed) == (1, 0)
-        assert shape.statement in judge.prompts[0]
+        assert shape.statement in model.prompts[0]
     else:
         assert result.skip_reason == "no fact is grounded in a chunk with text"

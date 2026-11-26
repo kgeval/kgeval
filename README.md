@@ -85,9 +85,9 @@ and relationships involved, so you can find them in the graph:
 
 ## Metrics
 
-kgeval has 29 metrics in five categories: intrinsic, schema, reference, judged, and
-retrieval. The metrics that need only the graph run by default, and the others run when you
-provide their input, such as a schema or ground truth:
+kgeval has 29 metrics in five categories: intrinsic, schema, reference, model, and
+retrieval. It runs every metric whose inputs you give. The intrinsic metrics need only the
+graph, and the others need an input, such as a schema or a model:
 
 | Input          | Evaluates                                                               |
 | -------------- | ----------------------------------------------------------------------- |
@@ -96,7 +96,7 @@ provide their input, such as a schema or ground truth:
 | Ground truth   | Graph precision, recall, and F1                                         |
 | Test questions | Answerability                                                           |
 | Retrievals     | Retriever precision and recall                                          |
-| LLM judge      | Accuracy, resolution, disambiguation, and extraction completeness       |
+| Model          | Accuracy, resolution, disambiguation, and extraction completeness       |
 
 See the [metrics guide](https://kgeval.github.io/kgeval/guide/metrics/) for the full list.
 

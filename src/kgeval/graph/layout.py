@@ -1,4 +1,4 @@
-"""Assign each node a role: entity, lexical node, community node, or other."""
+"""Implement the layout that assigns each node its role in a knowledge graph."""
 
 from __future__ import annotations
 

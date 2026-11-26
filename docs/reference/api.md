@@ -11,12 +11,12 @@ from neo4j import GraphDatabase
 with GraphDatabase.driver("<uri>", auth=("<username>", "<password>")) as driver:
     graph = kgeval.Neo4jSource(driver).load()
 
-metrics = kgeval.default_metrics(
+report = kgeval.evaluate(
+    graph,
     schema=kgeval.load_schema("schema.yaml"),
     ground_truth=kgeval.load_ground_truth("ground_truth.yaml"),
-    judge=kgeval.Judge("openai/gpt-5-mini"),
+    model=kgeval.Model("<model>"),
 )
-report = kgeval.evaluate(graph, metrics)
 
 report["entity_uniqueness"].findings  # each with .message, .subject, and its element IDs
 report.passed  # False when a metric misses its threshold
@@ -28,7 +28,7 @@ report.passed  # False when a metric misses its threshold
 
 ::: kgeval.assert_passes
 
-::: kgeval.default_metrics
+::: kgeval.load_suite
 
 ## Reports
 
@@ -114,17 +114,21 @@ report.passed  # False when a metric misses its threshold
 
 ::: kgeval.Retrievals
 
-## Judges
+## Models
 
-::: kgeval.Judge
+::: kgeval.Model
 
 ## Metrics
 
 ::: kgeval.Metric
 
+::: kgeval.Inputs
+
+::: kgeval.InputName
+
 ::: kgeval.MetricCategory
 
-::: kgeval.JudgedMetric
+::: kgeval.ModelMetric
 
 ::: kgeval.SampledMetric
 
@@ -205,7 +209,7 @@ report.passed  # False when a metric misses its threshold
 ::: kgeval.Competency
     options: {heading_level: 4, members: false}
 
-### Judged metrics
+### Model metrics
 
 ::: kgeval.EntityResolution
     options: {heading_level: 4, members: false}
@@ -241,6 +245,6 @@ report.passed  # False when a metric misses its threshold
 
 ::: kgeval.InputError
 
-::: kgeval.JudgeError
+::: kgeval.ModelError
 
 ::: kgeval.VerdictError

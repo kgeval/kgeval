@@ -1,4 +1,4 @@
-"""Test loading and checking test questions."""
+"""Test the test questions that a graph is expected to answer."""
 
 from pathlib import Path
 

@@ -1,4 +1,4 @@
-"""Test running metrics over a graph and collecting their results into a report."""
+"""Test the evaluation that runs metrics over a graph and reports their results."""
 
 import pytest
 
@@ -8,30 +8,31 @@ from kgeval.graph.layout import Layout
 from kgeval.ground_truth import load_ground_truth
 from kgeval.metrics import (
     BUILTIN_METRICS,
+    INTRINSIC_METRICS,
+    MODEL_METRICS,
     EntityConnectivity,
     EntityNaming,
     EntityUniqueness,
     FactAccuracy,
-    default_metrics,
+    RetrievalRecall,
 )
 from kgeval.questions import load_questions
 from kgeval.schema import load_schema
-from tests.doubles import FailingJudge, ScriptedJudge
+from tests.doubles import FailingModel, ScriptedModel
 from tests.factories import EXAMPLE_DIR, EXAMPLE_RETRIEVALS, example_graph, graph
 
 
 def test_every_metric_finds_the_planted_defects_of_the_example() -> None:
-    metrics = default_metrics(
+    report = evaluate(
+        example_graph(),
         schema=load_schema(EXAMPLE_DIR / "schema.yaml"),
         ground_truth=load_ground_truth(EXAMPLE_DIR / "ground_truth.yaml"),
         questions=load_questions(EXAMPLE_DIR / "questions.yaml"),
         retrievals=EXAMPLE_RETRIEVALS,
-        judge=ScriptedJudge("-[:KNOWS]->"),
+        model=ScriptedModel("-[:KNOWS]->"),
     )
 
-    report = evaluate(example_graph(), metrics)
-
-    # Expect extraction_completeness to skip: the scripted judge finds no stated fact.
+    # Expect extraction_completeness to skip: the scripted model finds no stated fact.
     failures = {result.metric: (result.failed, result.evaluated) for result in report.results}
     assert failures == {
         "entity_uniqueness": (1, 10),
@@ -69,6 +70,22 @@ def test_every_metric_finds_the_planted_defects_of_the_example() -> None:
     assert report.passed is True
 
 
+def test_without_metrics_every_metric_whose_inputs_are_given_runs() -> None:
+    report = evaluate(example_graph(), model=ScriptedModel())
+
+    assert [result.metric for result in report.results] == [
+        metric_type.name for metric_type in (*INTRINSIC_METRICS, *MODEL_METRICS)
+    ]
+
+
+def test_given_metrics_need_their_inputs() -> None:
+    with pytest.raises(
+        InputError,
+        match="fact_accuracy needs model; retrieval_recall needs questions and retrievals",
+    ):
+        evaluate(example_graph(), [FactAccuracy(), RetrievalRecall()])
+
+
 def test_reports_are_identical_for_identical_graphs() -> None:
     example = example_graph()
     shuffled = graph(*reversed(example.relationships), *reversed(example.nodes))
@@ -87,7 +104,7 @@ def test_explicit_layout_replaces_detection() -> None:
 
 def test_a_failing_metric_is_reported_as_skipped_and_the_others_still_run() -> None:
     report = evaluate(
-        example_graph(), [FactAccuracy(judge=FailingJudge(), threshold=0.9), EntityNaming()]
+        example_graph(), [FactAccuracy(threshold=0.9), EntityNaming()], model=FailingModel()
     )
 
     assert report["fact_accuracy"].skip_reason == "failed: model unavailable"
@@ -112,11 +129,11 @@ def test_assert_passes_names_each_missed_threshold_on_the_first_line() -> None:
     metrics = [
         EntityUniqueness(threshold=0.95),
         EntityNaming(threshold=0.5),
-        FactAccuracy(judge=FailingJudge(), threshold=0.9),
+        FactAccuracy(threshold=0.9),
     ]
 
     with pytest.raises(AssertionError) as raised:
-        assert_passes(example_graph(), metrics)
+        assert_passes(example_graph(), metrics, model=FailingModel())
 
     headline, _, report = str(raised.value).partition("\n\n")
     assert headline == (

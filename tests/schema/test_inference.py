@@ -1,7 +1,8 @@
-"""Test inferring the schema a graph follows today."""
+"""Test the inference of the schema a graph follows today, as a draft to review."""
 
 from pathlib import Path
 
+from kgeval.metrics.base import Inputs
 from kgeval.metrics.schema.conformance import EntityConformance, FactConformance
 from kgeval.schema.inference import infer_schema
 from kgeval.schema.model import load_schema
@@ -55,11 +56,11 @@ def test_example_conforms_to_its_inferred_schema_except_minority_types(tmp_path:
 
     schema = load_schema(path)
 
-    entities = EntityConformance(graph_schema=schema).evaluate(example_view())
+    entities = EntityConformance().evaluate(example_view(), Inputs(schema=schema))
     assert [finding.message for finding in entities.findings] == [
         '"Kwa Geok Choo" (Person): property born is STRING, expected DATE'
     ]
-    assert FactConformance(graph_schema=schema).evaluate(example_view()).failed == 0
+    assert FactConformance().evaluate(example_view(), Inputs(schema=schema)).failed == 0
 
 
 def test_inferred_schema_leaves_out_entities_without_a_node_type() -> None:

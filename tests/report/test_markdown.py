@@ -1,9 +1,9 @@
-"""Test rendering reports and comparisons as Markdown."""
+"""Test the Markdown rendering of reports and comparisons."""
 
 from kgeval.evaluation import evaluate
 from kgeval.graph.layout import Layout
 from kgeval.metrics import EntityConnectivity, EntityUniqueness, FactAccuracy, FactProvenance
-from tests.doubles import UnusableJudge
+from tests.doubles import UnusableModel
 from tests.factories import example_graph, graph, node, relationship
 
 
@@ -83,19 +83,19 @@ def test_reports_render_as_markdown_in_notebooks() -> None:
     assert report._repr_markdown_() == report.to_markdown()
 
 
-def test_markdown_counts_expired_facts_and_unjudged_units_only_when_there_are_some() -> None:
+def test_markdown_counts_expired_facts_and_undecided_units_only_when_there_are_some() -> None:
     history = graph(
         node("e", "Episodic", content="Ada left Acme."),
         node("ada", "Entity", "Person", name="Ada"),
         node("acme", "Entity", "Company", name="Acme"),
         relationship("left", "ada", "RELATES_TO", "acme", name="WORKS_AT", expired_at="2024"),
     )
-    judge = UnusableJudge("KNOWS")
+    model = UnusableModel("KNOWS")
 
     expired = evaluate(history, [EntityConnectivity()]).to_markdown()
-    unjudged = evaluate(example_graph(), [FactAccuracy(judge=judge)]).to_markdown()
+    undecided = evaluate(example_graph(), [FactAccuracy()], model=model).to_markdown()
 
     assert "1 relationship (0 facts, 1 expired fact, 0 provenance relationships)" in expired
     assert "; expired facts by expired_at" in expired
     assert "1 expired fact" not in evaluate(example_graph(), [EntityConnectivity()]).to_markdown()
-    assert "| 0 / 9 facts grounded in a chunk with text, 1 unjudged |" in unjudged
+    assert "| 0 / 9 facts grounded in a chunk with text, 1 undecided |" in undecided

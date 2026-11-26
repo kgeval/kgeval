@@ -6,7 +6,7 @@ from typing import ClassVar
 
 from kgeval.graph.model import Node, Relationship, property_types
 from kgeval.graph.view import GraphView
-from kgeval.metrics.base import Finding, MetricResult
+from kgeval.metrics.base import Finding, Inputs, MetricResult
 from kgeval.metrics.schema.base import SchemaMetric
 from kgeval.schema.model import Pattern
 
@@ -26,16 +26,20 @@ class SchemaCompleteness(SchemaMetric):
     name: ClassVar[str] = "schema_completeness"
     unit: ClassVar[str] = "declared types and patterns"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Report every declared node type, relationship type, and pattern the graph lacks.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
+
+        Raises:
+            InputError: If no graph schema was given.
         """
-        schema = self.graph_schema
+        schema = self.require(inputs.schema, "schema")
         node_types = {
             label for entity in graph.entities for label in graph.layout.node_types(entity)
         }
@@ -65,7 +69,7 @@ class SchemaCompleteness(SchemaMetric):
         findings = [
             Finding(message=f"{problem} {subject}", subject=subject) for subject, problem in missing
         ]
-        return self.result(evaluated, len(findings), findings)
+        return self.result(inputs, evaluated, len(findings), findings)
 
 
 class PropertyCompleteness(SchemaMetric):
@@ -82,19 +86,24 @@ class PropertyCompleteness(SchemaMetric):
     name: ClassVar[str] = "property_completeness"
     unit: ClassVar[str] = "declared properties"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Report every declared property that an entity or fact lacks.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
+
+        Raises:
+            InputError: If no graph schema was given.
         """
-        node_types = {node_type.label: node_type for node_type in self.graph_schema.node_types}
+        schema = self.require(inputs.schema, "schema")
+        node_types = {node_type.label: node_type for node_type in schema.node_types}
         relationship_types = {
             relationship_type.label: relationship_type
-            for relationship_type in self.graph_schema.relationship_types
+            for relationship_type in schema.relationship_types
         }
         units: list[tuple[Node | Relationship, list[str]]] = [
             (
@@ -130,7 +139,7 @@ class PropertyCompleteness(SchemaMetric):
             for name in names
             if name not in property_types(element)
         ]
-        return self.result(sum(len(names) for _, names in units), len(findings), findings)
+        return self.result(inputs, sum(len(names) for _, names in units), len(findings), findings)
 
 
 def _describe(pattern: Pattern) -> str:

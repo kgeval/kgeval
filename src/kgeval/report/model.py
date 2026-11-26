@@ -1,4 +1,4 @@
-"""Collect the results of one evaluation, with what is needed to reproduce them."""
+"""Implement the report that records the results of one evaluation and how to reproduce them."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from kgeval.report.markdown import DEFAULT_MAX_FINDINGS, render_markdown
 
 __all__ = ["REPORT_FORMAT", "GraphSummary", "Report"]
 
-REPORT_FORMAT = 1
+REPORT_FORMAT = 2
 """The version of the report format that this kgeval writes and reads.
 
 It grows whenever a report could hold what an older kgeval cannot read, so that older
@@ -98,7 +98,7 @@ class Report(BaseModel):
         layout: How the graph was read.
         summary: Counts of the graph's nodes and relationships.
         results: One result per metric, in evaluation order.
-        metadata: Describes the run, such as the model or prompt that built the graph.
+        metadata: Describes the run, such as the chunk size or prompt that built the graph.
             It annotates the report without changing any result.
     """
 
@@ -115,13 +115,18 @@ class Report(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _check_format(cls, data: object) -> object:
-        # Reject newer formats before their fields fail validation with obscure messages.
+        # Reject other formats before their fields fail validation with obscure messages.
         if isinstance(data, Mapping):
             report_format = data.get("report_format", 1)
             if isinstance(report_format, int) and report_format > REPORT_FORMAT:
                 raise ValueError(
                     f"the report has format {report_format}, which needs a newer kgeval; "
                     f"this one reads format {REPORT_FORMAT}"
+                )
+            if isinstance(report_format, int) and report_format < REPORT_FORMAT:
+                raise ValueError(
+                    f"the report has format {report_format}, from an older kgeval; this one "
+                    f"reads format {REPORT_FORMAT}, so evaluate the graph again"
                 )
         return data
 

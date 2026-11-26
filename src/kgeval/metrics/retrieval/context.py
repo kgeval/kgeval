@@ -6,7 +6,7 @@ from statistics import fmean
 from typing import ClassVar
 
 from kgeval.graph.view import GraphView
-from kgeval.metrics.base import Finding, MetricResult
+from kgeval.metrics.base import Finding, Inputs, MetricResult
 from kgeval.metrics.retrieval.base import RetrievalMetric
 
 __all__ = ["RetrievalPrecision", "RetrievalRecall"]
@@ -28,23 +28,24 @@ class RetrievalRecall(RetrievalMetric):
     name: ClassVar[str] = "retrieval_recall"
     unit: ClassVar[str] = "supporting facts and entities in the graph"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Report, for every question, the held supporting facts and entities not retrieved.
 
         Args:
             graph: The graph that was retrieved from.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
 
         Raises:
-            InputError: If a question has no retrieval, or no retrieved element ID is in
-                the graph.
+            InputError: If no test questions or retrievals were given, a question has
+                no retrieval, or no retrieved element ID is in the graph.
         """
         recalls: list[float] = []
         evaluated = failed = 0
         findings: list[Finding] = []
-        for question, support, retrieved in self.retrieved(graph):
+        for question, support, retrieved in self.retrieved(graph, inputs):
             held = [item for item in support if item.element_ids]
             if not held:
                 continue
@@ -73,8 +74,10 @@ class RetrievalRecall(RetrievalMetric):
                     )
                 )
         if not evaluated:
-            return self.skip("the graph holds no supporting fact or entity; competency lists them")
-        return self.result(evaluated, failed, findings, score=fmean(recalls))
+            return self.skip(
+                inputs, "the graph holds no supporting fact or entity; competency lists them"
+            )
+        return self.result(inputs, evaluated, failed, findings, score=fmean(recalls))
 
 
 class RetrievalPrecision(RetrievalMetric):
@@ -85,32 +88,33 @@ class RetrievalPrecision(RetrievalMetric):
     grounds one of those matching facts or entities. Other retrieved nodes, such as
     documents and community nodes, are not evaluated. Irrelevant context costs tokens
     and distracts the model that answers. The score is the mean of each question's
-    precision, over the questions whose retrieval holds an entity, fact or chunk. Each
+    precision, over the questions whose retrieval holds an entity, fact, or chunk. Each
     finding lists the unneeded elements of one question.
     """
 
     name: ClassVar[str] = "retrieval_precision"
     unit: ClassVar[str] = "retrieved entities, facts, and chunks"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Report, for every question, the retrieved elements its answer does not need.
 
         Args:
             graph: The graph that was retrieved from.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
 
         Raises:
-            InputError: If a question has no retrieval, or no retrieved element ID is in
-                the graph.
+            InputError: If no test questions or retrievals were given, a question has
+                no retrieval, or no retrieved element ID is in the graph.
         """
         node_ids = {entity.id for entity in graph.entities} | {chunk.id for chunk in graph.chunks}
         fact_ids = {fact.id for fact in graph.facts}
         precisions: list[float] = []
         evaluated = failed = 0
         findings: list[Finding] = []
-        for question, support, retrieved in self.retrieved(graph):
+        for question, support, retrieved in self.retrieved(graph, inputs):
             needed = {
                 element_id
                 for item in support
@@ -134,5 +138,5 @@ class RetrievalPrecision(RetrievalMetric):
                     )
                 )
         if not evaluated:
-            return self.skip("no retrieval holds an entity, fact or chunk of the graph")
-        return self.result(evaluated, failed, findings, score=fmean(precisions))
+            return self.skip(inputs, "no retrieval holds an entity, fact, or chunk of the graph")
+        return self.result(inputs, evaluated, failed, findings, score=fmean(precisions))

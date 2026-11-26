@@ -9,9 +9,9 @@ from pydantic import BaseModel, ConfigDict
 
 from kgeval.graph.model import Node, Relationship
 from kgeval.graph.view import GraphView
-from kgeval.metrics.base import NO_LEXICAL_NODES, Finding, MetricResult
-from kgeval.metrics.judged._prompts import quote_chunks, spell
-from kgeval.metrics.judged.base import SampledMetric
+from kgeval.metrics.base import NO_LEXICAL_NODES, Finding, Inputs, MetricResult
+from kgeval.metrics.model._prompts import quote_chunks, spell
+from kgeval.metrics.model.base import SampledMetric
 
 __all__ = ["CompletenessVerdict", "ExtractionCompleteness", "StatedFact"]
 
@@ -49,9 +49,9 @@ class StatedFact(BaseModel):
 
 
 class CompletenessVerdict(BaseModel):
-    """Hold a judge's verdict on which facts of a chunk the graph holds.
+    """Hold a model's verdict on which facts of a chunk the graph holds.
 
-    The judge checks the facts one by one, which small models do far more reliably than
+    The model checks the facts one by one, which small models do far more reliably than
     listing only the missing ones.
 
     Attributes:
@@ -68,8 +68,8 @@ class ExtractionCompleteness(SampledMetric):
 
     This is recall without a ground truth. ``extraction_coverage`` finds chunks that
     yielded nothing and ``fact_recall`` needs annotated facts; this metric shows the
-    judge each sampled chunk with text whole, with the entities grounded in it and the
-    facts grounded in it, those whose source and target both are. The judge lists each
+    model each sampled chunk with text whole, with the entities grounded in it and the
+    facts grounded in it, those whose source and target both are. The model lists each
     fact the chunk states and whether an extracted fact holds it. Each stated fact is a
     unit, so a chunk missing one fact of twenty weighs less than one missing all, and a
     chunk with a missing fact gets a finding that lists them. Chunks are sampled as
@@ -80,24 +80,26 @@ class ExtractionCompleteness(SampledMetric):
     name: ClassVar[str] = "extraction_completeness"
     unit: ClassVar[str] = "facts stated in chunks"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
-        """Judge a sample of chunks and report each that states facts the graph lacks.
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
+        """Ask the model about sampled chunks and report each that states facts the graph lacks.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
 
         Raises:
-            JudgeError: If the judge fails on any chunk, or gives no usable verdict for
+            InputError: If no model was given.
+            ModelError: If the model fails on any chunk, or gives no usable verdict for
                 any.
         """
         if not graph.lexical_nodes:
-            return self.skip(NO_LEXICAL_NODES)
+            return self.skip(inputs, NO_LEXICAL_NODES)
         chunks = [chunk for chunk in graph.chunks if graph.text(chunk)]
         if not chunks:
-            return self.skip("no chunk has text")
+            return self.skip(inputs, "no chunk has text")
         entities: defaultdict[str, list[Node]] = defaultdict(list)
         for entity in graph.entities:
             for chunk_id in graph.chunk_ids(entity.id):
@@ -109,6 +111,7 @@ class ExtractionCompleteness(SampledMetric):
 
         sample = self.sample(chunks, lambda chunk: graph.text(chunk) or "")
         verdicts = self.ask_all(
+            inputs,
             [
                 _PROMPT.format(
                     chunk=quote_chunks([graph.text(chunk) or ""]),
@@ -135,7 +138,7 @@ class ExtractionCompleteness(SampledMetric):
                         node_ids=(chunk.id,),
                     )
                 )
-        return self.estimate_clusters(len(chunks), clusters, findings, verdicts.count(None))
+        return self.estimate_clusters(inputs, len(chunks), clusters, findings, verdicts.count(None))
 
 
 def _listing(graph: GraphView, elements: list[Node] | list[Relationship]) -> str:

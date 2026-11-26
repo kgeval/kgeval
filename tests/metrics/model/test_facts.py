@@ -2,27 +2,28 @@
 
 import pytest
 
-from kgeval.errors import JudgeError
-from kgeval.metrics.judged.facts import FactAccuracy, SupportVerdict
-from tests.doubles import FailingJudge, ScriptedJudge
+from kgeval.errors import ModelError
+from kgeval.metrics.base import Inputs
+from kgeval.metrics.model.facts import FactAccuracy, SupportVerdict
+from tests.doubles import FailingModel, ScriptedModel
 from tests.factories import example_view, node, relationship, view
 
 
-def test_judge_sees_each_grounded_fact_with_its_shared_chunks() -> None:
-    judge = ScriptedJudge()
+def test_model_sees_each_grounded_fact_with_its_shared_chunks() -> None:
+    model = ScriptedModel()
 
-    result = FactAccuracy(judge=judge).evaluate(example_view())
+    result = FactAccuracy().evaluate(example_view(), Inputs(model=model))
 
     # Leave out duplicate_founded, whose entities share no chunk.
     assert (result.evaluated, result.failed, result.confidence_interval) == (10, 0, None)
-    [married] = [prompt for prompt in judge.prompts if "-[:MARRIED]->" in prompt]
+    [married] = [prompt for prompt in model.prompts if "-[:MARRIED]->" in prompt]
     assert 'Fact: "Kwa Geok Choo" (Person) -[:MARRIED]-> "Lee Kuan Yew" (Person)' in married
     assert "<chunk>\nKwa Geok Choo married Lee Kuan Yew.\n</chunk>" in married
     assert "Singapore" not in married
 
 
-def test_unsupported_facts_become_findings_with_the_judges_reason() -> None:
-    result = FactAccuracy(judge=ScriptedJudge("-[:KNOWS]->")).evaluate(example_view())
+def test_unsupported_facts_become_findings_with_the_models_reason() -> None:
+    result = FactAccuracy().evaluate(example_view(), Inputs(model=ScriptedModel("-[:KNOWS]->")))
 
     [finding] = result.findings
     assert finding.message == (
@@ -32,8 +33,8 @@ def test_unsupported_facts_become_findings_with_the_judges_reason() -> None:
     assert (finding.node_ids, finding.relationship_ids) == (("kwa",), ("knows",))
 
 
-def test_judge_sees_descriptions_and_no_element_ids() -> None:
-    judge = ScriptedJudge()
+def test_model_sees_descriptions_and_no_element_ids() -> None:
+    model = ScriptedModel()
     graph = view(
         node("c", "Chunk", text="Ada founded a company."),
         node("ada", "__Entity__", "Person", name="Ada"),
@@ -43,18 +44,18 @@ def test_judge_sees_descriptions_and_no_element_ids() -> None:
         relationship("r", "ada", "FOUNDED", "4:a1b2:7", description="Ada founded it in 1843."),
     )
 
-    FactAccuracy(judge=judge).evaluate(graph)
+    FactAccuracy().evaluate(graph, Inputs(model=model))
 
     assert (
         'Fact: "Ada" (Person) -[:FOUNDED]-> unnamed (Company)\n'
         "Description: Ada founded it in 1843.\n\n<chunk>"
-    ) in judge.prompts[0]
+    ) in model.prompts[0]
 
 
 def test_sample_depends_on_content_not_element_ids() -> None:
     def sampled(prefix: str) -> set[str]:
         people = [f"Person {number}" for number in range(10)]
-        judge = ScriptedJudge()
+        model = ScriptedModel()
         graph = view(
             node(f"{prefix}c", "Chunk", text=" ".join(people)),
             node(f"{prefix}hub", "__Entity__", name="Hub"),
@@ -69,8 +70,8 @@ def test_sample_depends_on_content_not_element_ids() -> None:
                 for name in people
             ),
         )
-        FactAccuracy(judge=judge, sample_size=3).evaluate(graph)
-        return set(judge.prompts)
+        FactAccuracy(sample_size=3).evaluate(graph, Inputs(model=model))
+        return set(model.prompts)
 
     assert len(sampled("4:x:")) == 3
     assert sampled("4:x:") == sampled("5:y:")
@@ -79,14 +80,14 @@ def test_sample_depends_on_content_not_element_ids() -> None:
 def test_metric_skips_graphs_without_grounded_facts() -> None:
     graph = view(node("a", name="Ada"), node("b", name="Bob"), relationship("r", "a", "KNOWS", "b"))
 
-    assert FactAccuracy(judge=ScriptedJudge()).evaluate(graph).skip_reason == (
+    assert FactAccuracy().evaluate(graph, Inputs(model=ScriptedModel())).skip_reason == (
         "no fact is grounded in a chunk with text"
     )
 
 
-def test_judge_failures_propagate() -> None:
-    with pytest.raises(JudgeError, match="model unavailable"):
-        FactAccuracy(judge=FailingJudge()).evaluate(example_view())
+def test_model_failures_propagate() -> None:
+    with pytest.raises(ModelError, match="model unavailable"):
+        FactAccuracy().evaluate(example_view(), Inputs(model=FailingModel()))
 
 
 def test_verdict_lists_reason_before_verdict() -> None:

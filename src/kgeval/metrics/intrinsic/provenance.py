@@ -5,7 +5,14 @@ from __future__ import annotations
 from typing import ClassVar
 
 from kgeval.graph.view import GraphView
-from kgeval.metrics.base import NO_LEXICAL_NODES, Finding, Metric, MetricCategory, MetricResult
+from kgeval.metrics.base import (
+    NO_LEXICAL_NODES,
+    Finding,
+    Inputs,
+    Metric,
+    MetricCategory,
+    MetricResult,
+)
 
 __all__ = ["EntityProvenance", "ExtractionCoverage", "FactProvenance"]
 
@@ -22,17 +29,18 @@ class EntityProvenance(Metric):
     category: ClassVar[MetricCategory] = MetricCategory.INTRINSIC
     unit: ClassVar[str] = "entities"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Report every entity without a provenance relationship.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
         """
         if not graph.lexical_nodes:
-            return self.skip(NO_LEXICAL_NODES)
+            return self.skip(inputs, NO_LEXICAL_NODES)
         findings = [
             Finding(
                 message=f"{graph.describe(entity)} is grounded in no chunk",
@@ -42,13 +50,13 @@ class EntityProvenance(Metric):
             for entity in graph.entities
             if not graph.chunk_ids(entity.id)
         ]
-        return self.result(len(graph.entities), len(findings), findings)
+        return self.result(inputs, len(graph.entities), len(findings), findings)
 
 
 class FactProvenance(Metric):
     """Measure the share of facts whose source and target are grounded in a common chunk.
 
-    An extractor creates a fact from one chunk, which then grounds both of its entities
+    A builder creates a fact from one chunk, which then grounds both of its entities
     and is the fact's provenance. A fact whose entities share no chunk cannot be traced
     to any text: it was added by hand, hallucinated across chunks, or left behind by
     entity resolution.
@@ -58,17 +66,18 @@ class FactProvenance(Metric):
     category: ClassVar[MetricCategory] = MetricCategory.INTRINSIC
     unit: ClassVar[str] = "facts"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Report every fact whose source and target share no chunk.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
         """
         if not graph.lexical_nodes:
-            return self.skip(NO_LEXICAL_NODES)
+            return self.skip(inputs, NO_LEXICAL_NODES)
         findings = [
             Finding(
                 message=f"no chunk grounds both entities of {graph.describe(fact)}",
@@ -79,7 +88,7 @@ class FactProvenance(Metric):
             for fact in graph.facts
             if not graph.fact_chunk_ids(fact)
         ]
-        return self.result(len(graph.facts), len(findings), findings)
+        return self.result(inputs, len(graph.facts), len(findings), findings)
 
 
 class ExtractionCoverage(Metric):
@@ -94,19 +103,20 @@ class ExtractionCoverage(Metric):
     category: ClassVar[MetricCategory] = MetricCategory.INTRINSIC
     unit: ClassVar[str] = "chunks"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Report every chunk that grounds no entity.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
         """
         if not graph.lexical_nodes:
-            return self.skip(NO_LEXICAL_NODES)
+            return self.skip(inputs, NO_LEXICAL_NODES)
         if not graph.chunks:
-            return self.skip("no lexical node has text or grounds an entity")
+            return self.skip(inputs, "no lexical node has text or grounds an entity")
         grounding = {
             chunk_id for entity in graph.entities for chunk_id in graph.chunk_ids(entity.id)
         }
@@ -119,4 +129,4 @@ class ExtractionCoverage(Metric):
             for chunk in graph.chunks
             if chunk.id not in grounding
         ]
-        return self.result(len(graph.chunks), len(findings), findings)
+        return self.result(inputs, len(graph.chunks), len(findings), findings)

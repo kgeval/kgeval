@@ -2,30 +2,30 @@
 
 from kgeval.graph.layout import Layout
 from kgeval.graph.model import Node, Relationship
-from kgeval.metrics.base import NO_LEXICAL_NODES
-from kgeval.metrics.judged.extraction import ExtractionCompleteness
-from tests.doubles import ScriptedJudge
+from kgeval.metrics.base import NO_LEXICAL_NODES, Inputs
+from kgeval.metrics.model.extraction import ExtractionCompleteness
+from tests.doubles import ScriptedModel
 from tests.factories import example_view, node, relationship, view
 
 
-def test_judge_sees_each_chunk_with_what_was_extracted_from_it() -> None:
-    judge = ScriptedJudge()
+def test_model_sees_each_chunk_with_what_was_extracted_from_it() -> None:
+    model = ScriptedModel()
 
-    result = ExtractionCompleteness(judge=judge).evaluate(example_view())
+    result = ExtractionCompleteness().evaluate(example_view(), Inputs(model=model))
 
-    assert len(judge.prompts) == 5
-    # Skip the metric when the judge finds no chunk stating a fact.
+    assert len(model.prompts) == 5
+    # Skip the metric when the model finds no chunk stating a fact.
     assert result.skip_reason == "no facts stated in chunks to evaluate"
-    [chunk1] = [prompt for prompt in judge.prompts if "born in Singapore" in prompt]
+    [chunk1] = [prompt for prompt in model.prompts if "born in Singapore" in prompt]
     assert '- "Lee Kuan Yew" (Person)\n' in chunk1
     assert '- "Lee Kuan Yew" (Person) -[:BORN_IN]-> "Singapore" (Location)\n' in chunk1
     assert "Kwa Geok Choo" not in chunk1
-    [contents] = [prompt for prompt in judge.prompts if "Table of contents" in prompt]
+    [contents] = [prompt for prompt in model.prompts if "Table of contents" in prompt]
     assert "Entities extracted from the chunk:\n(none)" in contents
 
 
 def test_chunks_that_state_missing_facts_fail_with_the_facts_listed() -> None:
-    judge = ScriptedJudge(
+    model = ScriptedModel(
         "born in Singapore",
         rejection={
             "facts": [
@@ -36,7 +36,7 @@ def test_chunks_that_state_missing_facts_fail_with_the_facts_listed() -> None:
         },
     )
 
-    result = ExtractionCompleteness(judge=judge).evaluate(example_view())
+    result = ExtractionCompleteness().evaluate(example_view(), Inputs(model=model))
 
     [finding] = result.findings
     assert finding.message.endswith(
@@ -51,7 +51,11 @@ def test_chunks_that_state_missing_facts_fail_with_the_facts_listed() -> None:
 
 def test_metric_skips_graphs_without_chunk_text() -> None:
     def skip_reason(*elements: Node | Relationship) -> str | None:
-        return ExtractionCompleteness(judge=ScriptedJudge()).evaluate(view(*elements)).skip_reason
+        return (
+            ExtractionCompleteness()
+            .evaluate(view(*elements), Inputs(model=ScriptedModel()))
+            .skip_reason
+        )
 
     assert skip_reason(node("a", "Person")) == NO_LEXICAL_NODES
     chunk_without_text = view(
@@ -60,5 +64,5 @@ def test_metric_skips_graphs_without_chunk_text() -> None:
         relationship("h", "c", "HAS_ENTITY", "a"),
         layout=Layout(lexical_labels=frozenset({"Chunk"})),
     )
-    result = ExtractionCompleteness(judge=ScriptedJudge()).evaluate(chunk_without_text)
+    result = ExtractionCompleteness().evaluate(chunk_without_text, Inputs(model=ScriptedModel()))
     assert result.skip_reason == "no chunk has text"

@@ -1,8 +1,8 @@
-"""Evaluate knowledge graphs."""
+"""Provide an evaluation framework for knowledge graphs."""
 
 from importlib.metadata import version
 
-from kgeval.errors import InputError, JudgeError, KgevalError, SourceError, VerdictError
+from kgeval.errors import InputError, KgevalError, ModelError, SourceError, VerdictError
 from kgeval.evaluation import assert_passes, evaluate
 from kgeval.graph import (
     Duration,
@@ -17,7 +17,6 @@ from kgeval.graph import (
     value_type,
 )
 from kgeval.ground_truth import GroundTruth, load_ground_truth
-from kgeval.judge import Judge
 from kgeval.metrics import (
     BUILTIN_METRICS,
     Competency,
@@ -43,10 +42,12 @@ from kgeval.metrics import (
     FactUniqueness,
     Finding,
     GroundTruthMetric,
-    JudgedMetric,
+    InputName,
+    Inputs,
     Metric,
     MetricCategory,
     MetricResult,
+    ModelMetric,
     NodeTypeAccuracy,
     PropertyCompleteness,
     PropertyTypeConsistency,
@@ -58,8 +59,9 @@ from kgeval.metrics import (
     SchemaMetric,
     VocabularyResolution,
     VocabularyUniqueness,
-    default_metrics,
+    load_suite,
 )
+from kgeval.model import Model
 from kgeval.questions import Question, QuestionSet, load_questions
 from kgeval.report import Comparison, GraphSummary, MetricChange, Report, Trend, compare
 from kgeval.retrieval import Retrievals, Retriever, load_retrievals, retrieve
@@ -102,15 +104,17 @@ __all__ = [
     "GroundTruth",
     "GroundTruthMetric",
     "InputError",
-    "Judge",
-    "JudgeError",
-    "JudgedMetric",
+    "InputName",
+    "Inputs",
     "KgevalError",
     "Layout",
     "Metric",
     "MetricCategory",
     "MetricChange",
     "MetricResult",
+    "Model",
+    "ModelError",
+    "ModelMetric",
     "Neo4jSource",
     "Node",
     "NodeTypeAccuracy",
@@ -139,13 +143,13 @@ __all__ = [
     "__version__",
     "assert_passes",
     "compare",
-    "default_metrics",
     "evaluate",
     "infer_schema",
     "load_ground_truth",
     "load_questions",
     "load_retrievals",
     "load_schema",
+    "load_suite",
     "retrieve",
     "value_type",
 ]

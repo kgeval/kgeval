@@ -1,12 +1,13 @@
 """Test the fact uniqueness metric."""
 
 from kgeval.graph.layout import Layout
+from kgeval.metrics.base import Inputs
 from kgeval.metrics.intrinsic.facts import FactUniqueness
 from tests.factories import example_view, node, relationship, view
 
 
 def test_fact_uniqueness_counts_redundant_copies() -> None:
-    result = FactUniqueness().evaluate(example_view())
+    result = FactUniqueness().evaluate(example_view(), Inputs())
 
     assert (result.evaluated, result.failed) == (11, 1)
     [finding] = result.findings
@@ -26,7 +27,8 @@ def test_fact_uniqueness_finds_repeats_whatever_their_properties() -> None:
             relationship("r1", "a", "WORKS_AT", "b", chunk="c1", uuid="u1"),
             relationship("r2", "a", "WORKS_AT", "b", chunk="c2", uuid="u2"),
             relationship("r3", "b", "WORKS_AT", "a"),
-        )
+        ),
+        Inputs(),
     )
 
     assert (result.evaluated, result.failed) == (3, 1)
@@ -42,7 +44,7 @@ def test_fact_uniqueness_reads_relationship_types_through_the_layout() -> None:
         layout=Layout(type_keys=("name",)),
     )
 
-    assert FactUniqueness().evaluate(graphiti).failed == 0
+    assert FactUniqueness().evaluate(graphiti, Inputs()).failed == 0
 
 
 def test_fact_uniqueness_skips_graphs_without_facts() -> None:
@@ -50,4 +52,4 @@ def test_fact_uniqueness_skips_graphs_without_facts() -> None:
         node("a"), node("c", "Chunk", text="Ada."), relationship("r", "c", "HAS_ENTITY", "a")
     )
 
-    assert FactUniqueness().evaluate(graph).skip_reason == "no facts to evaluate"
+    assert FactUniqueness().evaluate(graph, Inputs()).skip_reason == "no facts to evaluate"

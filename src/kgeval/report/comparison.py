@@ -1,4 +1,4 @@
-"""Compare two reports, such as a baseline and a new run, metric by metric."""
+"""Implement the comparison of two reports, such as a baseline and a new run, metric by metric."""
 
 from __future__ import annotations
 
@@ -43,14 +43,14 @@ class MetricChange(BaseModel):
 
     Attributes:
         metric: The metric's name.
-        category: What the metric needs beyond the graph.
+        category: The metric's group in reports.
         base: Its result in the base report, or ``None`` when the base did not run it.
         head: Its result in the head report, or ``None`` when the head did not run it.
         new_findings: The head's findings whose subject the base lacks, all of them when
-            the base did not run the metric. Always empty for judged metrics and for
+            the base did not run the metric. Always empty for model metrics and for
             results that are not comparable.
         resolved_findings: The base's findings whose subject the head lacks, when the
-            head scored the metric. Always empty for judged metrics and for results
+            head scored the metric. Always empty for model metrics and for results
             that are not comparable.
         max_drop: The largest score drop, from 0 to 1, that is not a regression.
     """
@@ -145,7 +145,7 @@ class MetricChange(BaseModel):
         # Compare with a tolerance, since score differences carry floating point error.
         if -change <= self.max_drop or math.isclose(-change, self.max_drop):
             return False
-        if self.category is MetricCategory.JUDGED:
+        if self.category is MetricCategory.MODEL:
             return True
         return bool(self.new_findings) or self.head.failed > self.base.failed
 
@@ -207,8 +207,8 @@ def compare(base: Report, head: Report, *, max_drop: float = 0.0) -> Comparison:
     Results pair up by metric name. Findings of deterministic metrics pair up by
     subject, which names the unit at fault by content, so the same defect matches in
     any run on the same content, even of a rebuilt graph with new element IDs; repeated
-    subjects pair up one by one. Findings of judged metrics are not compared, since each
-    run judges its own sample and verdicts vary.
+    subjects pair up one by one. Findings of model metrics are not compared, since each
+    run asks about its own sample and verdicts vary.
 
     Args:
         base: The report to compare against, such as a baseline.
@@ -242,7 +242,7 @@ def _change(
 ) -> MetricChange:
     category = next(result.category for result in (head, base) if result is not None)
     change = MetricChange(metric=metric, category=category, base=base, head=head, max_drop=max_drop)
-    if category is MetricCategory.JUDGED or head is None:
+    if category is MetricCategory.MODEL or head is None:
         return change
     if base is None:
         return change.model_copy(update={"new_findings": head.findings})

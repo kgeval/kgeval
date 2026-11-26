@@ -1,9 +1,9 @@
-"""Load YAML and JSON files into validated models."""
+"""Implement the reader that loads YAML and JSON files into validated models."""
 
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TypeVar
+from typing import Any, TypeVar
 
 import yaml
 from pydantic import TypeAdapter, ValidationError
@@ -13,6 +13,18 @@ from kgeval.errors import InputError
 __all__ = ["load_yaml"]
 
 _T = TypeVar("_T")
+
+
+class _Loader(yaml.SafeLoader):
+    """Load YAML as ``yaml.safe_load`` does, but reject repeated keys, which it drops."""
+
+    def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Any, Any]:
+        keys = [self.construct_object(key, deep=deep) for key, _ in node.value]
+        if repeated := sorted({str(key) for key in keys if keys.count(key) > 1}):
+            raise yaml.constructor.ConstructorError(
+                problem=f"repeated keys: {', '.join(repeated)}", problem_mark=node.start_mark
+            )
+        return super().construct_mapping(node, deep=deep)
 
 
 def load_yaml(path: str | Path, adapter: TypeAdapter[_T]) -> _T:
@@ -26,9 +38,10 @@ def load_yaml(path: str | Path, adapter: TypeAdapter[_T]) -> _T:
         The validated content.
 
     Raises:
-        InputError: If the file cannot be read, parsed or validated.
+        InputError: If the file cannot be read, parsed, or validated.
     """
     try:
-        return adapter.validate_python(yaml.safe_load(Path(path).read_text(encoding="utf-8")))
+        content = yaml.load(Path(path).read_text(encoding="utf-8"), Loader=_Loader)
+        return adapter.validate_python(content)
     except (OSError, yaml.YAMLError, ValidationError) as error:
         raise InputError(f"invalid file {path}: {error}") from error

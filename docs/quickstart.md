@@ -1,7 +1,7 @@
 # Quickstart
 
 This page evaluates a knowledge graph in Neo4j, walks through the report, and shows how
-to enable more metrics.
+to give kgeval more inputs.
 
 ## Evaluate a graph
 
@@ -47,7 +47,7 @@ The report opens with the size of the graph and how kgeval read it:
 ```text
 - Graph: 19 nodes (11 entities, 7 lexical nodes, 1 community node, 0 other nodes) and 40 relationships (11 facts, 14 provenance relationships)
 - Layout: lexical labels Chunk, Document; community labels __Community__; base labels __Entity__; names from name, title, id
-- Reproduce with kgeval 0.1.0 on graph `sha256:c4a8…f268`
+- Reproduce with kgeval 0.2.0 on graph `sha256:d9dd…3e7e`
 ```
 
 If the counts look wrong, check the layout first. kgeval detects it from the graph's
@@ -81,36 +81,38 @@ Each finding describes one defect and lists the elements involved:
 ### entity_uniqueness: 1 of 10 entities with a name failed
 
 - 2 entities share the normalized name 'lee kuan yew': "Lee Kuan Yew" (Person), "lee kuan yew" (Person)
-  - nodes: `4:a63a…:4`, `4:a63a…:9`
+  - nodes: `4:5cda…:4`, `4:5cda…:9`
 ```
 
 To inspect those nodes in Neo4j Browser:
 
 ```cypher
-MATCH (n) WHERE elementId(n) IN ['4:a63a…:4', '4:a63a…:9'] RETURN n
+MATCH (n) WHERE elementId(n) IN ['4:5cda…:4', '4:5cda…:9'] RETURN n
 ```
 
 The Markdown report lists up to 10 findings per metric, and `--max-findings` changes
 that limit. The JSON report and the Python `Report` hold all of them.
 
-## Enable more metrics
+## Give more inputs
 
-Each input enables another set of metrics:
+kgeval runs every metric whose inputs you give. Besides the graph, metrics use these
+inputs:
 
-| Input          | Option         | Enables                                         |
-| -------------- | -------------- | ----------------------------------------------- |
-| Graph schema   | `--schema`     | Conformance and completeness against the schema |
-| Ground truth   | `--ground`     | Fact and entity precision, recall, and F1       |
-| Test questions | `--questions`  | `competency`                                    |
-| Retrievals     | `--retrievals` | Retrieval recall and precision                  |
-| LLM judge      | `--judge`      | Six judged metrics                              |
+| Input          | Option           | Used by                                          |
+| -------------- | ---------------- | ------------------------------------------------ |
+| Graph schema   | `--schema`       | Conformance and completeness against the schema  |
+| Ground truth   | `--ground-truth` | Fact and entity precision, recall, and F1        |
+| Test questions | `--questions`    | `competency`, and retrieval recall and precision |
+| Retrievals     | `--retrievals`   | Retrieval recall and precision                   |
+| Model          | `--model`        | Six model metrics                                |
 
 ```console
-kgeval run --schema schema.yaml --ground ground_truth.yaml --questions questions.yaml
+kgeval run --schema schema.yaml --ground-truth ground_truth.yaml --questions questions.yaml
 ```
 
 [Inputs](guide/inputs.md) describes each file format, and
-[LLM judges](guide/judges.md) covers choosing a model.
+[Models](guide/models.md) covers choosing a model. To choose which metrics run, name them
+with `--metric` or list them in a [suite](guide/suites.md).
 
 ## Try the example notebook
 

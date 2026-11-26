@@ -3,7 +3,7 @@
 import pytest
 
 from kgeval.ground_truth import GroundTruth, load_ground_truth
-from kgeval.metrics.base import MetricResult
+from kgeval.metrics.base import Inputs, MetricResult
 from kgeval.metrics.reference.ground_truth import (
     EntityF1,
     EntityPrecision,
@@ -21,7 +21,7 @@ GROUND_TRUTH = load_ground_truth(EXAMPLE_DIR / "ground_truth.yaml")
 def measure(
     metric_type: type[GroundTruthMetric], ground_truth: GroundTruth = GROUND_TRUTH
 ) -> MetricResult:
-    return metric_type(ground_truth=ground_truth).evaluate(example_view())
+    return metric_type().evaluate(example_view(), Inputs(ground_truth=ground_truth))
 
 
 def changed(**fields: object) -> GroundTruth:
@@ -125,8 +125,8 @@ def test_aliases_and_symmetric_types_match_variants_of_ground_truth_facts() -> N
         symmetric_relationship_types=("MARRIED",),
     )
 
-    precision = FactPrecision(ground_truth=ground_truth).evaluate(graph)
-    recall = FactRecall(ground_truth=ground_truth).evaluate(graph)
+    precision = FactPrecision().evaluate(graph, Inputs(ground_truth=ground_truth))
+    recall = FactRecall().evaluate(graph, Inputs(ground_truth=ground_truth))
 
     assert (precision.evaluated, precision.failed, recall.evaluated, recall.failed) == (2, 0, 2, 0)
 
@@ -134,7 +134,6 @@ def test_aliases_and_symmetric_types_match_variants_of_ground_truth_facts() -> N
 def test_signature_changes_with_the_ground_truth() -> None:
     fewer = changed(facts=GROUND_TRUTH.facts[1:])
 
-    assert (
-        FactRecall(ground_truth=GROUND_TRUTH).signature()
-        != FactRecall(ground_truth=fewer).signature()
+    assert FactRecall().signature(Inputs(ground_truth=GROUND_TRUTH)) != FactRecall().signature(
+        Inputs(ground_truth=fewer)
     )

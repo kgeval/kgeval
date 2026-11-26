@@ -9,9 +9,8 @@ from pydantic import Field
 
 from kgeval.errors import InputError
 from kgeval.graph.view import GraphView
-from kgeval.metrics.base import Metric, MetricCategory
-from kgeval.questions import Question, QuestionSet, Support
-from kgeval.retrieval import Retrievals
+from kgeval.metrics.base import InputName, Inputs, Metric, MetricCategory
+from kgeval.questions import Question, Support
 
 __all__ = ["RetrievalMetric"]
 
@@ -32,33 +31,35 @@ class RetrievalMetric(Metric):
     evaluated, like the graph, so they are not part of it.
 
     Attributes:
-        questions: The test questions.
-        retrievals: The element IDs retrieved for each question, by question text, in
-            rank order.
         k: How many of the top-ranked element IDs of each retrieval to evaluate; all of
             them when omitted.
     """
 
     category: ClassVar[MetricCategory] = MetricCategory.RETRIEVAL
+    needs: ClassVar[tuple[InputName, ...]] = ("questions", "retrievals")
 
-    questions: QuestionSet
-    retrievals: Retrievals
     k: int | None = Field(default=None, ge=1)
 
-    def signature(self) -> str:
+    def signature(self, inputs: Inputs) -> str:
         """Return the metric name with a digest of the questions, and ``k`` when set.
+
+        Args:
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The signature.
         """
-        signature = f"{self.name}|questions={self.questions.digest()}"
+        signature = f"{self.name}|questions={self.require(inputs.questions, 'questions').digest()}"
         return signature if self.k is None else f"{signature}|k={self.k}"
 
-    def retrieved(self, graph: GraphView) -> list[tuple[Question, list[Support], frozenset[str]]]:
+    def retrieved(
+        self, graph: GraphView, inputs: Inputs
+    ) -> list[tuple[Question, list[Support], frozenset[str]]]:
         """Pair every question with its support in the graph and what was retrieved for it.
 
         Args:
             graph: The graph that was retrieved from.
+            inputs: The inputs, whose questions and retrievals are paired.
 
         Returns:
             Each question with its supporting facts and entities, matched as
@@ -66,15 +67,18 @@ class RetrievalMetric(Metric):
             IDs.
 
         Raises:
-            InputError: If a question has no retrieval, or no retrieved element ID is in
-                the graph, as when the retrievals come from another database.
+            InputError: If no test questions or retrievals were given, a question has
+                no retrieval, or no retrieved element ID is in the graph, as when the
+                retrievals come from another database.
         """
-        texts = [question.text for question in self.questions.questions]
-        if missing := [text for text in texts if text not in self.retrievals]:
+        questions = self.require(inputs.questions, "questions")
+        retrievals = self.require(inputs.retrievals, "retrievals")
+        texts = [question.text for question in questions.questions]
+        if missing := [text for text in texts if text not in retrievals]:
             raise InputError(
                 f"no retrieval for {len(missing)} of {len(texts)} questions, such as {missing[0]!r}"
             )
-        top = {text: frozenset(self.retrievals[text][: self.k]) for text in texts}
+        top = {text: frozenset(retrievals[text][: self.k]) for text in texts}
         retrieved = {element_id for ids in top.values() for element_id in ids}
         known = {node.id for node in graph.graph.nodes} | {
             relationship.id for relationship in graph.graph.relationships
@@ -90,7 +94,5 @@ class RetrievalMetric(Metric):
             )
         return [
             (question, support, top[question.text])
-            for question, support in zip(
-                self.questions.questions, self.questions.support(graph), strict=True
-            )
+            for question, support in zip(questions.questions, questions.support(graph), strict=True)
         ]

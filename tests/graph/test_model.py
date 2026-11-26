@@ -1,4 +1,4 @@
-"""Test the immutable property graph snapshot."""
+"""Test the immutable property graph snapshot that every metric evaluates."""
 
 from datetime import UTC, date, datetime, time
 

@@ -1,4 +1,4 @@
-"""Match the facts and entities that people write down with those a graph holds."""
+"""Define the base class of ground truths and test questions."""
 
 from __future__ import annotations
 

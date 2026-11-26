@@ -1,4 +1,4 @@
-"""Provide the ``kgeval`` command-line interface."""
+"""Implement the ``kgeval`` command-line interface."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from contextlib import contextmanager
 from enum import StrEnum
 from importlib.metadata import version
 from pathlib import Path
-from typing import Annotated, NoReturn
+from typing import Annotated, Any, NoReturn
 
 import typer
 from neo4j import Driver, GraphDatabase
@@ -24,19 +24,16 @@ from kgeval.errors import InputError, KgevalError, SourceError
 from kgeval.evaluation import evaluate
 from kgeval.graph import GraphView, Layout
 from kgeval.ground_truth import load_ground_truth
-from kgeval.judge import Judge
 from kgeval.metrics import (
     BUILTIN_METRICS,
-    GROUND_TRUTH_METRICS,
-    JUDGED_METRICS,
-    RETRIEVAL_METRICS,
-    SCHEMA_METRICS,
-    Competency,
+    InputName,
+    Inputs,
     Metric,
     MetricCategory,
-    default_metrics,
+    load_suite,
 )
-from kgeval.metrics.judged import DEFAULT_SAMPLE_SIZE
+from kgeval.metrics.model import DEFAULT_SAMPLE_SIZE
+from kgeval.model import Model
 from kgeval.questions import load_questions
 from kgeval.report import DEFAULT_MAX_FINDINGS, Report, compare
 from kgeval.retrieval import load_retrievals
@@ -46,10 +43,24 @@ from kgeval.sources import Neo4jSource
 __all__ = ["app"]
 
 app = typer.Typer(
-    help="Evaluate knowledge graphs.",
+    help="An evaluation framework for knowledge graphs.",
     no_args_is_help=True,
     add_completion=False,
 )
+
+_GRAPH = "Graph"
+_INPUTS = "Inputs"
+_MODEL = "Model"
+_METRICS = "Metrics"
+_OUTPUT = "Output"
+
+_OPTIONS: dict[InputName, str] = {
+    "schema": "--schema",
+    "ground_truth": "--ground-truth",
+    "questions": "--questions",
+    "retrievals": "--retrievals",
+    "model": "--model",
+}
 
 
 def _print_version(show: bool) -> None:
@@ -73,15 +84,6 @@ def _main(
     pass
 
 
-_ENABLED_BY = {
-    **{metric_type.name: "--schema" for metric_type in SCHEMA_METRICS},
-    **{metric_type.name: "--ground" for metric_type in GROUND_TRUTH_METRICS},
-    Competency.name: "--questions",
-    **{metric_type.name: "--judge" for metric_type in JUDGED_METRICS},
-    **{metric_type.name: "--questions and --retrievals" for metric_type in RETRIEVAL_METRICS},
-}
-
-
 class OutputFormat(StrEnum):
     """Name the formats a report can be written in."""
 
@@ -94,12 +96,15 @@ Uri = Annotated[
     typer.Option(
         envvar="NEO4J_URI",
         help="Neo4j connection URI (default neo4j://localhost:7687); prompted for in a terminal.",
+        rich_help_panel=_GRAPH,
     ),
 ]
 Username = Annotated[
     str | None,
     typer.Option(
-        envvar="NEO4J_USERNAME", help="Neo4j user (default neo4j); prompted for in a terminal."
+        envvar="NEO4J_USERNAME",
+        help="Neo4j user (default neo4j); prompted for in a terminal.",
+        rich_help_panel=_GRAPH,
     ),
 ]
 Password = Annotated[
@@ -107,11 +112,16 @@ Password = Annotated[
     typer.Option(
         envvar="NEO4J_PASSWORD",
         help="Neo4j password; prompted for in a terminal; connects without auth if empty.",
+        rich_help_panel=_GRAPH,
     ),
 ]
 Database = Annotated[
     str | None,
-    typer.Option(envvar="NEO4J_DATABASE", help="Database to read; the server default if unset."),
+    typer.Option(
+        envvar="NEO4J_DATABASE",
+        help="Database to read; the server default if unset.",
+        rich_help_panel=_GRAPH,
+    ),
 ]
 LayoutFile = Annotated[
     Path | None,
@@ -120,12 +130,19 @@ LayoutFile = Annotated[
         help="YAML file of layout fields that replace the detected ones.",
         exists=True,
         dir_okay=False,
+        rich_help_panel=_GRAPH,
     ),
 ]
 Output = Annotated[
-    Path | None, typer.Option("--output", "-o", help="Write to this file, not standard output.")
+    Path | None,
+    typer.Option(
+        "--output", "-o", help="Write to this file, not standard output.", rich_help_panel=_OUTPUT
+    ),
 ]
-MaxFindings = Annotated[int, typer.Option(min=0, help="Findings listed per metric in Markdown.")]
+MaxFindings = Annotated[
+    int,
+    typer.Option(min=0, help="Findings listed per metric in Markdown.", rich_help_panel=_OUTPUT),
+]
 ReportFile = Annotated[
     Path,
     typer.Argument(
@@ -134,7 +151,12 @@ ReportFile = Annotated[
         dir_okay=False,
     ),
 ]
-Verbose = Annotated[bool, typer.Option("--verbose", "-v", help="Log progress to standard error.")]
+Verbose = Annotated[
+    bool,
+    typer.Option(
+        "--verbose", "-v", help="Log progress to standard error.", rich_help_panel=_OUTPUT
+    ),
+]
 
 
 @app.command()
@@ -143,71 +165,84 @@ def run(
     username: Username = None,
     password: Password = None,
     database: Database = None,
+    layout: LayoutFile = None,
     schema: Annotated[
         Path | None,
         typer.Option(
-            help="Graph schema in neo4j-graphrag format (YAML or JSON); adds the schema metrics.",
+            help="Graph schema in neo4j-graphrag format (YAML or JSON).",
             exists=True,
             dir_okay=False,
+            rich_help_panel=_INPUTS,
         ),
     ] = None,
     ground_truth: Annotated[
         Path | None,
         typer.Option(
-            "--ground",
-            help="Ground truth facts (YAML or JSON); adds precision, recall, and F1.",
+            help="Facts the graph should contain (YAML or JSON).",
             exists=True,
             dir_okay=False,
+            rich_help_panel=_INPUTS,
         ),
     ] = None,
     questions: Annotated[
         Path | None,
         typer.Option(
-            help="Test questions with their supporting facts (YAML or JSON); adds competency.",
+            help="Test questions with their supporting facts (YAML or JSON).",
             exists=True,
             dir_okay=False,
+            rich_help_panel=_INPUTS,
         ),
     ] = None,
     retrievals: Annotated[
         Path | None,
         typer.Option(
-            help="Element IDs a retriever returned per question (YAML or JSON); "
-            "adds the retrieval metrics. Needs --questions.",
+            help="Element IDs a retriever returned per question (YAML or JSON).",
             exists=True,
             dir_okay=False,
+            rich_help_panel=_INPUTS,
         ),
     ] = None,
-    judge_model: Annotated[
+    model_name: Annotated[
         str | None,
         typer.Option(
-            "--judge",
-            help="Model to judge with, as LiteLLM names it, such as openai/gpt-5-mini; "
-            "adds the judged metrics. Needs the provider's API key.",
+            "--model",
+            help="Model as LiteLLM names it, such as openai/gpt-5-mini; needs the provider's "
+            "API key.",
+            rich_help_panel=_MODEL,
         ),
     ] = None,
-    judge_base_url: Annotated[
+    model_base_url: Annotated[
         str | None,
-        typer.Option(help="Base URL that replaces the provider's, such as another server's."),
+        typer.Option(
+            help="Base URL that replaces the provider's, such as another server's.",
+            rich_help_panel=_MODEL,
+        ),
     ] = None,
-    judge_cache: Annotated[
+    model_cache: Annotated[
         Path | None,
         typer.Option(
-            help="SQLite file that stores verdicts, so reruns reuse them.", dir_okay=False
-        ),
-    ] = None,
-    sample_size: Annotated[
-        int, typer.Option(min=1, help="Most units each sampled judged metric judges.")
-    ] = DEFAULT_SAMPLE_SIZE,
-    seed: Annotated[int, typer.Option(help="Seed that selects which units are sampled.")] = 0,
-    top_k: Annotated[
-        int | None,
-        typer.Option(
-            min=1, help="Top-ranked element IDs of each retrieval to evaluate; all if unset."
+            help="SQLite file that stores verdicts, so reruns reuse them.",
+            dir_okay=False,
+            rich_help_panel=_MODEL,
         ),
     ] = None,
     metric: Annotated[
         list[str] | None,
-        typer.Option("--metric", "-m", help="Run only this metric; repeat for several."),
+        typer.Option(
+            "--metric",
+            "-m",
+            help="Run only this metric; repeat for several.",
+            rich_help_panel=_METRICS,
+        ),
+    ] = None,
+    suite: Annotated[
+        Path | None,
+        typer.Option(
+            help="Metrics to run, with their settings (YAML or JSON).",
+            exists=True,
+            dir_okay=False,
+            rich_help_panel=_METRICS,
+        ),
     ] = None,
     threshold: Annotated[
         list[str] | None,
@@ -215,52 +250,80 @@ def run(
             "--threshold",
             "-t",
             help="Minimum score as METRIC=VALUE, VALUE from 0 to 1; repeat for several.",
+            rich_help_panel=_METRICS,
         ),
     ] = None,
-    metadata: Annotated[
-        list[str] | None,
+    sample_size: Annotated[
+        int,
         typer.Option(
-            help="Run description as KEY=VALUE, such as model=gpt-5-mini; repeat for several.",
+            min=1,
+            help="Most units each sampled metric checks, unless the suite sets it.",
+            rich_help_panel=_METRICS,
+        ),
+    ] = DEFAULT_SAMPLE_SIZE,
+    seed: Annotated[
+        int,
+        typer.Option(
+            help="Seed that selects which units are sampled, unless the suite sets it.",
+            rich_help_panel=_METRICS,
+        ),
+    ] = 0,
+    top_k: Annotated[
+        int | None,
+        typer.Option(
+            min=1,
+            help="Top-ranked element IDs of each retrieval to evaluate, unless the suite sets "
+            "k; all if unset.",
+            rich_help_panel=_METRICS,
         ),
     ] = None,
-    layout: LayoutFile = None,
     output_format: Annotated[
-        OutputFormat, typer.Option("--format", "-f", help="Report format.")
+        OutputFormat,
+        typer.Option("--format", "-f", help="Report format.", rich_help_panel=_OUTPUT),
     ] = OutputFormat.MARKDOWN,
     output: Output = None,
     max_findings: MaxFindings = DEFAULT_MAX_FINDINGS,
+    metadata: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Run description as KEY=VALUE, such as chunk_size=512; repeat for several.",
+            rich_help_panel=_OUTPUT,
+        ),
+    ] = None,
     verbose: Verbose = False,
 ) -> None:
     """Evaluate a Neo4j knowledge graph and report scores and findings.
 
-    Exits with status 1 when a metric scores below its threshold and 2 on errors.
+    Without --metric or --suite, every metric whose inputs are given runs. Exits with
+    status 1 when a metric scores below its threshold and 2 on errors.
     """
     _configure_logging(verbose)
     thresholds = _parse_thresholds(threshold or [])
     run_metadata = _parse_metadata(metadata or [])
-    for option, value in (("--judge-base-url", judge_base_url), ("--judge-cache", judge_cache)):
-        if value is not None and judge_model is None:
-            raise typer.BadParameter("needs --judge", param_hint=option)
+    for option, value in (("--model-base-url", model_base_url), ("--model-cache", model_cache)):
+        if value is not None and model_name is None:
+            raise typer.BadParameter("needs --model", param_hint=option)
     if retrievals is not None and questions is None:
         raise typer.BadParameter("needs --questions", param_hint="--retrievals")
-    if top_k is not None and retrievals is None:
-        raise typer.BadParameter("needs --retrievals", param_hint="--top-k")
     try:
         layout_overrides = _load_layout(layout)
-        judge: Judge | None = None
-        if judge_model is not None:
-            judge = Judge(judge_model, base_url=judge_base_url, cache=judge_cache)
-        metrics = default_metrics(
-            schema=None if schema is None else load_schema(schema),
-            ground_truth=None if ground_truth is None else load_ground_truth(ground_truth),
-            questions=None if questions is None else load_questions(questions),
-            retrievals=None if retrievals is None else load_retrievals(retrievals),
-            judge=judge,
-            sample_size=sample_size,
-            seed=seed,
-            top_k=top_k,
+        given: dict[str, Any] = {
+            "schema": None if schema is None else load_schema(schema),
+            "ground_truth": None if ground_truth is None else load_ground_truth(ground_truth),
+            "questions": None if questions is None else load_questions(questions),
+            "retrievals": None if retrievals is None else load_retrievals(retrievals),
+            "model": None
+            if model_name is None
+            else Model(model_name, base_url=model_base_url, cache=model_cache),
+        }
+        metrics = _select(
+            load_suite(suite) if suite else [metric_type() for metric_type in BUILTIN_METRICS],
+            metric or [],
+            thresholds,
+            Inputs(**given),
+            suite,
+            {"sample_size": sample_size, "seed": seed, "k": top_k},
         )
-        metrics = _select(metrics, metric or [], thresholds)
         with _connect(uri, username, password) as driver:
             graph = Neo4jSource(driver, database).load()
         report = evaluate(
@@ -268,6 +331,7 @@ def run(
             metrics,
             layout=Layout.detect(graph, layout_overrides),
             metadata=run_metadata,
+            **given,
         )
     except KgevalError as error:
         _fail(str(error))
@@ -331,30 +395,21 @@ def infer_schema_command(
 
 @app.command("metrics")
 def metrics_command() -> None:
-    """List every built-in metric by category, with what each category needs."""
+    """List every built-in metric by category, with the inputs it needs."""
     lines = ["# kgeval metrics"]
     for category in MetricCategory:
-        metric_types = [
-            metric_type for metric_type in BUILTIN_METRICS if metric_type.category is category
-        ]
-        options = " or ".join(
-            dict.fromkeys(
-                _ENABLED_BY[metric_type.name]
-                for metric_type in metric_types
-                if metric_type.name in _ENABLED_BY
-            )
-        )
+        lines += ["", f"## {category.value}", "", "| Metric | Needs | Description |"]
+        lines.append("| --- | --- | --- |")
         lines += [
-            "",
-            f"## {category.value} ({f'needs {options}' if options else 'runs by default'})",
-            "",
-            "| Metric | Description |",
-            "| --- | --- |",
-        ]
-        lines += [
-            f"| {metric_type.name} | {_summary(metric_type)} |" for metric_type in metric_types
+            f"| {metric_type.name} | {_needs(metric_type.needs)} | {_summary(metric_type)} |"
+            for metric_type in BUILTIN_METRICS
+            if metric_type.category is category
         ]
     _write("\n".join(lines) + "\n", None, render_markdown=True)
+
+
+def _needs(needs: tuple[InputName, ...]) -> str:
+    return " and ".join(_OPTIONS[need] for need in needs) or "the graph only"
 
 
 def _summary(metric_type: type[Metric]) -> str:
@@ -427,27 +482,53 @@ def _parse_metadata(values: list[str]) -> dict[str, str]:
     return metadata
 
 
-def _select(metrics: list[Metric], names: list[str], thresholds: dict[str, float]) -> list[Metric]:
-    enabled = [metric.name for metric in metrics]
-    missing = sorted((set(names) | set(thresholds)) - set(enabled))
-    problems = [f"{name} needs {_ENABLED_BY[name]}" for name in missing if name in _ENABLED_BY]
-    unknown = [name for name in missing if name not in _ENABLED_BY]
-    if unknown:
-        noun = "metric" if len(unknown) == 1 else "metrics"
-        problems.append(f"unknown {noun} {', '.join(unknown)}; choose from {', '.join(enabled)}")
-    unselected = sorted(set(thresholds) - set(names)) if names else []
-    if unselected:
+def _select(
+    candidates: list[Metric],
+    names: list[str],
+    thresholds: dict[str, float],
+    inputs: Inputs,
+    suite: Path | None,
+    settings: dict[str, int | None],
+) -> list[Metric]:
+    available = [metric.name for metric in candidates]
+    problems = []
+    if unknown := sorted((set(names) | set(thresholds)) - set(available)):
+        if suite is not None:
+            listed = f"{suite} does not list"
+        else:
+            listed = "unknown metric" if len(unknown) == 1 else "unknown metrics"
+        problems.append(f"{listed} {', '.join(unknown)}; choose from {', '.join(available)}")
+    if names and (unselected := sorted(set(thresholds) - set(names))):
         problems.append(f"--threshold names {', '.join(unselected)}, which --metric excludes")
+    selected = [metric for metric in candidates if not names or metric.name in names]
+    if not names and suite is None:
+        # Keep a metric that --threshold names, so that its missing inputs are reported.
+        selected = [
+            metric
+            for metric in selected
+            if not inputs.missing(metric.needs) or metric.name in thresholds
+        ]
+    problems += [
+        f"{metric.name} needs {_needs(tuple(missing))}"
+        for metric in selected
+        if (missing := inputs.missing(metric.needs))
+    ]
     if problems:
         raise typer.BadParameter("; ".join(problems))
-    return [
-        # Rely on _parse_thresholds for the range check, because model_copy does not validate.
-        metric.model_copy(update={"threshold": thresholds[metric.name]})
-        if metric.name in thresholds
-        else metric
-        for metric in metrics
-        if not names or metric.name in names
-    ]
+    configured = []
+    for metric in selected:
+        # Keep the suite's settings, and rely on option checks, since model_copy does not validate.
+        update: dict[str, Any] = {
+            field: value
+            for field, value in settings.items()
+            if value is not None
+            and field in type(metric).model_fields
+            and field not in metric.model_fields_set
+        }
+        if metric.name in thresholds:
+            update["threshold"] = thresholds[metric.name]
+        configured.append(metric.model_copy(update=update))
+    return configured
 
 
 def _load_report(path: Path) -> Report:

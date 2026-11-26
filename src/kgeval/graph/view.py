@@ -1,4 +1,4 @@
-"""Index a graph snapshot by role, so metrics can ask about entities, facts, and chunks."""
+"""Implement the view that indexes a graph's entities, facts, and chunks."""
 
 from __future__ import annotations
 

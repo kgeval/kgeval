@@ -1,4 +1,4 @@
-"""Load and check ground truths: the facts a graph is expected to contain."""
+"""Implement the ground truth that lists the facts a graph is expected to contain."""
 
 from __future__ import annotations
 

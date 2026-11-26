@@ -9,7 +9,7 @@ from typing import ClassVar
 from kgeval.graph.model import Node, Relationship
 from kgeval.graph.view import GraphView
 from kgeval.ground_truth import GroundTruth
-from kgeval.metrics.base import Finding, Metric, MetricCategory, MetricResult
+from kgeval.metrics.base import Finding, InputName, Inputs, Metric, MetricCategory, MetricResult
 
 __all__ = [
     "EntityF1",
@@ -23,7 +23,7 @@ __all__ = [
 
 
 class GroundTruthMetric(Metric):
-    """Compare the graph with a ground truth of facts, as precision, recall or F1.
+    """Compare the graph with a ground truth of facts, as precision, recall, or F1.
 
     Entity names and relationship types match under the keys that the ground truth's
     ``entity_key`` and ``fact_key`` return: normalized, with aliases mapped to the ground truth
@@ -38,41 +38,46 @@ class GroundTruthMetric(Metric):
     lacks. F1 scores both, which makes its score ``2 * matched / (distinct + ground_truth)``, the
     harmonic mean of precision and recall; its findings are those of precision and
     recall, so it reports none of its own.
-
-    Attributes:
-        ground_truth: The ground truth.
     """
 
     category: ClassVar[MetricCategory] = MetricCategory.REFERENCE
     scores_graph: ClassVar[bool]
     scores_ground_truth: ClassVar[bool]
+    needs: ClassVar[tuple[InputName, ...]] = ("ground_truth",)
 
-    ground_truth: GroundTruth
-
-    def signature(self) -> str:
+    def signature(self, inputs: Inputs) -> str:
         """Return the metric name with a digest of the ground truth.
+
+        Args:
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The signature.
         """
-        return f"{self.name}|ground_truth={self.ground_truth.digest()}"
+        ground_truth = self.require(inputs.ground_truth, "ground_truth")
+        return f"{self.name}|ground_truth={ground_truth.digest()}"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Match distinct facts or entities with the ground truth; report each unmatched.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
+
+        Raises:
+            InputError: If no ground truth was given.
         """
+        ground_truth = self.require(inputs.ground_truth, "ground_truth")
         scope: frozenset[str] | None = None
-        if self.ground_truth.documents:
-            scope = graph.chunks_of(self.ground_truth.documents)
+        if ground_truth.documents:
+            scope = graph.chunks_of(ground_truth.documents)
             if not scope:
-                return self.skip("no chunk belongs to the ground truth's documents")
-        extracted = self._extracted(graph, scope)
-        expected = self._expected()
+                return self.skip(inputs, "no chunk belongs to the ground truth's documents")
+        extracted = self._extracted(graph, ground_truth, scope)
+        expected = self._expected(ground_truth)
         evaluated = 0
         unmatched: list[Finding] = []
         if self.scores_graph:
@@ -83,28 +88,28 @@ class GroundTruthMetric(Metric):
             unmatched += [finding for key, finding in expected.items() if key not in extracted]
         # Leave F1's findings to precision and recall, which report the same defects.
         findings = () if self.scores_graph and self.scores_ground_truth else unmatched
-        return self.result(evaluated, len(unmatched), findings)
+        return self.result(inputs, evaluated, len(unmatched), findings)
 
     @abstractmethod
     def _extracted(
-        self, graph: GraphView, scope: frozenset[str] | None
+        self, graph: GraphView, ground_truth: GroundTruth, scope: frozenset[str] | None
     ) -> dict[tuple[str, ...], Finding]:
         """Map each distinct key in scope to the finding it gets when unmatched."""
 
     @abstractmethod
-    def _expected(self) -> dict[tuple[str, ...], Finding]:
+    def _expected(self, ground_truth: GroundTruth) -> dict[tuple[str, ...], Finding]:
         """Map each distinct ground_truth key to the finding it gets when unmatched."""
 
 
 class _FactMetric(GroundTruthMetric):
     def _extracted(
-        self, graph: GraphView, scope: frozenset[str] | None
+        self, graph: GraphView, ground_truth: GroundTruth, scope: frozenset[str] | None
     ) -> dict[tuple[str, ...], Finding]:
         groups: defaultdict[tuple[str, ...], list[Relationship]] = defaultdict(list)
         for fact in graph.facts:
             if scope is not None and not graph.fact_chunk_ids(fact) & scope:
                 continue
-            key = self.ground_truth.graph_fact_key(graph, fact)
+            key = ground_truth.graph_fact_key(graph, fact)
             if all(key):
                 groups[key].append(fact)
         # Describe each group by its alphabetically first description, which no element ID changes.
@@ -120,10 +125,10 @@ class _FactMetric(GroundTruthMetric):
             for key, facts in groups.items()
         }
 
-    def _expected(self) -> dict[tuple[str, ...], Finding]:
+    def _expected(self, ground_truth: GroundTruth) -> dict[tuple[str, ...], Finding]:
         expected: dict[tuple[str, ...], Finding] = {}
-        for source, relationship_type, target in self.ground_truth.facts:
-            key = self.ground_truth.fact_key(source, relationship_type, target)
+        for source, relationship_type, target in ground_truth.facts:
+            key = ground_truth.fact_key(source, relationship_type, target)
             expected.setdefault(
                 key,
                 Finding(
@@ -137,13 +142,13 @@ class _FactMetric(GroundTruthMetric):
 
 class _EntityMetric(GroundTruthMetric):
     def _extracted(
-        self, graph: GraphView, scope: frozenset[str] | None
+        self, graph: GraphView, ground_truth: GroundTruth, scope: frozenset[str] | None
     ) -> dict[tuple[str, ...], Finding]:
         groups: defaultdict[tuple[str, ...], list[Node]] = defaultdict(list)
         for entity in graph.entities:
             if scope is not None and not graph.chunk_ids(entity.id) & scope:
                 continue
-            if key := self.ground_truth.entity_key(graph.name(entity) or ""):
+            if key := ground_truth.entity_key(graph.name(entity) or ""):
                 groups[(key,)].append(entity)
         return {
             key: Finding(
@@ -154,10 +159,10 @@ class _EntityMetric(GroundTruthMetric):
             for key, entities in groups.items()
         }
 
-    def _expected(self) -> dict[tuple[str, ...], Finding]:
+    def _expected(self, ground_truth: GroundTruth) -> dict[tuple[str, ...], Finding]:
         expected: dict[tuple[str, ...], Finding] = {}
-        for name in self.ground_truth.named_entities():
-            key = self.ground_truth.entity_key(name)
+        for name in ground_truth.named_entities():
+            key = ground_truth.entity_key(name)
             expected.setdefault(
                 (key,),
                 Finding(message=f'the graph lacks the ground truth entity "{name}"', subject=key),

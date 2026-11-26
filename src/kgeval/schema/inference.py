@@ -1,4 +1,4 @@
-"""Infer the schema a graph follows today, as a draft to review."""
+"""Implement the inference of the schema a graph follows today, as a draft to review."""
 
 from __future__ import annotations
 

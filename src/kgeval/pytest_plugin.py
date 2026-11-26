@@ -51,8 +51,7 @@ class _ReportWriter:
         self.failed = False
         evaluation._recorded = []
 
-    # Use an old-style wrapper, which every pytest version supports, since pytest loads this
-    # plugin in every project.
+    # Use an old-style wrapper, which every pytest supports, since every project loads it.
     @pytest.hookimpl(hookwrapper=True)
     def pytest_runtest_makereport(self) -> Generator[None, Result[pytest.TestReport], None]:
         outcome = yield

@@ -1,14 +1,27 @@
 # Inputs
 
-Inputs tell kgeval what the graph should contain and what a retriever returned, and
-each one enables more [metrics](metrics.md). Files can be YAML or JSON.
+Inputs tell kgeval what the graph should contain, what a retriever returned, and which
+model to ask. kgeval runs every [metric](metrics.md) whose inputs you give. Files can be
+YAML or JSON.
 
-| Input                             | CLI option     | Python                                                                     | Enables                                   |
-| --------------------------------- | -------------- | -------------------------------------------------------------------------- | ----------------------------------------- |
-| [Graph schema](#graph-schema)     | `--schema`     | [`load_schema`][kgeval.load_schema]                                        | Schema metrics                            |
-| [Ground truth](#ground-truth)     | `--ground`     | [`load_ground_truth`][kgeval.load_ground_truth]                            | Fact and entity precision, recall, and F1 |
-| [Test questions](#test-questions) | `--questions`  | [`load_questions`][kgeval.load_questions]                                  | `competency`                              |
-| [Retrievals](#retrievals)         | `--retrievals` | [`load_retrievals`][kgeval.load_retrievals], [`retrieve`][kgeval.retrieve] | Retrieval metrics                         |
+| Input                             | CLI option       | Python                                                                     | Used by                                   |
+| --------------------------------- | ---------------- | -------------------------------------------------------------------------- | ----------------------------------------- |
+| [Graph schema](#graph-schema)     | `--schema`       | [`load_schema`][kgeval.load_schema]                                        | Schema metrics                            |
+| [Ground truth](#ground-truth)     | `--ground-truth` | [`load_ground_truth`][kgeval.load_ground_truth]                            | Fact and entity precision, recall, and F1 |
+| [Test questions](#test-questions) | `--questions`    | [`load_questions`][kgeval.load_questions]                                  | `competency` and retrieval metrics        |
+| [Retrievals](#retrievals)         | `--retrievals`   | [`load_retrievals`][kgeval.load_retrievals], [`retrieve`][kgeval.retrieve] | Retrieval metrics                         |
+| [Model](models.md)                | `--model`        | [`Model`][kgeval.Model]                                                    | Model metrics                             |
+
+In Python, pass each input to [`evaluate`][kgeval.evaluate] by name:
+
+```python
+report = kgeval.evaluate(
+    graph,
+    schema=kgeval.load_schema("schema.yaml"),
+    ground_truth=kgeval.load_ground_truth("ground_truth.yaml"),
+    model=kgeval.Model("<model>"),
+)
+```
 
 ## Graph schema
 
@@ -34,13 +47,13 @@ constraints:
   - {type: UNIQUENESS, node_type: Person, property_names: [name]}
 ```
 
-| Field                                                                           | Description                                                                                                       |
-| ------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `node_types`                                                                    | Node types. Each is a label, or a mapping with `label`, `description`, `properties`, and `additional_properties`. |
-| `relationship_types`                                                            | Relationship types, in the same form as node types, plus an optional `max_targets`.                               |
-| `patterns`                                                                      | Allowed combinations, each as `[source node type, relationship type, target node type]`.                          |
+| Field                                                                           | Description                                                                                                        |
+| ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `node_types`                                                                    | Node types. Each is a label, or a mapping with `label`, `description`, `properties`, and `additional_properties`.  |
+| `relationship_types`                                                            | Relationship types, in the same form as node types, plus an optional `max_targets`.                                |
+| `patterns`                                                                      | Allowed combinations, each as `[source node type, relationship type, target node type]`.                           |
 | `constraints`                                                                   | `EXISTENCE`, `UNIQUENESS`, or `KEY` constraints on the `property_names` of one `node_type` or `relationship_type`. |
-| `additional_node_types`, `additional_relationship_types`, `additional_patterns` | Whether undeclared node types, relationship types, or patterns are allowed.                                       |
+| `additional_node_types`, `additional_relationship_types`, `additional_patterns` | Whether undeclared node types, relationship types, or patterns are allowed.                                        |
 
 A property has a `name`, a `type`, and optionally a `description` and `required`. The
 types are `BOOLEAN`, `DATE`, `DURATION`, `FLOAT`, `INTEGER`, `LIST`, `LOCAL_DATETIME`,
@@ -162,7 +175,7 @@ def retriever(question: str) -> list[object]:
 
 questions = kgeval.load_questions("questions.yaml")
 retrievals = kgeval.retrieve(questions, retriever)
-metrics = kgeval.default_metrics(questions=questions, retrievals=retrievals)
+report = kgeval.evaluate(graph, questions=questions, retrievals=retrievals)
 ```
 
 ## Name matching

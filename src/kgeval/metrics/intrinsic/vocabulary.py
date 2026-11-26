@@ -9,7 +9,7 @@ from typing import ClassVar
 from kgeval.graph.names import normalize_type
 from kgeval.graph.view import GraphView
 from kgeval.metrics._vocabulary import enumerate_terms, merge_findings, vocabulary
-from kgeval.metrics.base import Finding, Metric, MetricCategory, MetricResult
+from kgeval.metrics.base import Finding, Inputs, Metric, MetricCategory, MetricResult
 
 __all__ = ["VocabularyUniqueness"]
 
@@ -19,7 +19,7 @@ class VocabularyUniqueness(Metric):
 
     The vocabulary is the node types and property keys of the entities, and the
     relationship types and property keys of the facts. Terms of one kind are spelling
-    variants when they differ only in case, separators, camel case or plural form, as
+    variants when they differ only in case, separators, camel case, or plural form, as
     ``normalize_type`` defines. In each group of variants, the one most elements use
     counts as intended, ties going to the alphabetically first, and ``failed`` counts
     the others; each finding lists the elements that use them. ``vocabulary_resolution``
@@ -30,11 +30,12 @@ class VocabularyUniqueness(Metric):
     category: ClassVar[MetricCategory] = MetricCategory.INTRINSIC
     unit: ClassVar[str] = "vocabulary terms"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Group each kind of term by normalized spelling and report every group of two or more.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
@@ -51,7 +52,7 @@ class VocabularyUniqueness(Metric):
             evaluated += len(carriers)
             failed += kind_failed
             findings += kind_findings
-        return self.result(evaluated, failed, findings)
+        return self.result(inputs, evaluated, failed, findings)
 
 
 def _variants(kind: str, others: list[str], intended: str) -> str:

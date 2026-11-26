@@ -1,8 +1,8 @@
-"""Provide the judged metrics."""
+"""Provide the model metrics."""
 
-from kgeval.metrics.judged._prompts import MAX_CHUNKS
-from kgeval.metrics.judged.base import DEFAULT_SAMPLE_SIZE, JudgedMetric, SampledMetric
-from kgeval.metrics.judged.entities import (
+from kgeval.metrics.model._prompts import MAX_CHUNKS
+from kgeval.metrics.model.base import DEFAULT_SAMPLE_SIZE, ModelMetric, SampledMetric
+from kgeval.metrics.model.entities import (
     DuplicateVerdict,
     EntityDisambiguation,
     EntityResolution,
@@ -10,13 +10,13 @@ from kgeval.metrics.judged.entities import (
     NodeTypeAccuracy,
     TypeVerdict,
 )
-from kgeval.metrics.judged.extraction import (
+from kgeval.metrics.model.extraction import (
     CompletenessVerdict,
     ExtractionCompleteness,
     StatedFact,
 )
-from kgeval.metrics.judged.facts import FactAccuracy, SupportVerdict
-from kgeval.metrics.judged.vocabulary import SynonymGroup, SynonymVerdict, VocabularyResolution
+from kgeval.metrics.model.facts import FactAccuracy, SupportVerdict
+from kgeval.metrics.model.vocabulary import SynonymGroup, SynonymVerdict, VocabularyResolution
 
 __all__ = [
     "DEFAULT_SAMPLE_SIZE",
@@ -28,7 +28,7 @@ __all__ = [
     "ExtractionCompleteness",
     "FactAccuracy",
     "IdentityVerdict",
-    "JudgedMetric",
+    "ModelMetric",
     "NodeTypeAccuracy",
     "SampledMetric",
     "StatedFact",

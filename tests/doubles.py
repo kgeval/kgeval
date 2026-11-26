@@ -1,4 +1,4 @@
-"""Provide test doubles for judges."""
+"""Implement the test doubles of the model."""
 
 import threading
 import time
@@ -7,13 +7,13 @@ from typing import TypeVar
 
 from pydantic import BaseModel
 
-from kgeval.errors import JudgeError, VerdictError
-from kgeval.judge import Judge
+from kgeval.errors import ModelError, VerdictError
+from kgeval.model import Model
 
 OutputT = TypeVar("OutputT", bound=BaseModel)
 
 
-class ScriptedJudge(Judge):
+class ScriptedModel(Model):
     """Approve every prompt except those containing one of the given texts; record every prompt.
 
     Approving verdicts set their flag and leave their lists empty; rejecting verdicts clear
@@ -32,18 +32,18 @@ class ScriptedJudge(Judge):
         with self._lock:
             self.prompts.append(prompt)
         rejected = any(text in prompt for text in self.rejected)
-        answer: dict[str, object] = {}
+        verdict: dict[str, object] = {}
         for name, field in output_type.model_fields.items():
             if field.annotation is bool:
-                answer[name] = not rejected
+                verdict[name] = not rejected
             elif field.annotation is str:
-                answer[name] = "Scripted."
+                verdict[name] = "Scripted."
             else:
-                answer[name] = self.rejection.get(name, []) if rejected else []
-        return output_type.model_validate(answer)
+                verdict[name] = self.rejection.get(name, []) if rejected else []
+        return output_type.model_validate(verdict)
 
 
-class FailingJudge(Judge):
+class FailingModel(Model):
     """Fail on every prompt after an optional delay, and count how many it was asked."""
 
     name = "failing"
@@ -57,13 +57,13 @@ class FailingJudge(Judge):
         with self._lock:
             self.calls += 1
         time.sleep(self.delay)
-        raise JudgeError("model unavailable")
+        raise ModelError("model unavailable")
 
 
-class UnusableJudge(ScriptedJudge):
+class UnusableModel(ScriptedModel):
     """Give no usable verdict for prompts containing one of the given texts, up to a count.
 
-    Approve every other prompt, as ``ScriptedJudge`` does with nothing rejected.
+    Approve every other prompt, as ``ScriptedModel`` does with nothing rejected.
     """
 
     name = "unusable"
@@ -79,5 +79,5 @@ class UnusableJudge(ScriptedJudge):
             with self._lock:
                 count = self.failures[prompt] = self.failures.get(prompt, 0) + 1
             if count <= self.limit:
-                raise VerdictError("unparsable answer")
+                raise VerdictError("unparsable verdict")
         return super().ask(prompt, output_type)

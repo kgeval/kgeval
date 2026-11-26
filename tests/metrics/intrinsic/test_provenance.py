@@ -2,7 +2,7 @@
 
 import pytest
 
-from kgeval.metrics.base import Metric
+from kgeval.metrics.base import Inputs, Metric
 from kgeval.metrics.intrinsic.provenance import (
     EntityProvenance,
     ExtractionCoverage,
@@ -14,7 +14,8 @@ from tests.factories import example_view, node, relationship, view
 @pytest.mark.parametrize("metric", [EntityProvenance(), FactProvenance(), ExtractionCoverage()])
 def test_provenance_metrics_skip_graphs_without_a_lexical_graph(metric: Metric) -> None:
     result = metric.evaluate(
-        view(node("a", "Person"), node("b", "Movie"), relationship("r", "a", "ACTED_IN", "b"))
+        view(node("a", "Person"), node("b", "Movie"), relationship("r", "a", "ACTED_IN", "b")),
+        Inputs(),
     )
 
     assert result.skip_reason is not None
@@ -22,7 +23,7 @@ def test_provenance_metrics_skip_graphs_without_a_lexical_graph(metric: Metric) 
 
 
 def test_entity_provenance_reports_entities_grounded_in_no_chunk() -> None:
-    result = EntityProvenance().evaluate(example_view())
+    result = EntityProvenance().evaluate(example_view(), Inputs())
 
     assert (result.evaluated, result.failed) == (11, 1)
     [finding] = result.findings
@@ -30,7 +31,7 @@ def test_entity_provenance_reports_entities_grounded_in_no_chunk() -> None:
 
 
 def test_fact_provenance_needs_a_chunk_that_grounds_both_entities() -> None:
-    result = FactProvenance().evaluate(example_view())
+    result = FactProvenance().evaluate(example_view(), Inputs())
 
     assert (result.evaluated, result.failed) == (11, 1)
     [finding] = result.findings
@@ -39,7 +40,7 @@ def test_fact_provenance_needs_a_chunk_that_grounds_both_entities() -> None:
 
 
 def test_extraction_coverage_counts_only_lexical_nodes_with_a_chunk_label() -> None:
-    result = ExtractionCoverage().evaluate(example_view())
+    result = ExtractionCoverage().evaluate(example_view(), Inputs())
 
     assert (result.unit, result.evaluated, result.failed) == ("chunks", 5, 1)
     [finding] = result.findings
@@ -47,6 +48,8 @@ def test_extraction_coverage_counts_only_lexical_nodes_with_a_chunk_label() -> N
 
 
 def test_extraction_coverage_fails_every_chunk_when_no_entity_is_grounded() -> None:
-    result = ExtractionCoverage().evaluate(view(node("c", "Chunk", text="Hi"), node("e", "Person")))
+    result = ExtractionCoverage().evaluate(
+        view(node("c", "Chunk", text="Hi"), node("e", "Person")), Inputs()
+    )
 
     assert (result.evaluated, result.failed) == (1, 1)

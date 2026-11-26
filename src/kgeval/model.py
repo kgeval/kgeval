@@ -1,4 +1,4 @@
-"""Implement the LLM judge that the judged metrics ask."""
+"""Implement the model that metrics ask when rules cannot decide."""
 
 from __future__ import annotations
 
@@ -14,17 +14,17 @@ import openai
 import tenacity
 from pydantic import BaseModel, ValidationError
 
-from kgeval.errors import JudgeError, VerdictError
+from kgeval.errors import ModelError, VerdictError
 
-__all__ = ["Judge"]
+__all__ = ["Model"]
 
 _OutputT = TypeVar("_OutputT", bound=BaseModel)
 
 
-class Judge:
-    """Answer evaluation prompts with any model that LiteLLM supports.
+class Model:
+    """Get verdicts on evaluation prompts from any model that LiteLLM supports.
 
-    Each request asks for the answer's JSON schema as structured output. Requests that
+    Each request asks for the verdict's JSON schema as structured output. Requests that
     hit a rate limit or a server error are retried for up to about a minute.
 
     Args:
@@ -32,16 +32,16 @@ class Judge:
             ``openai/gpt-5-mini``.
         base_url: The server's API base URL; the provider's when omitted.
         api_key: The API key; read from the provider's environment variable when omitted.
-        name: Identifies the judge in metric signatures and the cache; the model when
+        name: Identifies the model in metric signatures and the cache; ``model`` when
             omitted. The settings follow it, since they change the verdicts.
         cache: A SQLite file that keeps every verdict, so reruns reuse them; created when
-            missing. A verdict is keyed by the judge's name, the answer's JSON schema, and
-            the prompt. Delete the file to judge again.
+            missing. A verdict is keyed by the model's name, the verdict's JSON schema, and
+            the prompt. Delete the file to ask again.
         **settings: Arguments for every request, such as ``temperature=0`` or
             ``reasoning_effort="low"``.
 
     Raises:
-        JudgeError: If LiteLLM supports no provider of that name, the provider's API key
+        ModelError: If LiteLLM supports no provider of that name, the provider's API key
             or base URL is required but not set, or the cache file cannot be opened.
     """
 
@@ -65,13 +65,13 @@ class Judge:
         try:
             litellm.get_llm_provider(model, api_base=base_url)
         except openai.OpenAIError as error:
-            raise JudgeError(
-                f"unknown judge model {model}; name it as provider/model, such as openai/gpt-5-mini"
+            raise ModelError(
+                f"unknown model {model}; name it as provider/model, such as openai/gpt-5-mini"
             ) from error
         environment = litellm.validate_environment(model, api_key=api_key, api_base=base_url)
         if environment["missing_keys"]:
             missing = ", ".join(environment["missing_keys"])
-            raise JudgeError(f"missing environment variables: {missing}")
+            raise ModelError(f"missing environment variables: {missing}")
         self.name = (name or model) + "".join(
             f"|{key}={json.dumps(settings[key])}" for key in sorted(settings)
         )
@@ -87,42 +87,42 @@ class Judge:
         if cache is not None:
             _execute(
                 cache,
-                "CREATE TABLE IF NOT EXISTS verdicts (key TEXT PRIMARY KEY, answer TEXT NOT NULL)",
+                "CREATE TABLE IF NOT EXISTS verdicts (key TEXT PRIMARY KEY, verdict TEXT NOT NULL)",
             )
 
     def ask(self, prompt: str, output_type: type[_OutputT]) -> _OutputT:
-        """Answer a prompt with an instance of ``output_type``, from the cache when it has one.
+        """Return the model's verdict on a prompt, from the cache when it has one.
 
         Args:
             prompt: The question for the model.
-            output_type: The Pydantic model class the answer must validate against.
+            output_type: The Pydantic model class the verdict must validate against.
 
         Returns:
-            The validated answer.
+            The validated verdict.
 
         Raises:
             VerdictError: If the server rejects the request as a bad one, as when the
-                prompt exceeds the context window, or the answer does not validate.
-            JudgeError: If the request fails otherwise, or the cache cannot be used.
+                prompt exceeds the context window, or the verdict does not validate.
+            ModelError: If the request fails otherwise, or the cache cannot be used.
         """
         if self._cache is None:
             return self._request(prompt, output_type)
         key = hashlib.sha256(
             json.dumps([self.name, output_type.model_json_schema(), prompt]).encode()
         ).hexdigest()
-        rows = _execute(self._cache, "SELECT answer FROM verdicts WHERE key = ?", key)
+        rows = _execute(self._cache, "SELECT verdict FROM verdicts WHERE key = ?", key)
         if rows:
             # Ask again when a stored verdict no longer validates; the insert below replaces it.
             with suppress(ValidationError):
                 return output_type.model_validate_json(rows[0][0])
-        answer = self._request(prompt, output_type)
+        verdict = self._request(prompt, output_type)
         _execute(
             self._cache,
             "INSERT OR REPLACE INTO verdicts VALUES (?, ?)",
             key,
-            answer.model_dump_json(),
+            verdict.model_dump_json(),
         )
-        return answer
+        return verdict
 
     def _request(self, prompt: str, output_type: type[_OutputT]) -> _OutputT:
         try:
@@ -133,9 +133,11 @@ class Judge:
             )
             return output_type.model_validate_json(response.choices[0].message.content or "")
         except (openai.BadRequestError, ValidationError) as error:
-            raise VerdictError(f"{self.name} could not judge a prompt: {error}") from error
+            raise VerdictError(
+                f"{self.name} gave no usable verdict for a prompt: {error}"
+            ) from error
         except openai.OpenAIError as error:
-            raise JudgeError(f"{self.name} request failed: {error}") from error
+            raise ModelError(f"{self.name} request failed: {error}") from error
 
 
 def _is_transient(error: BaseException) -> bool:
@@ -159,9 +161,9 @@ def _complete(**arguments: Any) -> Any:
 
 
 def _execute(path: str | Path, sql: str, *parameters: str) -> list[tuple[str, ...]]:
-    # Open a connection per statement, so that concurrent judge threads never share one.
+    # Open a connection per statement, so that concurrent requests never share one.
     try:
         with closing(sqlite3.connect(path)) as connection, connection:
             return connection.execute(sql, parameters).fetchall()
     except sqlite3.Error as error:
-        raise JudgeError(f"cannot use the judge cache {path}: {error}") from error
+        raise ModelError(f"cannot use the model cache {path}: {error}") from error

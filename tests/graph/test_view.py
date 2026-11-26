@@ -1,4 +1,4 @@
-"""Test indexing a graph snapshot by role."""
+"""Test the view that indexes a graph's entities, facts, and chunks."""
 
 from kgeval.graph.layout import Layout
 from tests.factories import example_view, node, relationship, view

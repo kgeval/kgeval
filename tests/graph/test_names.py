@@ -1,4 +1,4 @@
-"""Test normalizing entity names and type names."""
+"""Test the normalization of entity and type names, so spelling variants compare equal."""
 
 import pytest
 

@@ -1,4 +1,4 @@
-"""Test loading and checking ground truths."""
+"""Test the ground truth that lists the facts a graph is expected to contain."""
 
 from pathlib import Path
 

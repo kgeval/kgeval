@@ -17,7 +17,7 @@ from kgeval.errors import SourceError
 from kgeval.graph.model import Graph
 from kgeval.metrics.catalog import BUILTIN_METRICS
 from kgeval.schema.model import load_schema
-from tests.doubles import ScriptedJudge
+from tests.doubles import ScriptedModel
 from tests.factories import EXAMPLE_DIR, EXAMPLE_RETRIEVALS, example_graph
 
 
@@ -79,8 +79,8 @@ def test_connect_prompts_for_unset_settings_only_in_a_terminal(
         return FakeDriver()
 
     monkeypatch.setattr(cli, "GraphDatabase", SimpleNamespace(driver=driver))
-    answers = iter(["neo4j+s://db.example", "admin", "secret"])
-    monkeypatch.setattr(typer, "prompt", lambda *args, **kwargs: next(answers))
+    typed = iter(["neo4j+s://db.example", "admin", "secret"])
+    monkeypatch.setattr(typer, "prompt", lambda *args, **kwargs: next(typed))
 
     monkeypatch.setattr(sys, "stdin", SimpleNamespace(isatty=lambda: True))
     with cli._connect(None, None, None):
@@ -138,7 +138,9 @@ def test_run_layout_file_replaces_only_the_fields_it_sets(
     assert report_layout["lexical_labels"] == ["Chunk", "Document"]
 
 
-def test_run_adds_a_metric_suite_for_each_example_input(runner: CliRunner, tmp_path: Path) -> None:
+def test_run_evaluates_the_chosen_metrics_with_the_example_inputs(
+    runner: CliRunner, tmp_path: Path
+) -> None:
     retrievals = tmp_path / "retrievals.json"
     retrievals.write_text(json.dumps(EXAMPLE_RETRIEVALS), encoding="utf-8")
 
@@ -146,7 +148,7 @@ def test_run_adds_a_metric_suite_for_each_example_input(runner: CliRunner, tmp_p
         cli.app,
         [
             "run",
-            *("--ground", str(EXAMPLE_DIR / "ground_truth.yaml")),
+            *("--ground-truth", str(EXAMPLE_DIR / "ground_truth.yaml")),
             *("--schema", str(EXAMPLE_DIR / "schema.yaml")),
             *("--questions", str(EXAMPLE_DIR / "questions.yaml")),
             *("--retrievals", str(retrievals)),
@@ -175,12 +177,12 @@ def test_run_adds_a_metric_suite_for_each_example_input(runner: CliRunner, tmp_p
         (["-t", "entity_uniqueness"], "METRIC=VALUE"),
         (["-t", "entity_uniqueness=1.5"], "METRIC=VALUE"),
         (["-t", "entity_uniqueness=nan"], "METRIC=VALUE"),
-        (["-m", "fact_accuracy"], "fact_accuracy needs --judge"),
+        (["-m", "fact_accuracy"], "fact_accuracy needs --model"),
         (["-m", "retrieval_recall"], "retrieval_recall needs --questions and --retrievals"),
         (["--retrievals", str(EXAMPLE_DIR / "questions.yaml")], "needs --questions"),
-        (["--judge-base-url", "http://localhost:8000/v1"], "needs --judge"),
-        (["--judge-cache", "verdicts.sqlite"], "needs --judge"),
-        (["--top-k", "5"], "needs --retrievals"),
+        (["--model-base-url", "http://localhost:8000/v1"], "needs --model"),
+        (["--model-cache", "verdicts.sqlite"], "needs --model"),
+        (["-t", "fact_precision=0.9"], "fact_precision needs --ground-truth"),
         (["-m", "entity_unicorns"], "unknown metric entity_unicorns; choose from"),
         (["--metadata", "model"], "expected KEY=VALUE, got 'model'"),
         (["--metadata", "=gpt-5"], "expected KEY=VALUE, got '=gpt-5'"),
@@ -223,22 +225,22 @@ def test_run_reports_unwritable_output(runner: CliRunner, tmp_path: Path) -> Non
     assert result.stderr.startswith("Error: cannot write ")
 
 
-def test_run_adds_the_judged_metrics_for_a_judge(
+def test_run_creates_the_model_from_its_options(
     runner: CliRunner, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     created: list[tuple[str, str | None, Path | None]] = []
 
     def create(
         model: str, *, base_url: str | None = None, cache: Path | None = None
-    ) -> ScriptedJudge:
+    ) -> ScriptedModel:
         created.append((model, base_url, cache))
-        return ScriptedJudge()
+        return ScriptedModel()
 
-    monkeypatch.setattr(cli, "Judge", create)
+    monkeypatch.setattr(cli, "Model", create)
 
     result = runner.invoke(
         cli.app,
-        ["run", "--judge", "groq/test-model", "-m", "fact_accuracy", "-m", "node_type_accuracy"],
+        ["run", "--model", "groq/test-model", "-m", "fact_accuracy", "-m", "node_type_accuracy"],
     )
 
     assert result.exit_code == 0, result.output
@@ -247,10 +249,34 @@ def test_run_adds_the_judged_metrics_for_a_judge(
     assert "| node_type_accuracy | 100.0% |" in result.stdout
 
 
-def test_run_names_a_missing_judge_key(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
+def test_run_evaluates_the_metrics_a_suite_lists_with_their_settings(
+    runner: CliRunner, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    suite = tmp_path / "suite.yaml"
+    suite.write_text("entity_naming:\nfact_accuracy: {threshold: 0.9}\n", encoding="utf-8")
+    monkeypatch.setattr(cli, "Model", lambda name, **settings: ScriptedModel())
+    run = ["run", "--model", "groq/test-model", "--suite", str(suite), "--format", "json"]
+
+    def results(*arguments: str) -> list[tuple[str, float | None]]:
+        result = runner.invoke(cli.app, [*run, *arguments])
+        assert result.exit_code == 0, result.output
+        return [
+            (item["metric"], item["threshold"]) for item in json.loads(result.stdout)["results"]
+        ]
+
+    assert results() == [("entity_naming", None), ("fact_accuracy", 0.9)]
+    assert results("-m", "fact_accuracy", "-t", "fact_accuracy=0.5") == [("fact_accuracy", 0.5)]
+    result = runner.invoke(cli.app, [*run, "-m", "entity_uniqueness"])
+    assert result.exit_code == 2
+    assert "does not list entity_uniqueness; choose from entity_naming, fact_accuracy" in plain(
+        result.output
+    )
+
+
+def test_run_names_a_missing_model_key(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
 
-    result = runner.invoke(cli.app, ["run", "--judge", "groq/test-model"])
+    result = runner.invoke(cli.app, ["run", "--model", "groq/test-model"])
 
     assert result.exit_code == 2
     assert result.stderr == "Error: missing environment variables: GROQ_API_KEY\n"
@@ -263,14 +289,14 @@ def test_version_prints_the_installed_version(runner: CliRunner) -> None:
     assert result.output == f"kgeval {version('kgeval')}\n"
 
 
-def test_metrics_lists_every_builtin_metric_by_category(runner: CliRunner) -> None:
+def test_metrics_lists_every_builtin_metric_with_the_inputs_it_needs(runner: CliRunner) -> None:
     result = runner.invoke(cli.app, ["metrics"])
 
     assert result.exit_code == 0, result.output
-    assert "## intrinsic (runs by default)" in result.stdout
-    assert "## reference (needs --ground or --questions)" in result.stdout
-    assert "## judged (needs --judge)" in result.stdout
-    assert "## retrieval (needs --questions and --retrievals)" in result.stdout
+    assert "| entity_uniqueness | the graph only |" in result.stdout
+    assert "| fact_precision | --ground-truth |" in result.stdout
+    assert "| fact_accuracy | --model |" in result.stdout
+    assert "| retrieval_recall | --questions and --retrievals |" in result.stdout
     assert all(f"| {metric_type.name} |" in result.stdout for metric_type in BUILTIN_METRICS)
 
 

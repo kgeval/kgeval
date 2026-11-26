@@ -1,8 +1,8 @@
 # Comparing builds
 
-To test a change to how a graph is built, such as the extraction prompt, the model, or
-the schema, compare a report of each build to see whether the change helped. Build both
-graphs from the same documents, so that the comparison measures the pipeline rather
+To test a change to how a graph is built, such as the chunk size, the extraction prompt,
+or the schema, compare a report of each build to see whether the change helped. Build
+both graphs from the same documents, so that the comparison measures the pipeline rather
 than the corpus.
 
 ## Compare two builds
@@ -12,17 +12,17 @@ Describe each run with `--metadata`, write its report as JSON, and compare the t
 === "CLI"
 
     ```console
-    kgeval run --metadata model=gpt-5-mini --format json -o base.json
+    kgeval run --metadata chunk_size=512 --format json -o base.json
     # Rebuild the graph with the change under test.
-    kgeval run --metadata model=gpt-5 --format json -o head.json
+    kgeval run --metadata chunk_size=1024 --format json -o head.json
     kgeval compare base.json head.json
     ```
 
 === "Python"
 
     ```python
-    base = kgeval.evaluate(base_graph, metrics, metadata={"model": "gpt-5-mini"})
-    head = kgeval.evaluate(head_graph, metrics, metadata={"model": "gpt-5"})
+    base = kgeval.evaluate(base_graph, metadata={"chunk_size": "512"})
+    head = kgeval.evaluate(head_graph, metadata={"chunk_size": "1024"})
     comparison = kgeval.compare(base, head)
     ```
 
@@ -47,14 +47,14 @@ Scores: 9 improved, 2 worsened, 16 unchanged, 1 inconclusive
 
 | Metadata | Base | Head |
 | --- | --- | --- |
-| model | gpt-5-mini | gpt-5 |
+| chunk_size | 512 | 1024 |
 ```
 
 Then each metric gets one row:
 
-| Metric        |         Base |         Head |                               Change | New | Resolved | Note                                                      |
-| ------------- | -----------: | -----------: | -----------------------------------: | --: | -------: | --------------------------------------------------------- |
-| fact_accuracy | 88.0% of 100 | 85.0% of 100 | -3.0 pp (95% CI -12.7 pp to +6.7 pp) |   — |        — | inconclusive; findings of judged metrics are not compared |
+| Metric        |         Base |         Head |                               Change | New | Resolved | Note                                                     |
+| ------------- | -----------: | -----------: | -----------------------------------: | --: | -------: | -------------------------------------------------------- |
+| fact_accuracy | 88.0% of 100 | 85.0% of 100 | -3.0 pp (95% CI -12.7 pp to +6.7 pp) |   — |        — | inconclusive; findings of model metrics are not compared |
 
 - **Base** and **Head** show each score with the number of units it counts.
 - **Change** is in percentage points. For a sampled score, it includes a 95% interval.
@@ -63,7 +63,7 @@ Then each metric gets one row:
   node types. A finding whose details change, such as a group of duplicates that grows,
   keeps its subject.
 
-The verdict at the top, REGRESSED or NO REGRESSION, says whether any metric scores worse
+The outcome at the top, REGRESSED or NO REGRESSION, says whether any metric scores worse
 in the head, beyond sampling noise and `--max-drop`, with a new defect, or is no longer
 scored. Rebuilding a graph with an LLM moves its scores a little even when nothing
 changed, so give such comparisons an allowed drop, such as `--max-drop 0.01`. See
@@ -87,14 +87,14 @@ Not all metrics compare the same way across builds:
 
 ## Account for sampling noise
 
-Judged metrics score a sample, so two builds can differ by chance alone. For each
+Sampled metrics score a sample, so two builds can differ by chance alone. For each
 sampled score, the comparison shows a 95% interval for the change, and marks the change
 **inconclusive** when that interval includes zero; an inconclusive change is no
 regression. Deterministic scores have no sampling noise, so any change in them is real.
 
-To detect smaller differences, judge larger samples with
-[`--sample-size`](judges.md#sampling). Keep `--seed` the same in both runs: kgeval
-picks samples by content, so both builds then judge the units they have in common.
+To detect smaller differences, check larger samples with
+[`--sample-size`](models.md#sampling). Keep `--seed` the same in both runs: kgeval
+picks samples by content, so both builds then check the units they have in common.
 
 kgeval computes the interval with Newcombe's method from each score's Wilson interval.
 It treats the two samples as independent, which is conservative when they share units.

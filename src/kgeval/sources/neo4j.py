@@ -1,4 +1,4 @@
-"""Load knowledge graphs from Neo4j."""
+"""Implement the source that loads knowledge graphs from Neo4j."""
 
 from __future__ import annotations
 
@@ -111,7 +111,7 @@ def _describe(error: Neo4jError | DriverError) -> str:
 
 
 def _read_graph(transaction: neo4j.ManagedTransaction) -> tuple[list[Node], list[Relationship]]:
-    # Store repeated IDs, labels, types and keys once.
+    # Store repeated IDs, labels, types, and keys once.
     strings: dict[str, str] = {}
 
     def share(text: str) -> str:

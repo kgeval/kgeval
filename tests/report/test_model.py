@@ -1,4 +1,4 @@
-"""Test collecting the results of one evaluation."""
+"""Test the report that records the results of one evaluation and how to reproduce them."""
 
 import pytest
 from pydantic import ValidationError
@@ -18,29 +18,17 @@ def test_report_indexes_results_by_metric_name() -> None:
 
 
 def test_report_survives_a_json_round_trip() -> None:
-    report = evaluate(example_graph(), metadata={"model": "gpt-5-mini"})
+    report = evaluate(example_graph(), metadata={"chunk_size": "512"})
 
     assert Report.model_validate_json(report.model_dump_json()) == report
 
 
-def test_reports_written_before_metadata_existed_still_load() -> None:
-    data = evaluate(example_graph(), [EntityUniqueness()]).model_dump(mode="json")
-    del data["metadata"]
-
-    assert Report.model_validate(data).metadata == {}
-
-
-def test_reports_written_before_subjects_and_formats_existed_still_load() -> None:
+def test_reports_in_an_older_format_are_rejected_with_the_reason() -> None:
     data = evaluate(example_graph(), [EntityUniqueness()]).model_dump(mode="json")
     del data["report_format"]
-    for finding in data["results"][0]["findings"]:
-        del finding["subject"]
 
-    report = Report.model_validate(data)
-
-    assert report.report_format == 1
-    [finding] = report["entity_uniqueness"].findings
-    assert finding.subject == finding.message
+    with pytest.raises(ValidationError, match="from an older kgeval"):
+        Report.model_validate(data)
 
 
 def test_reports_in_a_newer_format_are_rejected_with_the_reason() -> None:

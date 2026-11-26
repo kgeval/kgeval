@@ -1,4 +1,4 @@
-"""Collect what a retriever returns for each test question, as element IDs."""
+"""Implement the retrievals that hold the element IDs a retriever returns for each test question."""
 
 from __future__ import annotations
 

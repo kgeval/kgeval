@@ -14,9 +14,9 @@ from kgeval.graph.model import Node, Relationship, value_type
 from kgeval.graph.names import normalize_type
 from kgeval.graph.view import GraphView
 from kgeval.metrics._vocabulary import enumerate_terms, merge_findings, vocabulary
-from kgeval.metrics.base import Finding, MetricResult
-from kgeval.metrics.judged._prompts import chunk_texts, excerpt, spell
-from kgeval.metrics.judged.base import JudgedMetric
+from kgeval.metrics.base import Finding, Inputs, MetricResult
+from kgeval.metrics.model._prompts import chunk_texts, excerpt, spell
+from kgeval.metrics.model.base import ModelMetric
 
 __all__ = ["SynonymGroup", "SynonymVerdict", "VocabularyResolution"]
 
@@ -73,7 +73,7 @@ class SynonymGroup(BaseModel):
 
 
 class SynonymVerdict(BaseModel):
-    """Hold a judge's verdict on which terms of one kind the graph uses for the same thing.
+    """Hold a model's verdict on which terms of one kind the graph uses for the same thing.
 
     Attributes:
         reason: One sentence explaining the verdict as a whole.
@@ -86,47 +86,49 @@ class SynonymVerdict(BaseModel):
     groups: list[SynonymGroup]
 
 
-class VocabularyResolution(JudgedMetric):
+class VocabularyResolution(ModelMetric):
     """Measure the share of distinct vocabulary terms that no other term duplicates in meaning.
 
     ``vocabulary_uniqueness`` finds terms spelled alike; this metric finds terms used for
     the same thing in other words, such as ``WORKS_AT`` and ``EMPLOYED_BY``, and the
-    near-copies that extractors without a schema invent. Its unit is a distinct term:
+    near-copies that builders without a schema invent. Its unit is a distinct term:
     the spelling variants that ``normalize_type`` merges count as one term, named by the
     variant most elements use, so the two metrics never report the same defect.
 
-    The judge sees every distinct node type, relationship type, and property key in use,
+    The model sees every distinct node type, relationship type, and property key in use,
     one kind per call, each with its usage and up to three examples, and groups the
     terms the graph uses for the same thing. A relationship type shows the node types it
     connects and example facts, each with an excerpt of a chunk that grounds it; a node
     type shows the relationship types its entities take part in and example names; a
     property key shows what carries it, its value types, and example values. Examples
     are those with the lowest SHA-256 of their content, so they are the same on every
-    run. A kind of more than 200 terms is judged in several calls, each listing the 100
+    run. A kind of more than 200 terms is checked in several calls, each listing the 100
     most used terms, where a split meaning's main term almost always sits, and a window
     of the others sorted by usage, so that terms used alike share a call; windows
     overlap by half, as in the sorted-neighborhood method of Hernández and Stolfo
     (SIGMOD 1995). Groups that share a term merge. In each group, the term most elements
     use counts as intended, ties going to the alphabetically first, and ``failed``
     counts the others; each finding lists the elements that use them. Every term is
-    judged rather than sampled, and terms only in calls the judge gave no usable
-    verdict for are left out as unjudged.
+    checked rather than sampled, and terms only in calls the model gave no usable
+    verdict for are left out as undecided.
     """
 
     name: ClassVar[str] = "vocabulary_resolution"
     unit: ClassVar[str] = "distinct vocabulary terms"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
-        """Ask the judge which terms of each kind the graph uses alike, and report every group.
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
+        """Ask the model which terms of each kind the graph uses alike, and report every group.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
 
         Raises:
-            JudgeError: If the judge fails on any call, or gives no usable verdict for
+            InputError: If no model was given.
+            ModelError: If the model fails on any call, or gives no usable verdict for
                 any.
         """
         facts_of: defaultdict[str, list[Relationship]] = defaultdict(list)
@@ -149,13 +151,13 @@ class VocabularyResolution(JudgedMetric):
             for batch in _batches(carriers, profiles[kind])
         ]
         verdicts = self.ask_all(
-            [_prompt(kind, batch, profiles[kind]) for kind, batch in calls], SynonymVerdict
+            inputs, [_prompt(kind, batch, profiles[kind]) for kind, batch in calls], SynonymVerdict
         )
-        judged: defaultdict[str, set[str]] = defaultdict(set)
+        decided: defaultdict[str, set[str]] = defaultdict(set)
         groups: defaultdict[str, list[tuple[list[str], str]]] = defaultdict(list)
         for (kind, batch), verdict in zip(calls, verdicts, strict=True):
             if verdict is not None:
-                judged[kind].update(batch)
+                decided[kind].update(batch)
                 named = {spelling: term for term in batch for spelling in spellings[kind][term]}
                 groups[kind] += [
                     (
@@ -164,20 +166,20 @@ class VocabularyResolution(JudgedMetric):
                     )
                     for group in verdict.groups
                 ]
-        failed = unjudged = 0
+        failed = undecided = 0
         findings: list[Finding] = []
         for kind, carriers in terms.items():
-            # Count a lone term as judged: it has no synonym to find, so it needs no call.
+            # Count a lone term as decided: it has no synonym to find, so it needs no call.
             if len(carriers) > 1:
-                unjudged += len(carriers) - len(judged[kind])
+                undecided += len(carriers) - len(decided[kind])
             merged = _merged_groups(groups[kind], carriers)
             kind_failed, kind_findings = merge_findings(
                 kind, list(merged), carriers, partial(_synonyms, kind, merged)
             )
             failed += kind_failed
             findings += kind_findings
-        evaluated = sum(map(len, terms.values())) - unjudged
-        return self.result(evaluated, failed, findings, unjudged=unjudged)
+        evaluated = sum(map(len, terms.values())) - undecided
+        return self.result(inputs, evaluated, failed, findings, undecided=undecided)
 
 
 def _distinct_terms(
@@ -210,7 +212,7 @@ def _profile(
     elements: Sequence[Node | Relationship],
     facts_of: Mapping[str, Sequence[Relationship]],
 ) -> tuple[str, str]:
-    """Return a term's listing for the judge, and the usage that sorts it among other terms."""
+    """Return a term's listing for the model, and the usage that sorts it among other terms."""
     heading = f"- {term}"
     if len(variants) > 1:
         heading += f", also spelled {enumerate_terms(list(variants[1:]))}"
@@ -281,7 +283,7 @@ def _carrier(graph: GraphView, element: Node | Relationship) -> str:
 
 
 def _fact_example(graph: GraphView, fact: Relationship) -> str:
-    """Return a fact as a judge reads it, with an excerpt of a chunk that grounds it.
+    """Return a fact as a model reads it, with an excerpt of a chunk that grounds it.
 
     The excerpt centers on the target's name, which the words stating a relation
     usually precede, as in "attended Raffles Institution", and otherwise on the source's.
@@ -299,7 +301,7 @@ def _fact_example(graph: GraphView, fact: Relationship) -> str:
 
 
 def _shown_value(value: object) -> str:
-    """Return a property value as a judge reads it: strings quoted, long values cut."""
+    """Return a property value as a model reads it: strings quoted, long values cut."""
     text = f'"{value}"' if isinstance(value, str) else str(value)
     return text if len(text) <= _MAX_VALUE else text[: _MAX_VALUE - 1] + "…"
 
@@ -331,7 +333,7 @@ def _prompt(kind: str, batch: Sequence[str], profiles: Mapping[str, tuple[str, s
 def _merged_groups(
     groups: Iterable[tuple[Sequence[str], str]], known: Collection[str]
 ) -> dict[tuple[str, ...], str]:
-    """Return the judge's groups restricted to known terms, merging groups that share a term.
+    """Return the model's groups restricted to known terms, merging groups that share a term.
 
     Returns:
         Each merged group, as its sorted terms, mapped to the reasons of the groups it

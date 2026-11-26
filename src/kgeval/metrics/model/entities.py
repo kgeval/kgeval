@@ -12,15 +12,15 @@ from pydantic import BaseModel, ConfigDict
 from kgeval.graph.model import Node
 from kgeval.graph.names import normalize_name
 from kgeval.graph.view import GraphView
-from kgeval.metrics.base import Finding, MetricResult
-from kgeval.metrics.judged._prompts import (
+from kgeval.metrics.base import Finding, Inputs, MetricResult
+from kgeval.metrics.model._prompts import (
     chunk_texts,
     entity_name,
     excerpt,
     quote_chunks,
     spell,
 )
-from kgeval.metrics.judged.base import SampledMetric
+from kgeval.metrics.model.base import SampledMetric
 
 __all__ = [
     "DuplicateVerdict",
@@ -86,7 +86,7 @@ _STOPWORDS = frozenset({"a", "an", "and", "de", "for", "in", "of", "on", "the"})
 
 
 class DuplicateVerdict(BaseModel):
-    """Hold a judge's verdict on which candidates duplicate an entity.
+    """Hold a model's verdict on which candidates duplicate an entity.
 
     Attributes:
         reason: One sentence explaining the verdict.
@@ -100,7 +100,7 @@ class DuplicateVerdict(BaseModel):
 
 
 class IdentityVerdict(BaseModel):
-    """Hold a judge's verdict on whether an entity stands for one specific thing.
+    """Hold a model's verdict on whether an entity stands for one specific thing.
 
     Attributes:
         reason: One sentence explaining the verdict.
@@ -114,7 +114,7 @@ class IdentityVerdict(BaseModel):
 
 
 class TypeVerdict(BaseModel):
-    """Hold a judge's verdict on whether chunks support an entity's node types.
+    """Hold a model's verdict on whether chunks support an entity's node types.
 
     Attributes:
         reason: One sentence explaining the verdict.
@@ -139,7 +139,7 @@ class EntityResolution(SampledMetric):
     candidates among all entities before it: those whose names share a word other than
     a stopword such as "of", when every such word of one name is in the other or the
     names are spelled alike, and those whose name is an acronym of the other's. The
-    judge sees each sampled entity and up to five candidates, the closest in spelling
+    model sees each sampled entity and up to five candidates, the closest in spelling
     first, each with its name, node types, description, and excerpts of up to
     ``MAX_CHUNKS`` chunks, and decides which are the same thing; an entity without
     candidates passes without a call. Candidates are proposed for the sampled entities
@@ -151,17 +151,19 @@ class EntityResolution(SampledMetric):
     name: ClassVar[str] = "entity_resolution"
     unit: ClassVar[str] = "entities with a name"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
-        """Judge a sample of entities against their candidates and report each duplicate.
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
+        """Ask the model about sampled entities and their candidates, and report each duplicate.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
 
         Raises:
-            JudgeError: If the judge fails on any entity, or gives no usable verdict for
+            InputError: If no model was given.
+            ModelError: If the model fails on any entity, or gives no usable verdict for
                 any.
         """
         named = sorted(
@@ -176,6 +178,7 @@ class EntityResolution(SampledMetric):
         candidates = _candidates([normalize_name(name) for _, name in named], sample)
         asked = [index for index in sample if candidates[index]]
         verdicts = self.ask_all(
+            inputs,
             [
                 _resolution_prompt(
                     graph, named[index], [named[other] for other in candidates[index]]
@@ -204,18 +207,18 @@ class EntityResolution(SampledMetric):
                         node_ids=(entity.id, *(duplicate.id for duplicate in duplicates)),
                     )
                 )
-        return self.estimate(len(named), len(sample), findings, verdicts.count(None))
+        return self.estimate(inputs, len(named), len(sample), findings, verdicts.count(None))
 
 
 class EntityDisambiguation(SampledMetric):
     """Estimate the share of entities in several chunks that stand for one specific thing.
 
     Builders merge entities by name, so one entity can conflate different things that
-    share a name, such as the country Jordan and a person called Jordan; extractors also
+    share a name, such as the country Jordan and a person called Jordan; they also
     make entities of generic terms, such as "the company", that mean different things in
     different places. Either way, a retriever that reaches the entity returns facts
     about the wrong thing. This metric considers entities with a name, one with a letter
-    or digit, grounded in at least two chunks with text, and shows the judge each sampled
+    or digit, grounded in at least two chunks with text, and shows the model each sampled
     entity's name and node types with up to ``MAX_CHUNKS`` of its chunks, those that
     contain its name first.
     Sampling and the confidence interval work as described in ``SampledMetric``; the
@@ -225,17 +228,19 @@ class EntityDisambiguation(SampledMetric):
     name: ClassVar[str] = "entity_disambiguation"
     unit: ClassVar[str] = "entities with a name in two or more chunks with text"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
-        """Judge a sample of entities and report each that stands for more than one thing.
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
+        """Ask the model about sampled entities and report each that stands for several things.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
 
         Raises:
-            JudgeError: If the judge fails on any entity, or gives no usable verdict for
+            InputError: If no model was given.
+            ModelError: If the model fails on any entity, or gives no usable verdict for
                 any.
         """
         eligible: list[tuple[Node, str]] = []
@@ -246,11 +251,13 @@ class EntityDisambiguation(SampledMetric):
             if len(chunk_texts(graph, graph.chunk_ids(entity.id), ())) > 1:
                 eligible.append((entity, name))
         if not eligible:
-            return self.skip("no entity with a name is grounded in two chunks with text")
+            return self.skip(inputs, "no entity with a name is grounded in two chunks with text")
 
         sample = self.sample(eligible, lambda item: _statement(graph, *item))
         verdicts = self.ask_all(
-            [_prompt(_DISAMBIGUATION_PROMPT, graph, *item) for item in sample], IdentityVerdict
+            inputs,
+            [_prompt(_DISAMBIGUATION_PROMPT, graph, *item) for item in sample],
+            IdentityVerdict,
         )
         findings = [
             Finding(
@@ -262,15 +269,15 @@ class EntityDisambiguation(SampledMetric):
             for (entity, _), verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.one_thing
         ]
-        return self.estimate(len(eligible), len(sample), findings, verdicts.count(None))
+        return self.estimate(inputs, len(eligible), len(sample), findings, verdicts.count(None))
 
 
 class NodeTypeAccuracy(SampledMetric):
     """Estimate the share of entities with a node type whose node types their chunks support.
 
-    Extractors often give entities the wrong node type. This metric considers entities
+    Builders often give entities the wrong node type. This metric considers entities
     with a name, one with a letter or digit, at least one node type, and at least one
-    chunk with text, and shows the judge each sampled entity's name and node types with
+    chunk with text, and shows the model each sampled entity's name and node types with
     up to ``MAX_CHUNKS`` of its chunks, those that contain its name first. Sampling and
     the confidence interval work as described in ``SampledMetric``; the sample is keyed
     by name and node types.
@@ -279,17 +286,19 @@ class NodeTypeAccuracy(SampledMetric):
     name: ClassVar[str] = "node_type_accuracy"
     unit: ClassVar[str] = "entities with a name, a node type, and a chunk with text"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
-        """Judge a sample of entities and report each whose node types the chunks do not support.
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
+        """Ask the model about sampled entities; report each whose chunks do not support its types.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
 
         Raises:
-            JudgeError: If the judge fails on any entity, or gives no usable verdict for
+            InputError: If no model was given.
+            ModelError: If the model fails on any entity, or gives no usable verdict for
                 any.
         """
         eligible: list[tuple[Node, str]] = []
@@ -300,11 +309,11 @@ class NodeTypeAccuracy(SampledMetric):
             if chunk_texts(graph, graph.chunk_ids(entity.id), ()):
                 eligible.append((entity, name))
         if not eligible:
-            return self.skip("no entity with a node type is grounded in a chunk with text")
+            return self.skip(inputs, "no entity with a node type is grounded in a chunk with text")
 
         sample = self.sample(eligible, lambda item: _statement(graph, *item))
         verdicts = self.ask_all(
-            [_prompt(_TYPE_PROMPT, graph, *item) for item in sample], TypeVerdict
+            inputs, [_prompt(_TYPE_PROMPT, graph, *item) for item in sample], TypeVerdict
         )
         findings = [
             Finding(
@@ -316,7 +325,7 @@ class NodeTypeAccuracy(SampledMetric):
             for (entity, _), verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.correct
         ]
-        return self.estimate(len(eligible), len(sample), findings, verdicts.count(None))
+        return self.estimate(inputs, len(eligible), len(sample), findings, verdicts.count(None))
 
 
 def _prompt(template: str, graph: GraphView, entity: Node, name: str) -> str:
@@ -326,7 +335,7 @@ def _prompt(template: str, graph: GraphView, entity: Node, name: str) -> str:
 
 
 def _statement(graph: GraphView, entity: Node, name: str) -> str:
-    """Return the lines that state an entity to the judge: its name, then its node types."""
+    """Return the lines that state an entity to the model: its name, then its node types."""
     statement = f'Entity: "{name}"'
     if node_types := graph.layout.node_types(entity):
         statement += f"\nNode types: {', '.join(node_types)}"

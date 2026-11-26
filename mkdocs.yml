@@ -14,7 +14,8 @@ nav:
   - User guide:
       - Metrics: guide/metrics.md
       - Inputs: guide/inputs.md
-      - LLM judges: guide/judges.md
+      - Models: guide/models.md
+      - Suites: guide/suites.md
       - Comparing builds: guide/comparing.md
       - Testing with pytest: guide/testing.md
       - Configuration: guide/configuration.md

@@ -8,9 +8,9 @@ from pydantic import BaseModel, ConfigDict
 
 from kgeval.graph.model import Relationship
 from kgeval.graph.view import GraphView
-from kgeval.metrics.base import Finding, MetricResult
-from kgeval.metrics.judged._prompts import chunk_texts, quote_chunks, spell
-from kgeval.metrics.judged.base import SampledMetric
+from kgeval.metrics.base import Finding, Inputs, MetricResult
+from kgeval.metrics.model._prompts import chunk_texts, quote_chunks, spell
+from kgeval.metrics.model.base import SampledMetric
 
 __all__ = ["FactAccuracy", "SupportVerdict"]
 
@@ -31,7 +31,7 @@ one-sentence reason, then the verdict.\
 
 
 class SupportVerdict(BaseModel):
-    """Hold a judge's verdict on whether chunks support a fact.
+    """Hold a model's verdict on whether chunks support a fact.
 
     Attributes:
         reason: One sentence explaining the verdict.
@@ -50,10 +50,10 @@ class FactAccuracy(SampledMetric):
     This is knowledge graph accuracy as Gao et al. estimate it, from an annotated sample
     with a confidence interval, with an LLM as the annotator. Rules can tell whether a
     fact is grounded in a chunk (``fact_provenance``) but not whether the chunk says it,
-    so this metric asks a judge. It considers facts whose source and target share at
-    least one chunk with text, and shows the judge each sampled fact, with its
+    so this metric asks a model. It considers facts whose source and target share at
+    least one chunk with text, and shows the model each sampled fact, with its
     description when it has one, and up to ``MAX_CHUNKS`` of the shared chunks, those
-    that contain both entities' names first. A wrong direction fails, since the judge
+    that contain both entities' names first. A wrong direction fails, since the model
     reads the fact from source to target. Sampling and the confidence interval work as
     described in ``SampledMetric``; the sample is keyed by the fact and its description.
     """
@@ -61,27 +61,29 @@ class FactAccuracy(SampledMetric):
     name: ClassVar[str] = "fact_accuracy"
     unit: ClassVar[str] = "facts grounded in a chunk with text"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
-        """Judge a sample of grounded facts and report each one found unsupported.
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
+        """Ask the model about sampled grounded facts and report each one found unsupported.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
 
         Raises:
-            JudgeError: If the judge fails on any fact, or gives no usable verdict for
+            InputError: If no model was given.
+            ModelError: If the model fails on any fact, or gives no usable verdict for
                 any.
         """
         grounded = [
             fact for fact in graph.facts if chunk_texts(graph, graph.fact_chunk_ids(fact), ())
         ]
         if not grounded:
-            return self.skip("no fact is grounded in a chunk with text")
+            return self.skip(inputs, "no fact is grounded in a chunk with text")
 
         sample = self.sample(grounded, lambda fact: _statement(graph, fact))
-        verdicts = self.ask_all([_prompt(graph, fact) for fact in sample], SupportVerdict)
+        verdicts = self.ask_all(inputs, [_prompt(graph, fact) for fact in sample], SupportVerdict)
         findings = [
             Finding(
                 message=f"the chunks do not support {graph.describe(fact)}: {verdict.reason}",
@@ -92,7 +94,7 @@ class FactAccuracy(SampledMetric):
             for fact, verdict in zip(sample, verdicts, strict=True)
             if verdict is not None and not verdict.supported
         ]
-        return self.estimate(len(grounded), len(sample), findings, verdicts.count(None))
+        return self.estimate(inputs, len(grounded), len(sample), findings, verdicts.count(None))
 
 
 def _prompt(graph: GraphView, fact: Relationship) -> str:
@@ -104,7 +106,7 @@ def _prompt(graph: GraphView, fact: Relationship) -> str:
 
 
 def _statement(graph: GraphView, fact: Relationship) -> str:
-    """Return the lines that state a fact to the judge: the fact, then its description."""
+    """Return the lines that state a fact to the model: the fact, then its description."""
     statement = f"Fact: {spell(graph, fact)}"
     if description := graph.description(fact):
         statement += f"\nDescription: {description}"

@@ -1,25 +1,37 @@
-"""Test listing the built-in metrics and assembling the suite that inputs enable."""
+"""Test the catalog of built-in metrics by category, and the loading of suites."""
+
+from pathlib import Path
+from typing import Any
 
 import pytest
 
 from kgeval.errors import InputError
-from kgeval.ground_truth import GroundTruth
-from kgeval.metrics.base import MetricCategory
+from kgeval.ground_truth import load_ground_truth
+from kgeval.metrics.base import Inputs, Metric, MetricCategory
 from kgeval.metrics.catalog import (
     BUILTIN_METRICS,
     GROUND_TRUTH_METRICS,
     INTRINSIC_METRICS,
-    JUDGED_METRICS,
+    MODEL_METRICS,
     REFERENCE_METRICS,
     RETRIEVAL_METRICS,
     SCHEMA_METRICS,
-    default_metrics,
+    load_suite,
 )
-from kgeval.questions import QuestionSet
-from kgeval.schema.model import GraphSchema
-from tests.doubles import ScriptedJudge
+from kgeval.metrics.intrinsic import EntityUniqueness
+from kgeval.metrics.model import EntityResolution, FactAccuracy
+from kgeval.questions import load_questions
+from kgeval.schema.model import load_schema
+from tests.doubles import ScriptedModel
+from tests.factories import EXAMPLE_DIR, EXAMPLE_RETRIEVALS, example_view
 
-QUESTIONS = QuestionSet.model_validate([{"text": "Who is Ada?", "supporting_entities": ["Ada"]}])
+EXAMPLE_INPUTS: dict[str, Any] = {
+    "schema": load_schema(EXAMPLE_DIR / "schema.yaml"),
+    "ground_truth": load_ground_truth(EXAMPLE_DIR / "ground_truth.yaml"),
+    "questions": load_questions(EXAMPLE_DIR / "questions.yaml"),
+    "retrievals": EXAMPLE_RETRIEVALS,
+    "model": ScriptedModel(),
+}
 
 
 def test_every_builtin_metric_has_a_unique_name_and_sits_in_its_category() -> None:
@@ -27,7 +39,7 @@ def test_every_builtin_metric_has_a_unique_name_and_sits_in_its_category() -> No
         MetricCategory.INTRINSIC: INTRINSIC_METRICS,
         MetricCategory.SCHEMA: SCHEMA_METRICS,
         MetricCategory.REFERENCE: REFERENCE_METRICS,
-        MetricCategory.JUDGED: JUDGED_METRICS,
+        MetricCategory.MODEL: MODEL_METRICS,
         MetricCategory.RETRIEVAL: RETRIEVAL_METRICS,
     }
 
@@ -38,35 +50,53 @@ def test_every_builtin_metric_has_a_unique_name_and_sits_in_its_category() -> No
         assert all(metric_type.category is category for metric_type in members)
 
 
-def test_default_metrics_without_inputs_are_the_intrinsic_metrics() -> None:
-    assert [type(metric) for metric in default_metrics()] == list(INTRINSIC_METRICS)
-
-
-def test_each_input_adds_the_metrics_that_need_it() -> None:
-    schema = GraphSchema.model_validate({"node_types": ["Person"]})
-    ground_truth = GroundTruth(facts=(("Ada", "KNOWS", "Alan"),))
-
-    metrics = default_metrics(
-        schema=schema,
-        ground_truth=ground_truth,
-        questions=QUESTIONS,
-        retrievals={"Who is Ada?": ("4:x:1",)},
-        judge=ScriptedJudge(),
-        sample_size=7,
-        seed=3,
-    )
-
-    assert [type(metric) for metric in metrics] == list(BUILTIN_METRICS)
-    signatures = {metric.name: metric.signature() for metric in metrics}
-    assert signatures["fact_accuracy"] == "fact_accuracy|judge=scripted|sample_size=7|seed=3"
-    assert signatures["vocabulary_resolution"] == "vocabulary_resolution|judge=scripted"
-    assert signatures["fact_recall"] == f"fact_recall|ground_truth={ground_truth.digest()}"
-
-
-def test_retrievals_need_their_questions() -> None:
-    with pytest.raises(InputError, match="retrievals need the test questions"):
-        default_metrics(retrievals={"Who is Ada?": ()})
-
-
 def test_ground_truth_metrics_are_reference_metrics() -> None:
     assert set(GROUND_TRUTH_METRICS) < set(REFERENCE_METRICS)
+
+
+@pytest.mark.parametrize("metric_type", BUILTIN_METRICS, ids=lambda metric_type: metric_type.name)
+def test_every_builtin_metric_runs_with_only_the_inputs_it_needs(
+    metric_type: type[Metric],
+) -> None:
+    inputs = Inputs(**{name: EXAMPLE_INPUTS[name] for name in metric_type.needs})
+
+    assert metric_type().evaluate(example_view(), inputs).metric == metric_type.name
+
+
+def write_suite(tmp_path: Path, content: str) -> Path:
+    path = tmp_path / "suite.yaml"
+    path.write_text(content, encoding="utf-8")
+    return path
+
+
+def test_load_suite_builds_the_listed_metrics_with_their_settings_in_order(
+    tmp_path: Path,
+) -> None:
+    path = write_suite(
+        tmp_path,
+        "fact_accuracy: {threshold: 0.9, sample_size: 5}\n"
+        "entity_uniqueness:\n"
+        "entity_resolution: {threshold: 0.8}\n",
+    )
+
+    assert load_suite(path) == [
+        FactAccuracy(threshold=0.9, sample_size=5),
+        EntityUniqueness(),
+        EntityResolution(threshold=0.8),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("content", "message"),
+    [
+        ("{}\n", "at least 1 item"),
+        ("fact_acuracy: {threshold: 0.9}\n", "unknown metric fact_acuracy; did you mean"),
+        ("entity_uniqueness: {threshold: 2}\n", "less than or equal to 1"),
+        ("entity_uniqueness: {treshold: 0.9}\n", "Extra inputs"),
+        ("entity_uniqueness: {threshold: 0.9}\nentity_uniqueness:\n", "repeated keys"),
+    ],
+)
+def test_load_suite_rejects_invalid_suites(tmp_path: Path, content: str, message: str) -> None:
+    with pytest.raises(InputError, match=r"suite\.yaml") as error:
+        load_suite(write_suite(tmp_path, content))
+    assert message in str(error.value)

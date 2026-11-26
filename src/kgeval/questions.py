@@ -1,4 +1,4 @@
-"""Load and check test questions: the questions a graph is expected to answer."""
+"""Implement the test questions that a graph is expected to answer."""
 
 from __future__ import annotations
 

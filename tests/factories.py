@@ -1,4 +1,4 @@
-"""Build the example graph and small graphs for edge cases."""
+"""Implement the factories of the example graph and of small graphs for edge cases."""
 
 from __future__ import annotations
 

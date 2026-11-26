@@ -4,14 +4,14 @@ from typing import Any
 
 import pytest
 
-from kgeval.metrics.base import MetricResult
+from kgeval.metrics.base import Inputs, MetricResult
 from kgeval.metrics.schema.base import SchemaMetric
 from kgeval.metrics.schema.conformance import EntityConformance, FactConformance
 from tests.factories import EXAMPLE_SCHEMA, example_schema, example_view, node, view
 
 
 def check(metric_type: type[SchemaMetric], **changes: Any) -> MetricResult:
-    return metric_type(graph_schema=example_schema(**changes)).evaluate(example_view())
+    return metric_type().evaluate(example_view(), Inputs(schema=example_schema(**changes)))
 
 
 def messages(result: MetricResult) -> list[str]:
@@ -68,8 +68,8 @@ def test_undeclared_node_types_fail_unless_additional_node_types_are_allowed() -
 
 
 def test_entities_without_a_node_type_fail_closed_node_types() -> None:
-    result = EntityConformance(graph_schema=example_schema()).evaluate(
-        view(node("a", name="Thing"))
+    result = EntityConformance().evaluate(
+        view(node("a", name="Thing")), Inputs(schema=example_schema())
     )
 
     assert messages(result) == ['"Thing": no node type']
@@ -86,8 +86,8 @@ def test_embeddings_count_as_present_list_properties() -> None:
     constraint = {"type": "EXISTENCE", "property_names": ["embedding"], "node_type": "Person"}
     schema = example_schema(node_types=node_types_with(person), constraints=[constraint])
 
-    result = EntityConformance(graph_schema=schema).evaluate(
-        view(node("ada", "Person", name="Ada", embeddings={"embedding": 3}))
+    result = EntityConformance().evaluate(
+        view(node("ada", "Person", name="Ada", embeddings={"embedding": 3})), Inputs(schema=schema)
     )
 
     assert (result.evaluated, result.failed) == (1, 0)
@@ -176,8 +176,8 @@ def test_existence_constraints_apply_to_relationship_types() -> None:
 
 
 def test_signature_identifies_the_schema() -> None:
-    first = EntityConformance(graph_schema=example_schema())
-    second = EntityConformance(graph_schema=example_schema(patterns=[]))
+    first = EntityConformance().signature(Inputs(schema=example_schema()))
+    second = EntityConformance().signature(Inputs(schema=example_schema(patterns=[])))
 
-    assert first.signature().startswith("entity_conformance|schema=")
-    assert first.signature() != second.signature()
+    assert first.startswith("entity_conformance|schema=")
+    assert first != second

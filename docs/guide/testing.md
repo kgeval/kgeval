@@ -43,7 +43,7 @@ E       # kgeval report
 E       ### entity_uniqueness: 1 of 10 entities with a name failed
 E
 E       - 2 entities share the normalized name 'lee kuan yew': "Lee Kuan Yew" (Person), "lee kuan yew" (Person)
-E         - nodes: `4:a63a…:4`, `4:a63a…:9`
+E         - nodes: `4:5cda…:4`, `4:5cda…:9`
 ```
 
 `assert_passes` returns the report, so a test can check more, such as a metric's
@@ -71,21 +71,31 @@ def test_metric(graph, metric):
 Each call evaluates the graph again, so on a large graph, checking several metrics in one
 call is faster.
 
-## Use an LLM judge
+## Use a model
 
-Metrics that need an input, such as a graph schema or an LLM judge, take it as an
-argument; see the [Python API](../reference/api.md). Give the judge a cache file, so that
-reruns on the same graph reuse its verdicts and give the same scores without calling the
-model again; see [Caching](judges.md#caching):
+`assert_passes` takes the inputs that metrics need, such as a graph schema or a model, by
+name, as `evaluate` does. Give the model a cache file, so that reruns on the same graph
+reuse its verdicts and give the same scores without calling the model again; see
+[Caching](models.md#caching):
 
 ```python
 import kgeval
 
-judge = kgeval.Judge("<model>", cache="verdicts.sqlite")
+model = kgeval.Model("<model>", cache="verdicts.sqlite")
 
 
 def test_facts_are_accurate(graph):
-    kgeval.assert_passes(graph, [kgeval.FactAccuracy(judge=judge, threshold=0.9)])
+    kgeval.assert_passes(graph, [kgeval.FactAccuracy(threshold=0.9)], model=model)
+```
+
+## Check a suite
+
+To check every metric of a [suite](suites.md) with the thresholds it sets, load it. Every
+metric in the suite needs a threshold:
+
+```python
+def test_graph_meets_the_suite(graph):
+    kgeval.assert_passes(graph, kgeval.load_suite("suite.yaml"), model=model)
 ```
 
 ## Compare test runs

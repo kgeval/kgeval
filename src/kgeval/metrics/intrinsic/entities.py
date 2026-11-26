@@ -8,7 +8,7 @@ from typing import ClassVar
 from kgeval.graph.model import Node
 from kgeval.graph.names import normalize_name
 from kgeval.graph.view import GraphView
-from kgeval.metrics.base import Finding, Metric, MetricCategory, MetricResult
+from kgeval.metrics.base import Finding, Inputs, Metric, MetricCategory, MetricResult
 
 __all__ = ["EntityConnectivity", "EntityNaming", "EntityUniqueness"]
 
@@ -42,11 +42,12 @@ class EntityUniqueness(Metric):
     category: ClassVar[MetricCategory] = MetricCategory.INTRINSIC
     unit: ClassVar[str] = "entities with a name"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Group entities by normalized name and report every group of two or more.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
@@ -70,7 +71,7 @@ class EntityUniqueness(Metric):
         ]
         evaluated = sum(len(group) for group in groups.values())
         failed = sum(len(group) - 1 for _, group in duplicates)
-        return self.result(evaluated, failed, findings)
+        return self.result(inputs, evaluated, failed, findings)
 
 
 class EntityConnectivity(Metric):
@@ -84,11 +85,12 @@ class EntityConnectivity(Metric):
     category: ClassVar[MetricCategory] = MetricCategory.INTRINSIC
     unit: ClassVar[str] = "entities"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Report every isolated entity.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
@@ -108,7 +110,7 @@ class EntityConnectivity(Metric):
             for entity in graph.entities
             if entity.id not in connected
         ]
-        return self.result(len(graph.entities), len(findings), findings)
+        return self.result(inputs, len(graph.entities), len(findings), findings)
 
 
 class EntityNaming(Metric):
@@ -118,7 +120,7 @@ class EntityNaming(Metric):
     name keys: it cannot be shown to people, resolved as a duplicate, or matched against
     ground truth facts and test questions. It also fails when its name is an English
     pronoun, such as "he" or "they", which refers to an entity only within its sentence:
-    the extractor did not resolve the reference to the entity it stands for. And it fails
+    the builder did not resolve the reference to the entity it stands for. And it fails
     when its name has no letter, such as "1923" or "50%": that is a value, which belongs
     in a property of the entity it describes. A name in capitals of two or more letters,
     such as "US" or "IT", is an acronym rather than a pronoun, but a work titled like a
@@ -129,11 +131,12 @@ class EntityNaming(Metric):
     category: ClassVar[MetricCategory] = MetricCategory.INTRINSIC
     unit: ClassVar[str] = "entities"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Report every entity without a name, or named by a pronoun or a value.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
@@ -148,7 +151,7 @@ class EntityNaming(Metric):
             for entity in graph.entities
             if (problem := _naming_problem(graph.name(entity), keys)) is not None
         ]
-        return self.result(len(graph.entities), len(findings), findings)
+        return self.result(inputs, len(graph.entities), len(findings), findings)
 
 
 def _naming_problem(name: str | None, keys: str) -> str | None:

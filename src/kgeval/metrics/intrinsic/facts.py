@@ -7,7 +7,7 @@ from typing import ClassVar
 
 from kgeval.graph.model import Relationship
 from kgeval.graph.view import GraphView
-from kgeval.metrics.base import Finding, Metric, MetricCategory, MetricResult
+from kgeval.metrics.base import Finding, Inputs, Metric, MetricCategory, MetricResult
 
 __all__ = ["FactUniqueness"]
 
@@ -20,7 +20,7 @@ class FactUniqueness(Metric):
     a fact is its source, relationship type, and target, as the ground truth metrics also match
     it, and its properties describe it. Repeats come from running a ``CREATE``-based
     import twice, or from storing every extraction of a fact as its own relationship,
-    with its own ID, timestamp or chunk. ``failed`` counts redundant copies: n repeats of
+    with its own ID, timestamp, or chunk. ``failed`` counts redundant copies: n repeats of
     a fact add n - 1.
     """
 
@@ -28,11 +28,12 @@ class FactUniqueness(Metric):
     category: ClassVar[MetricCategory] = MetricCategory.INTRINSIC
     unit: ClassVar[str] = "facts"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Group the facts that repeat each other and report every group of two or more.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
@@ -51,4 +52,4 @@ class FactUniqueness(Metric):
             for group in duplicates
         ]
         failed = sum(len(group) - 1 for group in duplicates)
-        return self.result(len(graph.facts), failed, findings)
+        return self.result(inputs, len(graph.facts), failed, findings)

@@ -29,7 +29,7 @@ pip install kgeval
 
 ## Next steps
 
-- [Quickstart](quickstart.md): evaluate a graph and read the report.
-- [Metrics](guide/metrics.md): what each metric checks and what it needs.
-- [Example notebook](https://github.com/kgeval/kgeval/blob/main/examples/singapore/evaluate.ipynb):
-  a complete walkthrough on a graph with one planted defect for every metric.
+The [quickstart](quickstart.md) evaluates a graph and reads the report, and the
+[metrics guide](guide/metrics.md) describes what each metric checks and what it needs.
+For a complete walkthrough on a graph with one planted defect for every metric, see the
+[example notebook](https://github.com/kgeval/kgeval/blob/main/examples/singapore/evaluate.ipynb).

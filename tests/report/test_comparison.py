@@ -1,4 +1,4 @@
-"""Test comparing two reports metric by metric."""
+"""Test the comparison of two reports, such as a baseline and a new run, metric by metric."""
 
 import pytest
 
@@ -15,20 +15,21 @@ from kgeval.metrics import (
     FactRecall,
     FactUniqueness,
     Finding,
-    Metric,
+    Inputs,
     MetricResult,
-    default_metrics,
 )
 from kgeval.questions import load_questions
 from kgeval.report.comparison import MetricChange, Trend, compare
 from kgeval.report.model import Report
 from kgeval.schema import load_schema
-from tests.doubles import ScriptedJudge
+from tests.doubles import ScriptedModel
 from tests.factories import EXAMPLE_DIR, example_graph, graph, node
 
 
-def deterministic_metrics() -> list[Metric]:
-    return default_metrics(
+def deterministic_report(original: Graph) -> Report:
+    """Evaluate a graph with the example's schema, ground truth, and test questions."""
+    return evaluate(
+        original,
         schema=load_schema(EXAMPLE_DIR / "schema.yaml"),
         ground_truth=load_ground_truth(EXAMPLE_DIR / "ground_truth.yaml"),
         questions=load_questions(EXAMPLE_DIR / "questions.yaml"),
@@ -63,18 +64,18 @@ def without(original: Graph, *relationship_ids: str) -> Graph:
     )
 
 
-def sampled(passed: int, judged: int) -> MetricResult:
-    """Return a fact_accuracy result that judged a sample of a larger population."""
+def sampled(passed: int, decided: int) -> MetricResult:
+    """Return a fact_accuracy result that checked a sample of a larger population."""
     findings = [
-        Finding(message=f"fact {number} is unsupported") for number in range(judged - passed)
+        Finding(message=f"fact {number} is unsupported") for number in range(decided - passed)
     ]
-    return FactAccuracy(judge=ScriptedJudge()).estimate(1_000, judged, findings)
+    return FactAccuracy().estimate(Inputs(model=ScriptedModel()), 1_000, decided, findings)
 
 
 def exact(passed: int, evaluated: int) -> MetricResult:
     """Return an entity_naming result over a whole population."""
     findings = [Finding(message=f"entity {number}") for number in range(evaluated - passed)]
-    return EntityNaming().result(evaluated, evaluated - passed, findings)
+    return EntityNaming().result(Inputs(), evaluated, evaluated - passed, findings)
 
 
 def sampled_change(base: MetricResult, head: MetricResult) -> MetricChange:
@@ -86,8 +87,8 @@ def report_of(*results: MetricResult) -> Report:
 
 
 def test_a_rebuilt_graph_with_new_element_ids_matches_every_finding() -> None:
-    base = evaluate(example_graph(), deterministic_metrics())
-    head = evaluate(rebuilt(example_graph()), deterministic_metrics())
+    base = deterministic_report(example_graph())
+    head = deterministic_report(rebuilt(example_graph()))
 
     comparison = compare(base, head)
 
@@ -200,7 +201,7 @@ def test_a_lower_score_from_a_smaller_population_alone_does_not_regress() -> Non
     )
 
 
-def test_a_significant_drop_of_a_judged_score_regresses() -> None:
+def test_a_significant_drop_of_a_sampled_score_regresses() -> None:
     dropped = sampled_change(sampled(95, 100), sampled(40, 100))
     noisy = sampled_change(sampled(95, 100), sampled(92, 100))
 
@@ -218,15 +219,15 @@ def test_drops_within_max_drop_do_not_regress() -> None:
         compare(base, head, max_drop=1.5)
 
 
-def test_findings_of_judged_metrics_are_not_compared() -> None:
-    base = evaluate(example_graph(), [FactAccuracy(judge=ScriptedJudge("-[:KNOWS]->"))])
-    head = evaluate(example_graph(), [FactAccuracy(judge=ScriptedJudge("-[:MARRIED]->"))])
+def test_findings_of_model_metrics_are_not_compared() -> None:
+    base = evaluate(example_graph(), [FactAccuracy()], model=ScriptedModel("-[:KNOWS]->"))
+    head = evaluate(example_graph(), [FactAccuracy()], model=ScriptedModel("-[:MARRIED]->"))
 
     comparison = compare(base, head)
 
     [change] = comparison.changes
     assert (change.new_findings, change.resolved_findings, comparison.regressed) == ((), (), False)
-    assert "findings of judged metrics are not compared" in comparison.to_markdown()
+    assert "findings of model metrics are not compared" in comparison.to_markdown()
 
 
 def test_deterministic_score_changes_are_exact() -> None:
@@ -299,7 +300,7 @@ def test_markdown_shows_the_interval_and_trend_of_sampled_score_changes() -> Non
 
     assert (
         "| fact_accuracy | 60.0% of 80 | 80.0% of 70 | +20.0 pp (95% CI +5.2 pp to +33.4 pp) "
-        "| — | — | improved; findings of judged metrics are not compared |"
+        "| — | — | improved; findings of model metrics are not compared |"
     ) in comparison.to_markdown()
 
 
@@ -328,7 +329,7 @@ def test_markdown_shows_score_changes_and_changed_findings() -> None:
 def test_markdown_notes_metrics_whose_parameters_changed() -> None:
     def report(*ground_truth_facts: tuple[str, str, str]) -> Report:
         return evaluate(
-            example_graph(), [FactRecall(ground_truth=GroundTruth(facts=ground_truth_facts))]
+            example_graph(), [FactRecall()], ground_truth=GroundTruth(facts=ground_truth_facts)
         )
 
     comparison = compare(report(("Ada", "KNOWS", "Bob")), report(("Ada", "KNOWS", "Cy")))

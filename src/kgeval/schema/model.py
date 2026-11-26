@@ -1,4 +1,4 @@
-"""Define graph schemas in the format neo4j-graphrag uses."""
+"""Implement the graph schema in the format neo4j-graphrag uses."""
 
 from __future__ import annotations
 
@@ -125,14 +125,14 @@ class Pattern(BaseModel):
 
 
 class Constraint(BaseModel):
-    """Declare a uniqueness, existence or key constraint on a node or relationship type.
+    """Declare a uniqueness, existence, or key constraint on a node or relationship type.
 
     EXISTENCE requires the properties to be present, UNIQUENESS requires their
     combined values to be unique among elements that have them all, and KEY requires
     both.
 
     Attributes:
-        type: The constraint type: EXISTENCE, UNIQUENESS or KEY.
+        type: The constraint type: EXISTENCE, UNIQUENESS, or KEY.
         property_names: The constrained properties.
         node_type: The label of the constrained node type, when it constrains entities.
         relationship_type: The constrained relationship type, when it constrains facts.

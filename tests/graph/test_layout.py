@@ -1,4 +1,4 @@
-"""Test assigning each node a role."""
+"""Test the layout that assigns each node its role in a knowledge graph."""
 
 from kgeval.graph.layout import Layout, Role
 from tests.factories import graph, node, relationship

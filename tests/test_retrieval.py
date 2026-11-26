@@ -1,4 +1,4 @@
-"""Test collecting what a retriever returns for each test question."""
+"""Test the retrievals that hold the element IDs a retriever returns for each test question."""
 
 from pathlib import Path
 

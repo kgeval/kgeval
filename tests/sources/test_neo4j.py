@@ -1,4 +1,4 @@
-"""Test loading knowledge graphs from Neo4j; integration tests wipe their database."""
+"""Test the source that loads knowledge graphs from Neo4j, wiping the integration database."""
 
 import json
 import os
@@ -22,7 +22,7 @@ from kgeval.evaluation import evaluate
 from kgeval.graph.model import Duration, Graph, Point, PropertyValue, canonical_json
 from kgeval.report import compare
 from kgeval.sources.neo4j import Neo4jSource, _convert, _read_graph
-from tests.doubles import ScriptedJudge
+from tests.doubles import ScriptedModel
 from tests.factories import EXAMPLE_DIR, example_graph
 
 _TEST_URI = os.environ.get("KGEVAL_TEST_NEO4J_URI")
@@ -260,8 +260,8 @@ def test_example_notebook_loads_and_evaluates_the_example_graph(
             monkeypatch.delenv(f"NEO4J_{setting}", raising=False)
     shutil.copytree(EXAMPLE_DIR, tmp_path, dirs_exist_ok=True)
     monkeypatch.chdir(tmp_path)
-    judge = ScriptedJudge()
-    monkeypatch.setattr("kgeval.Judge", lambda model, **options: judge)
+    model = ScriptedModel()
+    monkeypatch.setattr("kgeval.Model", lambda name, **options: model)
     notebook = json.loads((tmp_path / "evaluate.ipynb").read_text(encoding="utf-8"))
     namespace: dict[str, Any] = {}
 
@@ -278,6 +278,6 @@ def test_example_notebook_loads_and_evaluates_the_example_graph(
         if element.id in namespace["retrievals"]["Where was Lee Kuan Yew born?"]
     }
     assert len(born) == len(namespace["retrievals"]["Where was Lee Kuan Yew born?"]) > 0
-    assert judge.prompts
+    assert model.prompts
     assert namespace["check"].passed is False
     assert not compare(namespace["report"], evaluate(namespace["fixed"])).regressed

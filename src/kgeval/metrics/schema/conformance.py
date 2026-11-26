@@ -9,7 +9,7 @@ from typing import ClassVar
 
 from kgeval.graph.model import Node, Relationship, canonical_json, property_types
 from kgeval.graph.view import GraphView
-from kgeval.metrics.base import Finding, MetricResult
+from kgeval.metrics.base import Finding, Inputs, MetricResult
 from kgeval.metrics.schema.base import SchemaMetric
 from kgeval.schema.model import Constraint, GraphSchema, NodeType, RelationshipType
 
@@ -36,25 +36,30 @@ class EntityConformance(SchemaMetric):
     name: ClassVar[str] = "entity_conformance"
     unit: ClassVar[str] = "entities"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Check every entity against the graph schema and report each that fails.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
+
+        Raises:
+            InputError: If no graph schema was given.
         """
-        index = _SchemaIndex.of(self.graph_schema)
+        schema = self.require(inputs.schema, "schema")
+        index = _SchemaIndex.of(schema)
         problems: defaultdict[str, list[str]] = defaultdict(list)
         for entity in graph.entities:
             problems[entity.id] += index.entity_problems(entity, graph.layout.node_types(entity))
-        for constraint in self.graph_schema.constraints:
+        for constraint in schema.constraints:
             if constraint.node_type is not None:
                 for element_id, problem in _constraint_problems(graph, constraint):
                     problems[element_id].append(problem)
         findings = _findings(graph, graph.entities, problems)
-        return self.result(len(graph.entities), len(findings), findings)
+        return self.result(inputs, len(graph.entities), len(findings), findings)
 
 
 class FactConformance(SchemaMetric):
@@ -82,16 +87,21 @@ class FactConformance(SchemaMetric):
     name: ClassVar[str] = "fact_conformance"
     unit: ClassVar[str] = "facts"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Check every fact against the graph schema and report each that fails.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
+
+        Raises:
+            InputError: If no graph schema was given.
         """
-        index = _SchemaIndex.of(self.graph_schema)
+        schema = self.require(inputs.schema, "schema")
+        index = _SchemaIndex.of(schema)
         problems: defaultdict[str, list[str]] = defaultdict(list)
         for fact in graph.facts:
             source_types = graph.layout.node_types(graph.node(fact.source_id))
@@ -99,14 +109,14 @@ class FactConformance(SchemaMetric):
             problems[fact.id] += index.fact_problems(
                 fact, graph.relationship_type(fact), source_types, target_types
             )
-        for constraint in self.graph_schema.constraints:
+        for constraint in schema.constraints:
             if constraint.relationship_type is not None:
                 for element_id, problem in _constraint_problems(graph, constraint):
                     problems[element_id].append(problem)
-        for element_id, problem in _cardinality_problems(graph, self.graph_schema):
+        for element_id, problem in _cardinality_problems(graph, schema):
             problems[element_id].append(problem)
         findings = _findings(graph, graph.facts, problems)
-        return self.result(len(graph.facts), len(findings), findings)
+        return self.result(inputs, len(graph.facts), len(findings), findings)
 
 
 @dataclass(frozen=True)

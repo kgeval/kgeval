@@ -8,7 +8,7 @@ from typing import ClassVar, TypeAlias
 from kgeval.graph.layout import Role
 from kgeval.graph.model import Node, PropertyTypeName, Relationship, value_type
 from kgeval.graph.view import GraphView
-from kgeval.metrics.base import Finding, Metric, MetricCategory, MetricResult
+from kgeval.metrics.base import Finding, Inputs, Metric, MetricCategory, MetricResult
 
 __all__ = ["EmbeddingConsistency", "PropertyTypeConsistency"]
 
@@ -28,11 +28,12 @@ class PropertyTypeConsistency(Metric):
     category: ClassVar[MetricCategory] = MetricCategory.INTRINSIC
     unit: ClassVar[str] = "property values"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Report every property value whose type differs from the one its group holds.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
@@ -62,7 +63,7 @@ class PropertyTypeConsistency(Metric):
         evaluated = sum(
             len(elements) for by_type in groups.values() for elements in by_type.values()
         )
-        return self.result(evaluated, len(findings), findings)
+        return self.result(inputs, evaluated, len(findings), findings)
 
 
 class EmbeddingConsistency(Metric):
@@ -84,11 +85,12 @@ class EmbeddingConsistency(Metric):
     category: ClassVar[MetricCategory] = MetricCategory.INTRINSIC
     unit: ClassVar[str] = "expected embeddings"
 
-    def evaluate(self, graph: GraphView) -> MetricResult:
+    def evaluate(self, graph: GraphView, inputs: Inputs) -> MetricResult:
         """Report every expected embedding that is missing or has another dimension.
 
         Args:
             graph: The graph to evaluate.
+            inputs: The inputs the metric is evaluated with.
 
         Returns:
             The metric's result.
@@ -134,10 +136,11 @@ class EmbeddingConsistency(Metric):
                     )
         if not evaluated:
             return self.skip(
+                inputs,
                 "no group holds an embedding on at least half its members; kgeval reads "
-                "non-empty lists of floats as embeddings"
+                "non-empty lists of floats as embeddings",
             )
-        return self.result(evaluated, len(findings), findings)
+        return self.result(inputs, evaluated, len(findings), findings)
 
 
 def _group(graph: GraphView, element: _Element) -> str:

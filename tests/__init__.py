@@ -1,1 +1,1 @@
-"""Test kgeval."""
+"""Test the evaluation framework for knowledge graphs."""

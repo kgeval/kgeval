@@ -1,4 +1,4 @@
-"""Normalize entity names and type names, so that spelling variants compare equal."""
+"""Implement the normalization of entity and type names, so spelling variants compare equal."""
 
 from __future__ import annotations
 

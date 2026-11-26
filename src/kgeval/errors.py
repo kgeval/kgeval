@@ -1,6 +1,6 @@
-"""Define the exceptions that kgeval raises."""
+"""Implement the exceptions that kgeval raises."""
 
-__all__ = ["InputError", "JudgeError", "KgevalError", "SourceError", "VerdictError"]
+__all__ = ["InputError", "KgevalError", "ModelError", "SourceError", "VerdictError"]
 
 
 class KgevalError(Exception):
@@ -15,13 +15,13 @@ class InputError(KgevalError):
     """Signal that a user-supplied file or argument is invalid."""
 
 
-class JudgeError(KgevalError):
-    """Signal that an LLM judge cannot be set up or fails to return a usable verdict."""
+class ModelError(KgevalError):
+    """Signal that a model cannot be set up or fails to return a usable verdict."""
 
 
-class VerdictError(JudgeError):
-    """Signal that a judge gave no usable verdict for one prompt, though it can judge others.
+class VerdictError(ModelError):
+    """Signal that a model gave no usable verdict for one prompt, though others may succeed.
 
-    Judged metrics retry such a prompt once, then leave its unit out as unjudged, while
-    any other ``JudgeError``, such as a rejected API key, fails the metric.
+    Model metrics retry such a prompt once, then leave its unit out as undecided, while
+    any other ``ModelError``, such as a rejected API key, fails the metric.
     """
