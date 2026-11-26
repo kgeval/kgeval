@@ -185,7 +185,8 @@ class Comparison(BaseModel):
     def to_markdown(self, max_findings: int = DEFAULT_MAX_FINDINGS) -> str:
         """Render both graphs, the score changes, and the changed findings as Markdown.
 
-        Text taken from the graph is escaped, so it cannot inject Markdown.
+        Metric names and text taken from the graph are escaped, so they cannot inject
+        Markdown.
 
         Args:
             max_findings: How many new and resolved findings to list per metric; the

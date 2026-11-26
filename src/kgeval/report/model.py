@@ -155,7 +155,8 @@ class Report(BaseModel):
     def to_markdown(self, max_findings: int = DEFAULT_MAX_FINDINGS) -> str:
         """Render the graph summary, score tables, and findings as Markdown.
 
-        Text taken from the graph is escaped, so it cannot inject Markdown.
+        Metric names and text taken from the graph are escaped, so they cannot inject
+        Markdown.
 
         Args:
             max_findings: How many findings to list per metric; the rest are counted.

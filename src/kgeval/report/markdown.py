@@ -87,7 +87,7 @@ def render_markdown(report: Report, max_findings: int = DEFAULT_MAX_FINDINGS) ->
         lines += ["", "## Findings"]
     for result in with_findings:
         counts = f"{result.failed:,} of {result.evaluated:,} {result.unit} failed"
-        lines += ["", f"### {result.metric}: {counts}", ""]
+        lines += ["", f"### {_escape(result.metric)}: {counts}", ""]
         lines += _finding_items(result.findings, max_findings)
     return "\n".join(lines) + "\n"
 
@@ -203,7 +203,7 @@ def _score_row(result: MetricResult) -> str:
         outcome = f"skipped: {_escape(str(result.skip_reason))}"
         if result.passed is False:
             outcome = f"**FAIL**, {outcome}"
-        return f"| {result.metric} | — | — | {threshold} | {outcome} |"
+        return f"| {_escape(result.metric)} | — | — | {threshold} | {outcome} |"
     score = _percent(result.score)
     if result.confidence_interval is not None:
         low, high = result.confidence_interval
@@ -212,7 +212,7 @@ def _score_row(result: MetricResult) -> str:
     failed = f"{result.failed:,} / {result.evaluated:,} {result.unit}"
     if result.undecided:
         failed += f", {result.undecided:,} undecided"
-    return f"| {result.metric} | {score} | {failed} | {threshold} | {outcome} |"
+    return f"| {_escape(result.metric)} | {score} | {failed} | {threshold} | {outcome} |"
 
 
 def _change_row(change: MetricChange) -> str:
@@ -240,8 +240,8 @@ def _change_row(change: MetricChange) -> str:
         low, high = interval
         score_change += f" (95% CI {_points(low)} to {_points(high)})"
     return (
-        f"| {change.metric} | {_score(change.base)} | {_score(change.head)} | {score_change} "
-        f"| {new} | {resolved} | {'; '.join(notes)} |"
+        f"| {_escape(change.metric)} | {_score(change.base)} | {_score(change.head)} "
+        f"| {score_change} | {new} | {resolved} | {'; '.join(notes)} |"
     )
 
 
@@ -265,7 +265,11 @@ def _changed_findings(
     lines = ["", f"## {title}"] if any(findings.values()) else []
     for metric, changed in findings.items():
         if changed:
-            lines += ["", f"### {metric}: {_count(len(changed), f'{adjective} finding')}", ""]
+            lines += [
+                "",
+                f"### {_escape(metric)}: {_count(len(changed), f'{adjective} finding')}",
+                "",
+            ]
             lines += _finding_items(changed, max_findings)
     return lines
 

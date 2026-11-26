@@ -3,6 +3,7 @@
 from kgeval.evaluation import evaluate
 from kgeval.graph.layout import Layout
 from kgeval.metrics import EntityConnectivity, EntityUniqueness, FactAccuracy, FactProvenance
+from kgeval.report import compare
 from tests.doubles import UnusableModel
 from tests.factories import example_graph, graph, node, relationship
 
@@ -35,13 +36,18 @@ def test_markdown_marks_skipped_metrics() -> None:
     )
 
 
-def test_markdown_escapes_text_taken_from_the_graph() -> None:
+def test_markdown_escapes_metric_names_and_text_taken_from_the_graph() -> None:
     name = "*Ada* [click](https://example.com) <img> __init__ snake_case"
+    report = evaluate(graph(node("a", name=name)), [EntityConnectivity()])
+    renamed = report.results[0].model_copy(update={"metric": "custom|metric"})
+    report = report.model_copy(update={"results": (renamed,)})
 
-    markdown = evaluate(graph(node("a", name=name)), [EntityConnectivity()]).to_markdown()
+    markdown = report.to_markdown()
 
     assert r"\*Ada\* \[click](https://example.com) \<img> \_\_init\_\_ snake_case" in markdown
     assert " [click](" not in markdown
+    assert r"| custom\|metric |" in markdown
+    assert r"| custom\|metric |" in compare(report, report).to_markdown()
 
 
 def test_markdown_limits_findings_and_ids_shown() -> None:
