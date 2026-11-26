@@ -157,7 +157,7 @@ def test_example_snapshot_holds_the_example_graph_of_the_unit_tests() -> None:
     [
         (b'{"snapshot_format": 2}', "the snapshot has format 2, which needs a newer kgeval"),
         (b'{"snapshot_format": "2"}', "Input should be a valid integer"),
-        (b'{"nodes": [', "Invalid JSON"),
+        (b'{"nodes": [', "Expecting value"),
         (bytes([0x80]) + b"{}", "can't decode byte 0x80"),
     ],
 )

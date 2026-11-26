@@ -21,9 +21,9 @@ class _Loader(yaml.SafeLoader):
 
     def construct_mapping(self, node: yaml.MappingNode, deep: bool = False) -> dict[Any, Any]:
         keys = [self.construct_object(key, deep=deep) for key, _ in node.value]
-        if repeated := sorted({str(key) for key in keys if keys.count(key) > 1}):
+        if repeated := _repeated(keys):
             raise yaml.constructor.ConstructorError(
-                problem=f"repeated keys: {', '.join(repeated)}", problem_mark=node.start_mark
+                problem=f"repeated keys: {repeated}", problem_mark=node.start_mark
             )
         return super().construct_mapping(node, deep=deep)
 
@@ -59,11 +59,25 @@ def load_json(path: str | Path, adapter: TypeAdapter[_T]) -> _T:
         The validated content.
 
     Raises:
-        InputError: If the file cannot be read, decoded, parsed, or validated.
+        InputError: If the file cannot be read, decoded, parsed, or validated, or
+            repeats a key.
     """
     try:
-        data = Path(path).read_bytes()
-        # Detect the encoding, since redirecting output in Windows PowerShell writes UTF-16.
-        return adapter.validate_json(data.decode(json.detect_encoding(data)))
-    except (OSError, UnicodeDecodeError, ValidationError) as error:
+        # Pass bytes, so that json detects their encoding, such as the UTF-16 of PowerShell.
+        content = json.loads(Path(path).read_bytes(), object_pairs_hook=_unique)
+        return adapter.validate_python(content)
+    # Catch decoding, parsing, and validation errors, which are all ValueErrors.
+    except (OSError, ValueError) as error:
         raise InputError(f"invalid file {path}: {error}") from error
+
+
+def _unique(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    """Return a JSON object's pairs as a dict, rejecting repeated keys, which json drops."""
+    if repeated := _repeated([key for key, _ in pairs]):
+        raise ValueError(f"repeated keys: {repeated}")
+    return dict(pairs)
+
+
+def _repeated(keys: list[Any]) -> str:
+    """Return the keys that occur more than once, sorted and joined by commas."""
+    return ", ".join(sorted({str(key) for key in keys if keys.count(key) > 1}))
