@@ -53,6 +53,7 @@ _INPUTS = "Inputs"
 _MODEL = "Model"
 _METRICS = "Metrics"
 _OUTPUT = "Output"
+_REPORT = "A report that `kgeval run --format json` or `pytest --kgeval-report` wrote."
 
 _OPTIONS: dict[InputName, str] = {
     "schema": "--schema",
@@ -152,14 +153,6 @@ Output = Annotated[
 MaxFindings = Annotated[
     int,
     typer.Option(min=0, help="Findings listed per metric in Markdown.", rich_help_panel=_OUTPUT),
-]
-ReportFile = Annotated[
-    Path,
-    typer.Argument(
-        help="A report that `kgeval run --format json` or `pytest --kgeval-report` wrote.",
-        exists=True,
-        dir_okay=False,
-    ),
 ]
 Verbose = Annotated[
     bool,
@@ -355,8 +348,13 @@ def run(
 
 @app.command("compare")
 def compare_command(
-    base: ReportFile,
-    head: ReportFile,
+    # Name the arguments, since typer's default names differ between its versions.
+    base: Annotated[
+        Path, typer.Argument(metavar="BASE", help=_REPORT, exists=True, dir_okay=False)
+    ],
+    head: Annotated[
+        Path, typer.Argument(metavar="HEAD", help=_REPORT, exists=True, dir_okay=False)
+    ],
     max_drop: Annotated[
         float,
         typer.Option(
