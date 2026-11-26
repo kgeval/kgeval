@@ -82,15 +82,15 @@ def test_connect_prompts_for_unset_settings_only_in_a_terminal(
     typed = iter(["neo4j+s://db.example", "admin", "secret"])
     monkeypatch.setattr(typer, "prompt", lambda *args, **kwargs: next(typed))
 
-    monkeypatch.setattr(sys, "stdin", SimpleNamespace(isatty=lambda: True))
-    with cli._connect(None, None, None):
-        pass
-    monkeypatch.setattr(sys, "stdin", SimpleNamespace(isatty=lambda: False))
-    with cli._connect(None, None, None):
-        pass
+    for stdin, stderr in ((True, True), (True, False), (False, True)):
+        monkeypatch.setattr(sys, "stdin", SimpleNamespace(isatty=lambda tty=stdin: tty))
+        monkeypatch.setattr(sys.stderr, "isatty", lambda tty=stderr: tty)
+        with cli._connect(None, None, None):
+            pass
 
     assert connected == [
         ("neo4j+s://db.example", ("admin", "secret")),
+        ("neo4j://localhost:7687", None),
         ("neo4j://localhost:7687", None),
     ]
 

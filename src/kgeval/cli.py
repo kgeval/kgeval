@@ -454,8 +454,8 @@ def _configure_logging(verbose: bool) -> None:
 def _ask(value: str | None, text: str, default: str, *, hide_input: bool = False) -> str:
     if value is not None:
         return value
-    # Prompt only in a terminal, so pipelines fall back to the default instead of blocking.
-    if not sys.stdin.isatty():
+    # Prompt only when stdin and stderr are terminals, since Windows calls NUL a terminal too.
+    if not (sys.stdin.isatty() and sys.stderr.isatty()):
         return default
     # Write prompts to stderr, so they stay visible when the report is redirected.
     return str(
