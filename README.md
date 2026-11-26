@@ -24,7 +24,7 @@ regressed.
 ## Requirements
 
 - Python 3.11+
-- Neo4j 5.10+ or Aura
+- Neo4j 5.10+ or Aura, or a [graph snapshot](https://kgeval.github.io/kgeval/guide/configuration/#snapshots)
 
 ## Installation
 

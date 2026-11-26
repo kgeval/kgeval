@@ -118,8 +118,8 @@ with `--metric` or list them in a [suite](guide/suites.md).
 
 The [example notebook](https://github.com/kgeval/kgeval/blob/main/examples/singapore/evaluate.ipynb)
 evaluates a small graph shaped like LLM Graph Builder output, with one defect planted for
-every metric, and walks through every feature. To evaluate the same graph without a
-database, download its
+every metric, and walks through each category of metrics. To evaluate the same graph
+without a database, download its
 [snapshot](https://raw.githubusercontent.com/kgeval/kgeval/main/examples/singapore/graph.json)
 and run:
 
