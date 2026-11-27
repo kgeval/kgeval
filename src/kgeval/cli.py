@@ -531,13 +531,17 @@ def _select(
 ) -> list[Metric]:
     available = [metric.name for metric in candidates]
     problems = []
-    if unknown := sorted((set(names) | set(thresholds)) - set(available)):
-        if suite is not None:
-            listed = f"{suite} does not list"
-        else:
-            listed = "unknown metric" if len(unknown) == 1 else "unknown metrics"
-        problems.append(f"{listed} {', '.join(unknown)}; choose from {', '.join(available)}")
-    if names and (unselected := sorted(set(thresholds) - set(names))):
+    for option, given in (("--metric", names), ("--threshold", list(thresholds))):
+        if unknown := sorted(set(given) - set(available)):
+            listed = ", ".join(unknown)
+            if suite is not None:
+                problems.append(f"{option} names {listed}, which {suite} does not list")
+            else:
+                noun = "metric" if len(unknown) == 1 else "metrics"
+                problems.append(f"{option} names unknown {noun} {listed}")
+    if problems:
+        problems[-1] += f"; choose from {', '.join(available)}"
+    if names and (unselected := sorted((set(thresholds) & set(available)) - set(names))):
         problems.append(f"--threshold names {', '.join(unselected)}, which --metric excludes")
     selected = [metric for metric in candidates if not names or metric.name in names]
     if not names and suite is None:

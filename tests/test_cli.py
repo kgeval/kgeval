@@ -183,7 +183,8 @@ def test_run_evaluates_the_chosen_metrics_with_the_example_inputs(
         (["--model-base-url", "http://localhost:8000/v1"], "needs --model"),
         (["--model-cache", "verdicts.sqlite"], "needs --model"),
         (["-t", "fact_precision=0.9"], "fact_precision needs --ground-truth"),
-        (["-m", "entity_unicorns"], "unknown metric entity_unicorns; choose from"),
+        (["-m", "entity_unicorns"], "--metric names unknown metric entity_unicorns; choose from"),
+        (["-t", "entity_unicorns=0.9"], "--threshold names unknown metric entity_unicorns;"),
         (["--metadata", "model"], "expected KEY=VALUE, got 'model'"),
         (["--metadata", "=gpt-5"], "expected KEY=VALUE, got '=gpt-5'"),
         (["--metadata", "model=a", "--metadata", "model=b"], "repeats the key 'model'"),
@@ -268,9 +269,9 @@ def test_run_evaluates_the_metrics_a_suite_lists_with_their_settings(
     assert results("-m", "fact_accuracy", "-t", "fact_accuracy=0.5") == [("fact_accuracy", 0.5)]
     result = runner.invoke(cli.app, [*run, "-m", "entity_uniqueness"])
     assert result.exit_code == 2
-    assert "does not list entity_uniqueness; choose from entity_naming, fact_accuracy" in plain(
-        result.output
-    )
+    output = plain(result.output)
+    assert "--metric names entity_uniqueness, which " in output
+    assert "does not list; choose from entity_naming, fact_accuracy" in output
 
 
 def test_run_names_a_missing_model_key(runner: CliRunner, monkeypatch: pytest.MonkeyPatch) -> None:
