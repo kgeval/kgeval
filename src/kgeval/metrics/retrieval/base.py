@@ -89,9 +89,8 @@ class RetrievalMetric(Metric):
                     f"no retrieved element ID is in the graph, such as {min(unknown)!r}; "
                     "retrievals must hold element IDs from the database of the evaluated graph"
                 )
-            logger.warning(
-                "Ignored %d retrieved element IDs that are not in the graph", len(unknown)
-            )
+            noun = "ID" if len(unknown) == 1 else "IDs"
+            logger.warning("Ignored %d retrieved element %s not in the graph", len(unknown), noun)
         return [
             (question, support, top[question.text])
             for question, support in zip(questions.questions, questions.support(graph), strict=True)

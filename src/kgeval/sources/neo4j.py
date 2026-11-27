@@ -94,10 +94,11 @@ class Neo4jSource:
             for relationship in relationships
             if relationship.source_id in node_ids and relationship.target_id in node_ids
         ]
-        if len(kept) < len(relationships):
+        if dropped := len(relationships) - len(kept):
             logger.warning(
-                "Dropped %d relationships to nodes created while loading",
-                len(relationships) - len(kept),
+                "Dropped %d %s to nodes created while loading",
+                dropped,
+                "relationship" if dropped == 1 else "relationships",
             )
         logger.info("Loaded %d nodes and %d relationships", len(nodes), len(kept))
         return Graph(nodes=tuple(nodes), relationships=tuple(kept))

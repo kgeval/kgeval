@@ -42,7 +42,8 @@ def retrieve(questions: QuestionSet, retriever: Retriever) -> Retrievals:
     Raises:
         InputError: If the retriever returns anything else, such as a property value.
     """
-    logger.info("Retrieving for %d questions", len(questions.questions))
+    count = len(questions.questions)
+    logger.info("Retrieving for %d %s", count, "question" if count == 1 else "questions")
     return {
         question.text: _element_ids(question.text, retriever(question.text))
         for question in questions.questions

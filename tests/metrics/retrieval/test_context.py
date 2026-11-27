@@ -126,7 +126,7 @@ def test_unknown_element_ids_are_ignored_with_a_warning(caplog: pytest.LogCaptur
     )
 
     assert result.skip_reason == "no retrieval holds an entity, fact, or chunk of the graph"
-    assert "Ignored 1 retrieved element IDs that are not in the graph" in caplog.text
+    assert "Ignored 1 retrieved element ID not in the graph" in caplog.text
 
 
 def test_retrievals_without_any_element_id_of_the_graph_are_rejected() -> None:
