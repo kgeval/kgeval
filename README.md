@@ -81,7 +81,7 @@ and relationships involved, so you can find them in the graph:
 ### entity_uniqueness: 1 of 10 entities with a name failed
 
 - 2 entities share the normalized name 'lee kuan yew': "Lee Kuan Yew" (Person), "lee kuan yew" (Person)
-  - nodes: `4:f55f160f-fe22-4227-97fd-5c7f875fb3b4:4`, `4:f55f160f-fe22-4227-97fd-5c7f875fb3b4:9`
+  - nodes: `4:baa5f725-cef3-42dc-a2d1-19be9b037996:4`, `4:baa5f725-cef3-42dc-a2d1-19be9b037996:9`
 ```
 
 ## Metrics
