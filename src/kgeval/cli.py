@@ -92,7 +92,7 @@ class OutputFormat(StrEnum):
     JSON = "json"
 
 
-Uri = Annotated[
+_Uri = Annotated[
     str | None,
     typer.Option(
         envvar="NEO4J_URI",
@@ -100,7 +100,7 @@ Uri = Annotated[
         rich_help_panel=_GRAPH,
     ),
 ]
-Username = Annotated[
+_Username = Annotated[
     str | None,
     typer.Option(
         envvar="NEO4J_USERNAME",
@@ -108,7 +108,7 @@ Username = Annotated[
         rich_help_panel=_GRAPH,
     ),
 ]
-Password = Annotated[
+_Password = Annotated[
     str | None,
     typer.Option(
         envvar="NEO4J_PASSWORD",
@@ -116,7 +116,7 @@ Password = Annotated[
         rich_help_panel=_GRAPH,
     ),
 ]
-Database = Annotated[
+_Database = Annotated[
     str | None,
     typer.Option(
         envvar="NEO4J_DATABASE",
@@ -124,7 +124,7 @@ Database = Annotated[
         rich_help_panel=_GRAPH,
     ),
 ]
-GraphFile = Annotated[
+_GraphFile = Annotated[
     Path | None,
     typer.Option(
         "--graph",
@@ -134,7 +134,7 @@ GraphFile = Annotated[
         rich_help_panel=_GRAPH,
     ),
 ]
-LayoutFile = Annotated[
+_LayoutFile = Annotated[
     Path | None,
     typer.Option(
         "--layout",
@@ -144,17 +144,17 @@ LayoutFile = Annotated[
         rich_help_panel=_GRAPH,
     ),
 ]
-Output = Annotated[
+_Output = Annotated[
     Path | None,
     typer.Option(
         "--output", "-o", help="Write to this file, not standard output.", rich_help_panel=_OUTPUT
     ),
 ]
-MaxFindings = Annotated[
+_MaxFindings = Annotated[
     int,
     typer.Option(min=0, help="Findings listed per metric in Markdown.", rich_help_panel=_OUTPUT),
 ]
-Verbose = Annotated[
+_Verbose = Annotated[
     bool,
     typer.Option(
         "--verbose", "-v", help="Log progress to standard error.", rich_help_panel=_OUTPUT
@@ -164,12 +164,12 @@ Verbose = Annotated[
 
 @app.command()
 def run(
-    uri: Uri = None,
-    username: Username = None,
-    password: Password = None,
-    database: Database = None,
-    graph_file: GraphFile = None,
-    layout: LayoutFile = None,
+    uri: _Uri = None,
+    username: _Username = None,
+    password: _Password = None,
+    database: _Database = None,
+    graph_file: _GraphFile = None,
+    layout: _LayoutFile = None,
     schema: Annotated[
         Path | None,
         typer.Option(
@@ -285,8 +285,8 @@ def run(
         OutputFormat,
         typer.Option("--format", "-f", help="Report format.", rich_help_panel=_OUTPUT),
     ] = OutputFormat.MARKDOWN,
-    output: Output = None,
-    max_findings: MaxFindings = DEFAULT_MAX_FINDINGS,
+    output: _Output = None,
+    max_findings: _MaxFindings = DEFAULT_MAX_FINDINGS,
     metadata: Annotated[
         list[str] | None,
         typer.Option(
@@ -294,7 +294,7 @@ def run(
             rich_help_panel=_OUTPUT,
         ),
     ] = None,
-    verbose: Verbose = False,
+    verbose: _Verbose = False,
 ) -> None:
     """Evaluate a knowledge graph in Neo4j, or a snapshot of one, and report scores and findings.
 
@@ -361,8 +361,8 @@ def compare_command(
             min=0, max=1, help="Largest score drop, from 0 to 1, that is not a regression."
         ),
     ] = 0.0,
-    output: Output = None,
-    max_findings: MaxFindings = DEFAULT_MAX_FINDINGS,
+    output: _Output = None,
+    max_findings: _MaxFindings = DEFAULT_MAX_FINDINGS,
 ) -> None:
     """Compare the report HEAD with the report BASE, such as a baseline, metric by metric.
 
@@ -381,14 +381,14 @@ def compare_command(
 
 @app.command("infer-schema")
 def infer_schema_command(
-    uri: Uri = None,
-    username: Username = None,
-    password: Password = None,
-    database: Database = None,
-    graph_file: GraphFile = None,
-    layout: LayoutFile = None,
-    output: Output = None,
-    verbose: Verbose = False,
+    uri: _Uri = None,
+    username: _Username = None,
+    password: _Password = None,
+    database: _Database = None,
+    graph_file: _GraphFile = None,
+    layout: _LayoutFile = None,
+    output: _Output = None,
+    verbose: _Verbose = False,
 ) -> None:
     """Write the schema the graph follows today, as YAML to review and pass to --schema."""
     _configure_logging(verbose)
@@ -403,12 +403,12 @@ def infer_schema_command(
 
 @app.command()
 def snapshot(
-    uri: Uri = None,
-    username: Username = None,
-    password: Password = None,
-    database: Database = None,
-    output: Output = None,
-    verbose: Verbose = False,
+    uri: _Uri = None,
+    username: _Username = None,
+    password: _Password = None,
+    database: _Database = None,
+    output: _Output = None,
+    verbose: _Verbose = False,
 ) -> None:
     """Write a snapshot of the graph in Neo4j as JSON, for --graph to read."""
     _configure_logging(verbose)
