@@ -15,7 +15,7 @@ from kgeval.graph.names import normalize_type
 from kgeval.graph.view import GraphView
 from kgeval.metrics._vocabulary import enumerate_terms, merge_findings, vocabulary
 from kgeval.metrics.base import Finding, Inputs, MetricResult
-from kgeval.metrics.model._prompts import chunk_texts, excerpt, spell
+from kgeval.metrics.model._prompts import chunk_texts, excerpt, spell, untagged
 from kgeval.metrics.model.base import ModelMetric
 
 __all__ = ["SynonymGroup", "SynonymVerdict", "VocabularyResolution"]
@@ -213,13 +213,14 @@ def _profile(
     if len(variants) > 1:
         heading += f", also spelled {enumerate_terms(list(variants[1:]))}"
     times = "once" if len(elements) == 1 else f"{len(elements)} times"
-    lines = [f"{heading} (used {times})"]
+    # Escape every line of graph text; sample facts come from spell and excerpt, which do.
+    lines = [untagged(f"{heading} (used {times})")]
     if kind == "relationship type":
         facts = [element for element in elements if isinstance(element, Relationship)]
         usage = _counted(
             f"{_types(graph, fact.source_id)} → {_types(graph, fact.target_id)}" for fact in facts
         )
-        lines.append(f"  connects: {usage}")
+        lines.append(untagged(f"  connects: {usage}"))
         lines += [
             f"  sample fact: {fact}" for fact in _samples(facts, partial(_fact_sample, graph))
         ]
@@ -229,15 +230,15 @@ def _profile(
             graph.relationship_type(fact) for entity in entities for fact in facts_of[entity.id]
         )
         if usage:
-            lines.append(f"  in facts: {usage}")
+            lines.append(untagged(f"  in facts: {usage}"))
         names = _samples(
             entities, lambda entity: f'"{graph.name(entity)}"' if graph.name(entity) else ""
         )
         if names:
-            lines.append(f"  sample entities: {', '.join(names)}")
+            lines.append(untagged(f"  sample entities: {', '.join(names)}"))
     else:
         usage = _counted(_carrier(graph, element) for element in elements)
-        lines.append(f"  on: {usage}")
+        lines.append(untagged(f"  on: {usage}"))
         values = [
             element.properties[variant]
             for element in elements
@@ -245,7 +246,7 @@ def _profile(
             if variant in element.properties
         ]
         lines.append(f"  values: {_counted(value_type(value) for value in values)}")
-        lines.append(f"  sample values: {', '.join(_samples(values, _shown_value))}")
+        lines.append(untagged(f"  sample values: {', '.join(_samples(values, _shown_value))}"))
     return "\n".join(lines), usage
 
 

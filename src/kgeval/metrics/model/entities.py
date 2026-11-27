@@ -19,6 +19,7 @@ from kgeval.metrics.model._prompts import (
     excerpt,
     quote_chunks,
     spell,
+    untagged,
 )
 from kgeval.metrics.model.base import SampledMetric
 
@@ -336,9 +337,9 @@ def _prompt(template: str, graph: GraphView, entity: Node, name: str) -> str:
 
 def _statement(graph: GraphView, entity: Node, name: str) -> str:
     """Return the lines that state an entity's name, then its node types, to the model."""
-    statement = f'Entity: "{name}"'
+    statement = f'Entity: "{untagged(name)}"'
     if node_types := graph.layout.node_types(entity):
-        statement += f"\nNode types: {', '.join(node_types)}"
+        statement += f"\nNode types: {untagged(', '.join(node_types))}"
     return statement
 
 
@@ -419,7 +420,7 @@ def _profile(graph: GraphView, entity: Node, name: str) -> str:
     """Return an entity's name, node types, description, and excerpts, one per line."""
     lines = [spell(graph, entity)]
     if description := graph.description(entity):
-        lines.append(f"Description: {description}")
+        lines.append(f"Description: {untagged(description)}")
     lines += [
         f"<excerpt>{excerpt(text, name, _EXCERPT_RADIUS)}</excerpt>"
         for text in chunk_texts(graph, graph.chunk_ids(entity.id), [name])

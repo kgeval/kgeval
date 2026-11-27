@@ -14,7 +14,7 @@ from kgeval.graph.model import Duration, Node, Point, PropertyValue, Relationshi
 from kgeval.graph.view import GraphView
 from kgeval.metrics._vocabulary import enumerate_terms
 from kgeval.metrics.base import Finding, Inputs, MetricResult
-from kgeval.metrics.model._prompts import chunk_texts, quote_chunks, spell
+from kgeval.metrics.model._prompts import chunk_texts, quote_chunks, spell, untagged
 from kgeval.metrics.model.base import SampledMetric
 
 __all__ = ["CriterionMetric", "CriterionVerdict", "EntityCriterion", "FactCriterion"]
@@ -258,13 +258,13 @@ def _statement(graph: GraphView, unit: Node | Relationship) -> str:
     if not unit.properties:
         return f"{statement} none"
     return statement + "".join(
-        f"\n- {key}: {_value(unit.properties[key])}" for key in sorted(unit.properties)
+        f"\n- {untagged(key)}: {_value(unit.properties[key])}" for key in sorted(unit.properties)
     )
 
 
 def _value(value: PropertyValue) -> str:
     """Return a property value as JSON, cut to ``_MAX_VALUE`` characters."""
-    text = json.dumps(value, ensure_ascii=False, default=_jsonable)
+    text = untagged(json.dumps(value, ensure_ascii=False, default=_jsonable))
     return text if len(text) <= _MAX_VALUE else text[: _MAX_VALUE - 1] + "…"
 
 

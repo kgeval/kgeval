@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict
 from kgeval.graph.model import Relationship
 from kgeval.graph.view import GraphView
 from kgeval.metrics.base import Finding, Inputs, MetricResult
-from kgeval.metrics.model._prompts import chunk_texts, entity_name, quote_chunks, spell
+from kgeval.metrics.model._prompts import chunk_texts, entity_name, quote_chunks, spell, untagged
 from kgeval.metrics.model.base import SampledMetric
 
 __all__ = ["FactAccuracy", "SupportVerdict"]
@@ -114,5 +114,5 @@ def _statement(graph: GraphView, fact: Relationship) -> str:
     """Return the lines that state a fact, then its description, to the model."""
     statement = f"Fact: {spell(graph, fact)}"
     if description := graph.description(fact):
-        statement += f"\nDescription: {description}"
+        statement += f"\nDescription: {untagged(description)}"
     return statement

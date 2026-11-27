@@ -2,16 +2,28 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Iterable
 
 from kgeval.graph.model import Node, Relationship
 from kgeval.graph.names import normalize_name
 from kgeval.graph.view import GraphView
 
-__all__ = ["MAX_CHUNKS", "chunk_texts", "entity_name", "excerpt", "quote_chunks", "spell"]
+__all__ = [
+    "MAX_CHUNKS",
+    "chunk_texts",
+    "entity_name",
+    "excerpt",
+    "quote_chunks",
+    "spell",
+    "untagged",
+]
 
 MAX_CHUNKS = 3
 """The most chunks a model is shown for one entity or fact."""
+
+# Match the tags that prompts quote graph text in, as loosely as a model reads them.
+_TAG = re.compile(r"<\s*/?\s*(?:chunk|excerpt)\s*>", re.IGNORECASE)
 
 
 def entity_name(graph: GraphView, entity: Node) -> str | None:
@@ -65,7 +77,7 @@ def excerpt(text: str, name: str, radius: int) -> str:
     begin = max(start - radius, 0)
     end = start + len(name) + radius
     kept = " ".join(text[begin:end].split())
-    return ("…" if begin else "") + kept + ("…" if end < len(text) else "")
+    return untagged(("…" if begin else "") + kept + ("…" if end < len(text) else ""))
 
 
 def quote_chunks(texts: Iterable[str]) -> str:
@@ -77,7 +89,23 @@ def quote_chunks(texts: Iterable[str]) -> str:
     Returns:
         The tagged texts, separated by blank lines.
     """
-    return "\n\n".join(f"<chunk>\n{text}\n</chunk>" for text in texts)
+    return "\n\n".join(f"<chunk>\n{untagged(text)}\n</chunk>" for text in texts)
+
+
+def untagged(text: str) -> str:
+    """Return text from the graph with the tags that prompts quote text in escaped.
+
+    Graph text comes from the documents the graph was built from, so none of it may end
+    a quote, after which the rest of it could pass itself off as instructions.
+
+    Args:
+        text: Text from the graph, such as a name or a chunk's text.
+
+    Returns:
+        The text, with the angle brackets of every ``<chunk>`` and ``<excerpt>`` tag in it
+        escaped.
+    """
+    return _TAG.sub(lambda tag: tag.group().replace("<", "&lt;").replace(">", "&gt;"), text)
 
 
 def spell(graph: GraphView, element: Node | Relationship) -> str:
@@ -97,8 +125,8 @@ def spell(graph: GraphView, element: Node | Relationship) -> str:
     if isinstance(element, Relationship):
         source = spell(graph, graph.node(element.source_id))
         target = spell(graph, graph.node(element.target_id))
-        return f"{source} -[:{graph.relationship_type(element)}]-> {target}"
+        return untagged(f"{source} -[:{graph.relationship_type(element)}]-> {target}")
     name = graph.name(element)
     reference = f'"{name}"' if name else "unnamed"
     labels = ":".join(graph.layout.node_types(element))
-    return f"{reference} ({labels})" if labels else reference
+    return untagged(f"{reference} ({labels})" if labels else reference)
