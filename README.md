@@ -7,16 +7,16 @@
 
 kgeval is an evaluation framework for knowledge graphs.
 
-It scores a graph on 29 metrics, covering duplicate entities, conformance to a graph
-schema, agreement with a ground truth, and whether each fact is supported by the text it
-was extracted from, and reports every defect with the nodes and relationships involved.
-Comparing the reports of two versions of a graph shows which metrics improved or
-regressed.
+It measures the quality of the knowledge graphs behind GraphRAG and other
+retrieval-augmented generation (RAG) applications, and reports every defect with the nodes
+and relationships involved. It reads Neo4j graphs from LLM Graph Builder, neo4j-graphrag,
+LangChain, LlamaIndex, Microsoft GraphRAG, and Graphiti without configuration, and scores
+them with deterministic metrics and with an LLM as a judge.
 
 ## Features
 
 - Score a graph on 29 built-in metrics
-- Define metrics of your own in one sentence
+- Define custom metrics in one sentence
 - Trace every finding to the nodes and relationships involved
 - Run reference-free and reference-based evaluation
 - Compare evaluation runs over time
@@ -34,9 +34,6 @@ pip install kgeval
 ```
 
 ## Usage
-
-kgeval runs from the command line, from Python, or in pytest. Each loads a snapshot of the
-graph, evaluates it in memory, and produces a report of scores and findings.
 
 ### CLI
 
@@ -71,33 +68,15 @@ def test_entities_are_unique():
     kgeval.assert_passes(graph, [kgeval.EntityUniqueness(threshold=0.95)])
 ```
 
-## Report
-
-The report gives each metric a score, the share of units such as entities or facts that
-pass, so 100% is perfect. Each finding describes one defect and lists the IDs of the nodes
-and relationships involved, so you can find them in the graph:
-
-```text
-### entity_uniqueness: 1 of 10 entities with a name failed
-
-- 2 entities share the normalized name 'lee kuan yew': "Lee Kuan Yew" (Person), "lee kuan yew" (Person)
-  - nodes: `4:baa5f725-cef3-42dc-a2d1-19be9b037996:4`, `4:baa5f725-cef3-42dc-a2d1-19be9b037996:9`
-```
-
 ## Metrics
 
-kgeval has 29 intrinsic, schema, reference, model, and retrieval metrics. It runs every
-metric whose inputs you give. The intrinsic metrics need only the graph, and the others
-need an input, such as a schema or a model:
-
-| Input          | Evaluates                                                               |
-| -------------- | ----------------------------------------------------------------------- |
-| Graph only     | Uniqueness, connectivity, naming, provenance, consistency, and coverage |
-| Graph schema   | Conformance and completeness                                            |
-| Ground truth   | Graph precision, recall, and F1                                         |
-| Test questions | Answerability                                                           |
-| Retrievals     | Retriever precision and recall                                          |
-| Model          | Accuracy, resolution, disambiguation, and extraction completeness       |
+| Metrics   | Evaluate                                                                |
+| --------- | ----------------------------------------------------------------------- |
+| Intrinsic | Uniqueness, connectivity, naming, provenance, consistency, and coverage |
+| Schema    | Conformance and completeness                                            |
+| Reference | Graph precision, recall, F1, and answerability                          |
+| Model     | Accuracy, resolution, disambiguation, and extraction completeness       |
+| Retrieval | Retriever precision and recall                                          |
 
 See the [metrics guide](https://kgeval.github.io/kgeval/guide/metrics/) for the full list.
 
