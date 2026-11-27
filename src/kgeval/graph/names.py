@@ -22,10 +22,11 @@ _SIBILANT_PLURALS = ("sses", "shes", "ches", "xes", "zzes")
 def normalize_name(name: str) -> str:
     """Return the key under which entity names count as the same name.
 
-    The key is the name case-folded and NFKD-decomposed without combining marks, with
-    every run of characters other than letters, digits, ``+``, and ``#`` replaced by
-    one space, and trimmed. ``Lee Kuan-Yew`` and ``lee kuan yew`` share a key, while
-    ``C``, ``C++``, and ``C#`` keep apart.
+    The key is the name case-folded and NFKD-decomposed, without combining marks or
+    invisible format characters such as soft hyphens, and with every run of characters
+    other than letters, digits, ``+``, and ``#`` replaced by one space, then trimmed.
+    ``Lee Kuan-Yew`` and ``lee kuan yew`` share a key, while ``C``, ``C++``, and ``C#``
+    keep apart.
 
     Args:
         name: An entity name.
@@ -34,10 +35,14 @@ def normalize_name(name: str) -> str:
         The key; empty when the name has no letter or digit.
     """
     decomposed = unicodedata.normalize("NFKD", name.casefold())
-    unaccented = "".join(char for char in decomposed if not unicodedata.combining(char))
-    if not any(char.isalnum() for char in unaccented):
+    plain = "".join(
+        char
+        for char in decomposed
+        if not unicodedata.combining(char) and unicodedata.category(char) != "Cf"
+    )
+    if not any(char.isalnum() for char in plain):
         return ""
-    return " ".join(token for token in _SEPARATORS.split(unaccented) if token)
+    return " ".join(token for token in _SEPARATORS.split(plain) if token)
 
 
 def normalize_type(type_name: str) -> str:

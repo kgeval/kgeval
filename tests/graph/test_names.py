@@ -11,6 +11,8 @@ from kgeval.graph.names import normalize_name, normalize_type
         ("Lee Kuan Yew", "lee kuan yew"),
         ("  LEE   kuan yew ", "lee kuan yew"),
         ("Lee-Kuan-Yew", "lee kuan yew"),
+        ("Singa\N{SOFT HYPHEN}pore", "singapore"),
+        ("Singa\N{ZERO WIDTH SPACE}pore", "singapore"),
         ("Lée Kuan Yew", "lee kuan yew"),
         ("Apple Inc.", "apple inc"),
         ("snake_case", "snake case"),
@@ -22,7 +24,9 @@ from kgeval.graph.names import normalize_name, normalize_type
         ("++", ""),
     ],
 )
-def test_normalize_name_ignores_case_accents_and_punctuation(name: str, key: str) -> None:
+def test_normalize_name_ignores_case_accents_punctuation_and_invisible_characters(
+    name: str, key: str
+) -> None:
     assert normalize_name(name) == key
 
 
