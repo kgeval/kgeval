@@ -63,8 +63,8 @@ def infer_schema(graph: GraphView) -> GraphSchema:
         graph: The graph to describe.
 
     Returns:
-        The inferred graph schema, closed to additional node types, relationship types,
-        patterns, and properties.
+        The inferred graph schema, closed to additional properties, and to additional
+        node types, relationship types, and patterns when it declares some.
     """
     node_usage: defaultdict[str, _Usage] = defaultdict(_Usage)
     relationship_usage: defaultdict[str, _Usage] = defaultdict(_Usage)
@@ -111,9 +111,10 @@ def infer_schema(graph: GraphView) -> GraphSchema:
                 for key in usage.universal_properties()
             ),
         ),
-        additional_node_types=False,
-        additional_relationship_types=False,
-        additional_patterns=False,
+        # Close only the lists that declare something, since a closed empty list rejects everything.
+        additional_node_types=not node_types,
+        additional_relationship_types=not relationship_types,
+        additional_patterns=not patterns,
     )
 
 

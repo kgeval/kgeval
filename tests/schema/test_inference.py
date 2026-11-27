@@ -6,7 +6,7 @@ from kgeval.metrics.base import Inputs
 from kgeval.metrics.schema.conformance import EntityConformance, FactConformance
 from kgeval.schema.inference import infer_schema
 from kgeval.schema.model import load_schema
-from tests.factories import example_view, node, view
+from tests.factories import example_view, node, relationship, view
 
 
 def test_infer_schema_orders_types_and_patterns_by_use() -> None:
@@ -63,5 +63,14 @@ def test_example_conforms_to_its_inferred_schema_except_minority_types(tmp_path:
     assert FactConformance().evaluate(example_view(), Inputs(schema=schema)).failed == 0
 
 
-def test_inferred_schema_leaves_out_entities_without_a_node_type() -> None:
-    assert infer_schema(view(node("a", name="Ada"))).node_types == ()
+def test_untyped_entities_fail_an_inferred_schema_only_among_typed_ones() -> None:
+    untyped = view(node("a", name="Ada"), node("b", name="Bob"), relationship("r", "a", "MET", "b"))
+    partly_typed = view(node("a", name="Ada"), node("b", "Person", name="Bob"))
+
+    schema = infer_schema(untyped)
+
+    assert schema.node_types == ()
+    assert EntityConformance().evaluate(untyped, Inputs(schema=schema)).failed == 0
+    assert FactConformance().evaluate(untyped, Inputs(schema=schema)).failed == 0
+    partly_typed_inputs = Inputs(schema=infer_schema(partly_typed))
+    assert EntityConformance().evaluate(partly_typed, partly_typed_inputs).failed == 1
