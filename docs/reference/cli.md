@@ -162,12 +162,11 @@ the draft before passing it to `--schema`, because it copies the graph's defects
 
 ### Options
 
-| Option                                                       | Default             | Description                                           |
-| ------------------------------------------------------------ | ------------------- | ----------------------------------------------------- |
-| `--uri`, `--username`, `--password`, `--database`, `--graph` | As for `kgeval run` | The [graph options](#graph) of `kgeval run`.          |
-| `--layout FILE`                                              | None                | A layout file whose fields replace the detected ones. |
-| `-o`, `--output FILE`                                        | Standard output     | The file to write the schema to.                      |
-| `-v`, `--verbose`                                            | Off                 | Log progress to standard error.                       |
+| Option                                                                   | Default             | Description                                  |
+| ------------------------------------------------------------------------ | ------------------- | -------------------------------------------- |
+| `--uri`, `--username`, `--password`, `--database`, `--graph`, `--layout` | As for `kgeval run` | The [graph options](#graph) of `kgeval run`. |
+| `-o`, `--output FILE`                                                    | Standard output     | The file to write the schema to.             |
+| `-v`, `--verbose`                                                        | Off                 | Log progress to standard error.              |
 
 ## kgeval snapshot
 
