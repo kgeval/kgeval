@@ -78,7 +78,7 @@ INTRINSIC_METRICS: tuple[type[Metric], ...] = (
     EmbeddingConsistency,
     ExtractionCoverage,
 )
-"""The deterministic metrics that need nothing but the graph, in report order."""
+"""List the deterministic metrics that need nothing but the graph, in report order."""
 
 SCHEMA_METRICS: tuple[type[SchemaMetric], ...] = (
     EntityConformance,
@@ -86,7 +86,7 @@ SCHEMA_METRICS: tuple[type[SchemaMetric], ...] = (
     SchemaCompleteness,
     PropertyCompleteness,
 )
-"""The deterministic metrics that measure a graph against a graph schema, in report order."""
+"""List the deterministic metrics that measure a graph against a graph schema, in report order."""
 
 GROUND_TRUTH_METRICS: tuple[type[GroundTruthMetric], ...] = (
     FactPrecision,
@@ -96,10 +96,10 @@ GROUND_TRUTH_METRICS: tuple[type[GroundTruthMetric], ...] = (
     EntityRecall,
     EntityF1,
 )
-"""The metrics that compare the graph with a ground truth, in report order."""
+"""List the metrics that compare the graph with a ground truth, in report order."""
 
 REFERENCE_METRICS: tuple[type[Metric], ...] = (*GROUND_TRUTH_METRICS, Competency)
-"""The ground truth metrics and competency, which need a reference, in report order."""
+"""List the ground truth metrics and competency, which need a reference, in report order."""
 
 MODEL_METRICS: tuple[type[ModelMetric], ...] = (
     EntityResolution,
@@ -109,10 +109,10 @@ MODEL_METRICS: tuple[type[ModelMetric], ...] = (
     VocabularyResolution,
     ExtractionCompleteness,
 )
-"""The metrics that need a model, in report order."""
+"""List the metrics that need a model, in report order."""
 
 RETRIEVAL_METRICS: tuple[type[RetrievalMetric], ...] = (RetrievalRecall, RetrievalPrecision)
-"""The metrics that evaluate retrieval from the graph, in report order."""
+"""List the metrics that evaluate retrieval from the graph, in report order."""
 
 BUILTIN_METRICS: tuple[type[Metric], ...] = (
     *INTRINSIC_METRICS,
@@ -121,7 +121,7 @@ BUILTIN_METRICS: tuple[type[Metric], ...] = (
     *MODEL_METRICS,
     *RETRIEVAL_METRICS,
 )
-"""Every built-in metric, grouped by category."""
+"""List every built-in metric, grouped by category."""
 
 
 _Suite = Annotated[dict[str, dict[str, Any] | None], Field(min_length=1)]
@@ -168,7 +168,7 @@ def load_suite(path: str | Path) -> list[Metric]:
                 if is_criterion
                 else metric_types[name].model_validate(fields)
             )
-        # Catch our errors with pydantic's, since a ValidationError is a ValueError.
+        # Catch the ValueErrors of _criterion with pydantic's, since a ValidationError is one too.
         except ValueError as error:
             raise InputError(f"invalid suite {path}: {name}: {error}") from error
         metrics.append(metric)

@@ -32,10 +32,10 @@ __all__ = [
 NO_LEXICAL_NODES = (
     "the graph has no lexical nodes; set Layout.lexical_labels if it has a lexical graph"
 )
-"""The reason metrics that read chunks give when they skip a graph without a lexical graph."""
+"""State why metrics that read chunks skip a graph without a lexical graph."""
 
 InputName: TypeAlias = Literal["schema", "ground_truth", "questions", "retrievals", "model"]
-"""The name of an input that a metric needs, as ``Inputs`` and ``evaluate`` call it."""
+"""Name an input that a metric needs, as ``Inputs`` and ``evaluate`` call it."""
 
 _T = TypeVar("_T")
 

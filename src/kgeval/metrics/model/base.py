@@ -21,7 +21,7 @@ __all__ = ["DEFAULT_SAMPLE_SIZE", "ModelMetric", "SampledMetric"]
 logger = logging.getLogger(__name__)
 
 DEFAULT_SAMPLE_SIZE = 100
-"""The default for the most units each sampled metric asks the model about."""
+"""Set the default for the most units each sampled metric asks the model about."""
 
 _ATTEMPTS = 2
 

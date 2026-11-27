@@ -31,18 +31,7 @@ class _Loader(yaml.SafeLoader):
 
 
 def load_yaml(path: str | Path, adapter: TypeAdapter[_T]) -> _T:
-    """Read a YAML file, or a JSON file when its name ends in .json, and validate its content.
-
-    Args:
-        path: The file to read, in UTF-8, or in UTF-16 with a byte order mark.
-        adapter: Validates the parsed content.
-
-    Returns:
-        The validated content.
-
-    Raises:
-        InputError: If the file cannot be read, parsed, or validated.
-    """
+    """Read and validate a YAML file, or JSON when its name ends in .json, raising InputError."""
     # Read JSON as JSON, since YAML 1.1 parses some of it differently, such as escaped emoji.
     if Path(path).suffix.lower() == ".json":
         return load_json(path, adapter)
@@ -54,19 +43,7 @@ def load_yaml(path: str | Path, adapter: TypeAdapter[_T]) -> _T:
 
 
 def load_json(path: str | Path, adapter: TypeAdapter[_T]) -> _T:
-    """Read a JSON file in any encoding that JSON allows, and validate its content.
-
-    Args:
-        path: The file to read, in UTF-8, UTF-16, or UTF-32.
-        adapter: Validates the parsed content.
-
-    Returns:
-        The validated content.
-
-    Raises:
-        InputError: If the file cannot be read, decoded, parsed, or validated, or
-            repeats a key.
-    """
+    """Read and validate a JSON file in any encoding JSON allows, raising InputError."""
     try:
         # Pass bytes, so that json detects their encoding, such as the UTF-16 of PowerShell.
         content = json.loads(Path(path).read_bytes(), object_pairs_hook=_unique)

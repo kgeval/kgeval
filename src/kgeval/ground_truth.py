@@ -14,7 +14,7 @@ from kgeval.reference import NamedFact, Reference
 __all__ = ["DocumentSelector", "GroundTruth", "load_ground_truth"]
 
 DocumentSelector: TypeAlias = Annotated[dict[str, str], Field(min_length=1)]
-"""A selector of the lexical nodes that have every listed property with the listed value."""
+"""Select the lexical nodes that have every listed property with the listed value."""
 
 
 class GroundTruth(Reference):

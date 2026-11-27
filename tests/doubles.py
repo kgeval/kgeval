@@ -14,12 +14,7 @@ OutputT = TypeVar("OutputT", bound=BaseModel)
 
 
 class ScriptedModel(Model):
-    """Approve every prompt except those containing one of the given texts; record every prompt.
-
-    Approving verdicts set their flag, pick the first option of each choice, and leave
-    their lists empty; rejecting verdicts clear their flag and take their choices and
-    lists from ``rejection``, or else the second option and an empty list.
-    """
+    """Approve every prompt except those containing one of the given texts; record every prompt."""
 
     name = "scripted"
 
@@ -65,10 +60,7 @@ class FailingModel(Model):
 
 
 class UnusableModel(ScriptedModel):
-    """Give no usable verdict for prompts containing one of the given texts, up to a count.
-
-    Approve every other prompt, as ``ScriptedModel`` does with nothing rejected.
-    """
+    """Give no usable verdict for prompts containing one of the given texts, up to a count."""
 
     name = "unusable"
 

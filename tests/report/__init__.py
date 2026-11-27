@@ -1,1 +1,1 @@
-"""Test reports and report comparisons."""
+"""Test the reports of evaluations and their comparisons."""

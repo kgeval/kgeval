@@ -1,4 +1,4 @@
-"""Provide graph schemas in the format neo4j-graphrag uses."""
+"""Provide the graph schema in the format neo4j-graphrag uses, and its inference."""
 
 from kgeval.schema.inference import infer_schema
 from kgeval.schema.model import (

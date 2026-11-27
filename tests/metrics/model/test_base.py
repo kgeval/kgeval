@@ -133,7 +133,7 @@ def test_chunk_texts_put_texts_naming_everyone_first_and_respect_the_limit() -> 
 
     texts = chunk_texts(graph, ["c4", "c3", "c2", "c1", "c0"], ["chunk 3"])
 
-    # Rank c3, which names everyone, first, then keep element ID order up to the limit.
+    # Rank c3, which names everyone, first, then the alphabetically first texts up to the limit.
     assert texts == ["Chunk 3", "Chunk 0", "Chunk 1"]
 
 

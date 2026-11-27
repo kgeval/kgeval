@@ -1,4 +1,4 @@
-"""Test the source that loads knowledge graphs from Neo4j, wiping the integration database."""
+"""Test the source that loads knowledge graphs from Neo4j."""
 
 import json
 import os

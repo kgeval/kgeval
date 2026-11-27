@@ -15,7 +15,7 @@ from kgeval.report.markdown import DEFAULT_MAX_FINDINGS, render_markdown
 __all__ = ["REPORT_FORMAT", "GraphSummary", "Report"]
 
 REPORT_FORMAT = 2
-"""The version of the report format that this kgeval writes and reads.
+"""Identify the version of the report format that this kgeval writes and reads.
 
 It grows whenever a report could hold what an older kgeval cannot read, so that older
 releases reject newer reports with a clear message rather than misread them.

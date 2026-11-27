@@ -11,7 +11,7 @@ from kgeval.graph.model import Graph, Node
 __all__ = ["BASE_LABELS", "COMMUNITY_LABELS", "LEXICAL_LABELS", "Layout", "Role"]
 
 LEXICAL_LABELS = frozenset({"Chunk", "Document", "Episodic", "__Chunk__", "__Document__"})
-"""Labels that well-known builders give to lexical nodes.
+"""Name the labels that well-known builders give to lexical nodes.
 
 A graph's nodes with these labels are lexical nodes only when they hold text, or are
 joined to lexical nodes that do, as a document is to its chunks, so that a ``Document``
@@ -19,14 +19,14 @@ node type of a domain graph stays a node type.
 """
 
 COMMUNITY_LABELS = frozenset({"__Community__"})
-"""Labels that well-known builders give to community nodes.
+"""Name the labels that well-known builders give to community nodes.
 
 Graphiti's ``Community`` counts too, in graphs with Graphiti's ``Episodic`` label, so
 that a ``Community`` node type of another graph stays a node type.
 """
 
 BASE_LABELS = frozenset({"__Entity__", "__KGBuilder__", "__Node__"})
-"""Base labels that well-known builders add to every entity, next to its node type.
+"""Name the base labels that well-known builders add to every entity, next to its node type.
 
 Some builders also put ``__KGBuilder__`` or ``__Node__`` on chunks; lexical labels take
 precedence, so those chunks stay lexical nodes. Graphiti's ``Entity`` counts too, in

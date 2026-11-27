@@ -45,7 +45,7 @@ __all__ = [
 logger = logging.getLogger(__name__)
 
 SNAPSHOT_FORMAT = 1
-"""The version of the snapshot format that this kgeval writes and reads.
+"""Identify the version of the snapshot format that this kgeval writes and reads.
 
 It grows whenever a snapshot could hold what an older kgeval cannot read, so that older
 releases reject newer snapshots with a clear message rather than misread them.
@@ -103,10 +103,10 @@ Scalar: TypeAlias = Annotated[
     WrapSerializer(_serialize_scalar, when_used="json"),
     BeforeValidator(_untag),
 ]
-"""A single property value of any type Neo4j stores, except vectors and byte arrays."""
+"""Hold one property value of any type Neo4j stores, except vectors and byte arrays."""
 
 PropertyValue: TypeAlias = Scalar | list[Scalar]
-"""A scalar or a list of scalars that a property holds."""
+"""Hold a property's value, a scalar or a list of scalars."""
 
 PropertyTypeName: TypeAlias = Literal[
     "BOOLEAN",
@@ -122,7 +122,7 @@ PropertyTypeName: TypeAlias = Literal[
     "ZONED_DATETIME",
     "ZONED_TIME",
 ]
-"""The Neo4j property type names, spelled as in neo4j-graphrag schemas."""
+"""Name the Neo4j property types, as neo4j-graphrag schemas spell them."""
 
 
 def value_type(value: PropertyValue) -> PropertyTypeName:
@@ -208,7 +208,7 @@ def content_digest(value: object) -> str:
 
 
 EmbeddingDimensions: TypeAlias = dict[str, Annotated[int, Field(ge=1)]]
-"""The length of each embedding, a non-empty list of floats, by the property that holds it."""
+"""Map each property that holds an embedding, a non-empty list of floats, to its length."""
 
 
 class Node(BaseModel):

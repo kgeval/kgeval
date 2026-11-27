@@ -22,10 +22,10 @@ def _require_alphanumeric(text: str) -> str:
 
 
 Name: TypeAlias = Annotated[str, AfterValidator(_require_alphanumeric)]
-"""An entity name or relationship type in a reference, which needs a letter or digit."""
+"""Hold an entity name or relationship type of a reference, which needs a letter or digit."""
 
 NamedFact: TypeAlias = tuple[Name, Name, Name]
-"""A fact named by its source entity name, relationship type, and target entity name.
+"""Name a fact by its source entity name, relationship type, and target entity name.
 
 It has the shape of a schema pattern, with entity names in place of node types.
 """

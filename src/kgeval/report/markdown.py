@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 __all__ = ["DEFAULT_MAX_FINDINGS", "render_comparison_markdown", "render_markdown"]
 
 DEFAULT_MAX_FINDINGS = 10
-"""The default for how many findings Markdown lists per metric."""
+"""Set the default for how many findings Markdown lists per metric."""
 
 _MAX_IDS_SHOWN = 10
 

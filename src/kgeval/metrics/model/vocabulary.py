@@ -181,12 +181,7 @@ class VocabularyResolution(ModelMetric):
 def _distinct_terms(
     carriers: Mapping[str, Sequence[Node | Relationship]],
 ) -> tuple[dict[str, list[Node | Relationship]], dict[str, list[str]]]:
-    """Merge spelling variants into distinct terms, each named by its most used variant.
-
-    Returns:
-        Each distinct term mapped to the elements of all its variants, in ID order, and
-        to its variants, the term first.
-    """
+    """Merge spelling variants into distinct terms, each named by its most used variant."""
     variants: defaultdict[str, list[str]] = defaultdict(list)
     for term in sorted(carriers):
         variants[normalize_type(term)].append(term)
@@ -280,14 +275,11 @@ def _carrier(graph: GraphView, element: Node | Relationship) -> str:
 
 
 def _fact_sample(graph: GraphView, fact: Relationship) -> str:
-    """Return a fact as a model reads it, with an excerpt of a chunk that grounds it.
-
-    The excerpt centers on the target's name, since the words stating a relation usually
-    precede it, and otherwise on the source's.
-    """
+    """Return a fact as a model reads it, with an excerpt of a chunk that grounds it."""
     shown = spell(graph, fact)
     source = graph.name(graph.node(fact.source_id))
     target = graph.name(graph.node(fact.target_id))
+    # Center on the target's name first, since the words stating a relation usually precede it.
     names = [name for name in (target, source) if name]
     texts = chunk_texts(graph, graph.fact_chunk_ids(fact), names)
     if texts:
@@ -327,12 +319,7 @@ def _prompt(kind: str, batch: Sequence[str], profiles: Mapping[str, tuple[str, s
 def _merged_groups(
     groups: Iterable[tuple[Sequence[str], str]], known: Collection[str]
 ) -> dict[tuple[str, ...], str]:
-    """Return the model's groups restricted to known terms, merging groups that share a term.
-
-    Returns:
-        Each merged group, as its sorted terms, mapped to the reasons of the groups it
-        merges, joined in order.
-    """
+    """Return the model's groups restricted to known terms, merging groups that share a term."""
     merged: list[tuple[set[str], list[str]]] = []
     for group, reason in groups:
         terms = {term for term in group if term in known}

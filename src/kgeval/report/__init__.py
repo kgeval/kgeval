@@ -1,4 +1,4 @@
-"""Provide reports and report comparisons."""
+"""Provide the reports of evaluations and their comparisons."""
 
 from kgeval.report.comparison import Comparison, MetricChange, Trend, compare
 from kgeval.report.markdown import DEFAULT_MAX_FINDINGS

@@ -1,4 +1,4 @@
-"""Test that graphs from well-known builders need no configuration."""
+"""Test the evaluation of graphs from well-known builders without configuration."""
 
 from dataclasses import dataclass
 from datetime import UTC, datetime

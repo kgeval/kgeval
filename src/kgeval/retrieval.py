@@ -21,10 +21,10 @@ __all__ = ["Retrievals", "Retriever", "load_retrievals", "retrieve"]
 logger = logging.getLogger(__name__)
 
 Retriever: TypeAlias = Callable[[str], Iterable[object]]
-"""A function that returns a question's element IDs, or driver nodes, relationships, and paths."""
+"""Return a question's element IDs, or driver nodes, relationships, and paths."""
 
 Retrievals: TypeAlias = Mapping[str, tuple[str, ...]]
-"""The element IDs retrieved for each question, by question text, in rank order and each once."""
+"""Map each question's text to the element IDs retrieved for it, in rank order and each once."""
 
 
 def retrieve(questions: QuestionSet, retriever: Retriever) -> Retrievals:

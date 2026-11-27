@@ -93,11 +93,7 @@ def content(graph: Graph) -> tuple[Counter[str], Counter[tuple[str, str, str, st
 
 
 def example_graph() -> Graph:
-    """Return the graph that examples/singapore/seed.cypher creates, with readable IDs.
-
-    Node IDs are the seed's variable names; embeddings keep only their dimensions, as
-    sources do.
-    """
+    """Return the graph that examples/singapore/seed.cypher creates, its variable names as IDs."""
     born = date(1923, 9, 16)
     return graph(
         node("document", "Document", fileName="singapore.txt"),
